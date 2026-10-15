@@ -4,7 +4,7 @@ namespace App\Services\Waiter;
 
 use App\Models\Order;
 use App\Models\Waiter;
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\DeliveryTask;
 use App\Models\User;
 use Illuminate\Support\Facades\Log;
@@ -22,10 +22,7 @@ class DeliveryWorkloadService
     public function assignDelivery(Order $order, Waiter $waiter, $floor = null): DeliveryTask
     {
         try {
-            $hotelId = $order->hotel_id ?? $floor?->hotel_id ?? $waiter->hotel_id ?? app(\App\Services\TenantContext::class)->getHotelId();
-
             $delivery = DeliveryTask::create([
-                'hotel_id'        => $hotelId,
                 'order_id'        => $order->id,
                 'reservation_id'  => $order->reservation_id,
                 'room_id'         => $order->room_id,
@@ -41,11 +38,14 @@ class DeliveryWorkloadService
             $waiter->incrementOrders();
             $waiter->update(['last_assigned_at' => now()]);
 
-            Log::info(' Delivery Task Assigned with tie-breaker update', [
+            Log::info('Room Delivery Task Assigned', [
                 'delivery_id' => $delivery->id,
                 'order_id' => $order->id,
+                'room_id' => $order->room_id,
+                'room_number' => $order->room->room_number ?? 'Unknown',
+                'floor_id' => $floor?->id,
                 'waiter_id' => $waiter->id,
-                'waiter_name' => $waiter->user->name ?? 'Unknown',
+                'waiter_name' => $waiter->user->email ?? 'Unknown',
                 'current_orders' => $waiter->current_orders,
                 'last_assigned_at' => now()->toDateTimeString(),
             ]);
@@ -64,10 +64,7 @@ class DeliveryWorkloadService
     public function assignTableDelivery(Order $order, Waiter $waiter, $table): DeliveryTask
     {
         try {
-            $hotelId = $order->hotel_id ?? $table?->hotel_id ?? $waiter->hotel_id ?? app(\App\Services\TenantContext::class)->getHotelId();
-
             $delivery = DeliveryTask::create([
-                'hotel_id'        => $hotelId,
                 'order_id'        => $order->id,
                 'reservation_id'  => $order->reservation_id,
                 'table_id'        => $table->id,
@@ -82,7 +79,7 @@ class DeliveryWorkloadService
             $waiter->incrementOrders();
             $waiter->update(['last_assigned_at' => now()]);
 
-            Log::info(' Table Delivery Task Assigned', [
+            Log::info('Table Delivery Task Assigned', [
                 'delivery_id' => $delivery->id,
                 'order_id' => $order->id,
                 'order_type' => 'walk_in',
@@ -109,10 +106,7 @@ class DeliveryWorkloadService
     public function createWaitingDelivery(Order $order, $floor = null, string $reason = 'Waiting assignment'): DeliveryTask
     {
         try {
-            $hotelId = $order->hotel_id ?? $floor?->hotel_id ?? app(\App\Services\TenantContext::class)->getHotelId();
-
             $delivery = DeliveryTask::create([
-                'hotel_id'        => $hotelId,
                 'order_id'        => $order->id,
                 'reservation_id'  => $order->reservation_id,
                 'room_id'         => $order->room_id,
@@ -129,13 +123,12 @@ class DeliveryWorkloadService
             Log::warning('Created Waiting Delivery Task', [
                 'delivery_id' => $delivery->id,
                 'order_id' => $order->id,
-                'floor_id' => $floor?->id,
                 'reason' => $reason,
             ]);
 
             return $delivery;
         } catch (Throwable $e) {
-            Log::error('Waiting Delivery Creation Exception', [
+            Log::error('Waiting Delivery Task Creation Exception', [
                 'order_id' => $order->id,
                 'error' => $e->getMessage(),
             ]);
@@ -143,4 +136,3 @@ class DeliveryWorkloadService
         }
     }
 }
-

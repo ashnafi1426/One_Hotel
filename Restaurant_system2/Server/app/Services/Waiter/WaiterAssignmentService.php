@@ -3,7 +3,7 @@
 namespace App\Services\Waiter;
 
 use App\Models\Waiter;
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\HotelShift;
 use App\Models\WaiterFloorAssignment;
 use App\Models\DeliveryTask;
@@ -26,7 +26,7 @@ class WaiterAssignmentService
             if ($waiter->status !== 'active') {
                 throw new \Exception("Cannot assign inactive waiter: {$waiter->user->name}");
             }
-            $floor = HotelFloor::findOrFail($floorId);
+            $floor = Floor::findOrFail($floorId);
             $shift = HotelShift::findOrFail($shiftId);
             if ($priority === 'primary') {
                 $existing = WaiterFloorAssignment::where([
@@ -72,7 +72,7 @@ class WaiterAssignmentService
     public function findBestAvailableWaiter(string $floorId, string $shiftId): ?Waiter
     {
         try {
-            $floor = HotelFloor::findOrFail($floorId);
+            $floor = Floor::findOrFail($floorId);
             $shift = HotelShift::findOrFail($shiftId);
             $assignments = WaiterFloorAssignment::where([
                 ['floor_id', '=', $floorId],
@@ -268,13 +268,6 @@ class WaiterAssignmentService
         $query = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
             ->with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
 
-        if ($hotelId) {
-            $query->where(function ($q) use ($hotelId) {
-                $q->where('delivery_tasks.hotel_id', $hotelId)
-                  ->orWhereNull('delivery_tasks.hotel_id');
-            });
-        }
-
         if (!$isAdminOrManager && $waiterId) {
             $query->where('waiter_id', $waiterId);
         }
@@ -301,19 +294,11 @@ class WaiterAssignmentService
 
     public function getPendingAssignments(int|string|null $waiterId = null)
     {
-        $hotelId = app(\App\Services\TenantContext::class)->getHotelId();
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager']);
 
         $query = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
             ->whereIn('status', ['assigned', 'waiting_assignment'])
             ->with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
-
-        if ($hotelId) {
-            $query->where(function ($q) use ($hotelId) {
-                $q->where('delivery_tasks.hotel_id', $hotelId)
-                  ->orWhereNull('delivery_tasks.hotel_id');
-            });
-        }
 
         if (!$isAdminOrManager && $waiterId) {
             $query->where('waiter_id', $waiterId);
@@ -324,19 +309,11 @@ class WaiterAssignmentService
 
     public function getActiveAssignments(int|string|null $waiterId = null)
     {
-        $hotelId = app(\App\Services\TenantContext::class)->getHotelId();
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager']);
 
         $query = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
             ->whereIn('status', ['accepted', 'picked_up', 'on_delivery'])
             ->with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
-
-        if ($hotelId) {
-            $query->where(function ($q) use ($hotelId) {
-                $q->where('delivery_tasks.hotel_id', $hotelId)
-                  ->orWhereNull('delivery_tasks.hotel_id');
-            });
-        }
 
         if (!$isAdminOrManager && $waiterId) {
             $query->where('waiter_id', $waiterId);
@@ -347,19 +324,11 @@ class WaiterAssignmentService
 
     public function getTodayAssignments(int|string|null $waiterId = null)
     {
-        $hotelId = app(\App\Services\TenantContext::class)->getHotelId();
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager']);
 
         $query = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
             ->whereDate('assigned_at', today())
             ->with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
-
-        if ($hotelId) {
-            $query->where(function ($q) use ($hotelId) {
-                $q->where('delivery_tasks.hotel_id', $hotelId)
-                  ->orWhereNull('delivery_tasks.hotel_id');
-            });
-        }
 
         if (!$isAdminOrManager && $waiterId) {
             $query->where('waiter_id', $waiterId);

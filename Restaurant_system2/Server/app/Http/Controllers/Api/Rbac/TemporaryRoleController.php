@@ -23,27 +23,9 @@ class TemporaryRoleController extends Controller
 
     public function index(Request $request)
     {
-        $query = TemporaryRoleAssignment::with(['user', 'role', 'assigner']);
-
-        $hotelId = $request->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId()
-            ?: $request->query('hotel_id');
-
-        $isAllHotels = $request->boolean('all_hotels') && $request->user()?->isPlatformAdmin();
-
-        if (!$isAllHotels) {
-            if (!$hotelId && $request->user()) {
-                $hotelId = $request->user()->hotelMemberships()->first()?->hotel_id;
-            }
-
-            if ($hotelId) {
-                $query->whereHas('user.hotelMemberships', function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId);
-                });
-            }
-        }
-
-        $assignments = $query->orderBy('created_at', 'desc')->get();
+        $assignments = TemporaryRoleAssignment::with(['user', 'role', 'assigner'])
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,

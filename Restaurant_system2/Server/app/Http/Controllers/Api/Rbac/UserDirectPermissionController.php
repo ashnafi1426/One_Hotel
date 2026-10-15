@@ -24,11 +24,7 @@ class UserDirectPermissionController extends Controller
 
     public function getUserPermissions(Request $request, User $user)
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?: $request->header('X-Hotel-ID')
-            ?: $request->query('hotel_id');
-
-        $activeRoles = $this->authService->getActiveRoles($user, $hotelId);
+        $activeRoles = $this->authService->getActiveRoles($user);
         $primaryRole = $activeRoles->first();
 
         $rolePermissions = [];
@@ -47,11 +43,6 @@ class UserDirectPermissionController extends Controller
 
         $directQuery = UserPermission::with('permission', 'grantor')
             ->where('user_id', $user->id);
-        if ($hotelId) {
-            $directQuery->where(function ($q) use ($hotelId) {
-                $q->where('hotel_id', $hotelId)->orWhereNull('hotel_id');
-            });
-        }
         $directUserPermissions = $directQuery->get()
             ->map(fn($up) => [
                 'id' => $up->id,
@@ -67,7 +58,7 @@ class UserDirectPermissionController extends Controller
                     && ($up->expires_at === null || $up->expires_at >= now()),
             ]);
 
-        $effectivePermissions = $this->authService->getEffectivePermissions($user, $hotelId);
+        $effectivePermissions = $this->authService->getEffectivePermissions($user);
 
         $allPermissionsGrouped = Permission::where('is_active', true)
             ->orderBy('module')
@@ -116,10 +107,6 @@ class UserDirectPermissionController extends Controller
 
     public function assignDirectPermissions(Request $request, User $user)
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?: $request->header('X-Hotel-ID')
-            ?: $request->query('hotel_id');
-
         $validated = $request->validate([
             'permission_ids' => 'present|array',
             'permission_ids.*' => 'exists:permissions,id',
@@ -131,27 +118,21 @@ class UserDirectPermissionController extends Controller
         try {
             $grantorId = $request->user()?->id;
 
-            $oldPermQuery = UserPermission::where('user_id', $user->id);
-            if ($hotelId) {
-                $oldPermQuery->where('hotel_id', $hotelId);
-            }
-            $oldPermissions = $oldPermQuery->pluck('permission_id')->toArray();
+            $oldPermissions = UserPermission::where('user_id', $user->id)
+                ->pluck('permission_id')
+                ->toArray();
 
             $newPermissionIds = array_unique($validated['permission_ids']);
 
-            $deleteQuery = UserPermission::where('user_id', $user->id)
-                ->whereNotIn('permission_id', $newPermissionIds);
-            if ($hotelId) {
-                $deleteQuery->where('hotel_id', $hotelId);
-            }
-            $deleteQuery->delete();
+            UserPermission::where('user_id', $user->id)
+                ->whereNotIn('permission_id', $newPermissionIds)
+                ->delete();
 
             foreach ($newPermissionIds as $permId) {
                 UserPermission::updateOrCreate(
                     [
                         'user_id' => $user->id,
                         'permission_id' => $permId,
-                        'hotel_id' => $hotelId,
                     ],
                     [
                         'granted_by' => $grantorId,
@@ -162,7 +143,7 @@ class UserDirectPermissionController extends Controller
                 );
             }
 
-            $this->authService->invalidateUserCache($user->id, $hotelId);
+            $this->authService->invalidateUserCache($user->id);
 
             RbacAuditLog::log(
                 $grantorId,
