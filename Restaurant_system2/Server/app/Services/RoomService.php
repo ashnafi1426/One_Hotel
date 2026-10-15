@@ -22,7 +22,7 @@ class RoomService
      */
     public function getRoomsQuery(array $filters = []): Builder
     {
-        $query = Room::with(['roomType', 'hotel', 'floor']);
+        $query = Room::with(['roomType', 'floor']);
 
         if (!empty($filters['search'])) {
             $search = strtolower(trim($filters['search']));
@@ -58,22 +58,17 @@ class RoomService
     }
 
     /**
-     * Create a new room with synchronized floor attributes and tenant scoping.
+     * Create a new room with synchronized floor attributes.
      */
     public function createRoom(array $data, ?string $hotelId = null): Room
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
-        if ($hotelId) {
-            $data['hotel_id'] = $hotelId;
-        }
-
-        $data = $this->syncFloorData($data, $hotelId);
+        unset($data['hotel_id']);
+        $data = $this->syncFloorData($data);
 
         return DB::transaction(function () use ($data) {
             $room = Room::create($data);
 
-            return $room->load(['roomType', 'hotel', 'floor']);
+            return $room->load(['roomType', 'floor']);
         });
     }
 
@@ -82,13 +77,13 @@ class RoomService
      */
     public function updateRoom(Room $room, array $data): Room
     {
-        $hotelId = $room->hotel_id ?: TenantContext::id();
-        $data = $this->syncFloorData($data, $hotelId);
+        unset($data['hotel_id']);
+        $data = $this->syncFloorData($data);
 
         return DB::transaction(function () use ($room, $data) {
             $room->update($data);
 
-            return $room->fresh()->load(['roomType', 'hotel', 'floor']);
+            return $room->fresh()->load(['roomType', 'floor']);
         });
     }
 
@@ -245,7 +240,7 @@ class RoomService
     /**
      * Keep floor_id and floor (floor number) in sync.
      */
-    protected function syncFloorData(array $data, ?string $hotelId = null): array
+    protected function syncFloorData(array $data): array
     {
         if (!empty($data['floor_id'])) {
             $floorNumber = Floor::where('id', $data['floor_id'])->value('floor_number');
@@ -253,11 +248,7 @@ class RoomService
                 $data['floor'] = $floorNumber;
             }
         } elseif (!empty($data['floor'])) {
-            $floorId = Floor::where('floor_number', $data['floor'])
-                ->when($hotelId, fn($q) => $q->where(function ($sq) use ($hotelId) {
-                    $sq->where('hotel_id', $hotelId)->orWhereNull('hotel_id');
-                }))
-                ->value('id');
+            $floorId = Floor::where('floor_number', $data['floor'])->value('id');
 
             if ($floorId) {
                 $data['floor_id'] = $floorId;

@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\RestaurantSection;
 use App\Models\RestaurantTable;
-use App\Services\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -14,18 +13,13 @@ use Illuminate\Validation\ValidationException;
 class RestaurantTableService
 {
     /**
-     * Get paginated tables for a hotel with filters applied.
+     * Get paginated tables for the single hotel with filters applied.
      */
     public function getTables(array $filters = [], int $perPage = 15, ?string $hotelId = null): LengthAwarePaginator
     {
         app(RestaurantSectionService::class)->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
 
         $query = RestaurantTable::query()->with('restaurantSection');
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (!empty($filters['search'])) {
             $query->search($filters['search']);
@@ -68,18 +62,13 @@ class RestaurantTableService
     }
 
     /**
-     * Get a single table scoped to the tenant.
+     * Get a single table.
      */
     public function getTable(string $id, ?string $hotelId = null): RestaurantTable
     {
         app(RestaurantSectionService::class)->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
 
         $query = RestaurantTable::query()->with('restaurantSection');
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         $table = $query->findOrFail($id);
         $table->qr_code_url = $table->qr_code_url;
@@ -94,22 +83,14 @@ class RestaurantTableService
     public function createTable(array $data, ?string $hotelId = null): RestaurantTable
     {
         app(RestaurantSectionService::class)->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
 
-        if (!$hotelId) {
-            throw ValidationException::withMessages([
-                'hotel_id' => ['Active hotel tenant context is required.'],
-            ]);
-        }
-
-        $existing = RestaurantTable::where('hotel_id', $hotelId)
-            ->where('table_number', trim($data['table_number']))
+        $existing = RestaurantTable::where('table_number', trim($data['table_number']))
             ->whereNull('deleted_at')
             ->exists();
 
         if ($existing) {
             throw ValidationException::withMessages([
-                'table_number' => ['Table number already exists in this hotel.'],
+                'table_number' => ['Table number already exists.'],
             ]);
         }
 
@@ -117,22 +98,19 @@ class RestaurantTableService
         $sectionName = $data['section'] ?? null;
 
         if ($sectionId) {
-            $sec = RestaurantSection::where('hotel_id', $hotelId)->find($sectionId);
+            $sec = RestaurantSection::find($sectionId);
             if ($sec) {
                 $sectionName = $sec->name;
             }
         } elseif ($sectionName) {
-            $sec = RestaurantSection::where('hotel_id', $hotelId)
-                ->where('name', trim($sectionName))
-                ->first();
+            $sec = RestaurantSection::where('name', trim($sectionName))->first();
             if ($sec) {
                 $sectionId = $sec->id;
             }
         }
 
-        return DB::transaction(function () use ($data, $hotelId, $sectionId, $sectionName) {
+        return DB::transaction(function () use ($data, $sectionId, $sectionName) {
             $table = RestaurantTable::create([
-                'hotel_id'        => $hotelId,
                 'table_number'    => trim($data['table_number']),
                 'table_name'      => $data['table_name'] ?? null,
                 'capacity'        => (int) ($data['capacity'] ?? 4),
@@ -157,18 +135,15 @@ class RestaurantTableService
      */
     public function updateTable(RestaurantTable $table, array $data, ?string $hotelId = null): RestaurantTable
     {
-        $hotelId = $hotelId ?: $table->hotel_id ?: TenantContext::id();
-
         if (isset($data['table_number']) && trim($data['table_number']) !== $table->table_number) {
-            $conflict = RestaurantTable::where('hotel_id', $hotelId)
-                ->where('table_number', trim($data['table_number']))
+            $conflict = RestaurantTable::where('table_number', trim($data['table_number']))
                 ->where('id', '!=', $table->id)
                 ->whereNull('deleted_at')
                 ->exists();
 
             if ($conflict) {
                 throw ValidationException::withMessages([
-                    'table_number' => ['Table number already exists in this hotel.'],
+                    'table_number' => ['Table number already exists.'],
                 ]);
             }
         }
@@ -177,15 +152,13 @@ class RestaurantTableService
         $sectionName = array_key_exists('section', $data) ? $data['section'] : $table->section;
 
         if (!empty($data['section_id'])) {
-            $sec = RestaurantSection::where('hotel_id', $hotelId)->find($data['section_id']);
+            $sec = RestaurantSection::find($data['section_id']);
             if ($sec) {
                 $sectionName = $sec->name;
                 $sectionId = $sec->id;
             }
         } elseif (!empty($data['section'])) {
-            $sec = RestaurantSection::where('hotel_id', $hotelId)
-                ->where('name', trim($data['section']))
-                ->first();
+            $sec = RestaurantSection::where('name', trim($data['section']))->first();
             if ($sec) {
                 $sectionId = $sec->id;
             }
@@ -235,16 +208,11 @@ class RestaurantTableService
     }
 
     /**
-     * Get aggregate statistics for tables scoped to hotel.
+     * Get aggregate statistics for tables for the single hotel.
      */
     public function getStatistics(?string $hotelId = null): array
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $base = RestaurantTable::query();
-        if ($hotelId) {
-            $base->where('hotel_id', $hotelId);
-        }
 
         $total = (clone $base)->count();
         $active = (clone $base)->where('is_active', true)->count();
@@ -265,4 +233,3 @@ class RestaurantTableService
         ];
     }
 }
-

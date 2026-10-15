@@ -33,7 +33,6 @@ class ReviewService
         }
 
         $menuItem = MenuItem::findOrFail($data['menu_item_id']);
-        $hotelId = $menuItem->hotel_id ?? app(TenantContext::class)->getHotelId();
 
         $guestId = $data['guest_id'] ?? null;
         if (!$guestId && auth()->check()) {
@@ -42,7 +41,6 @@ class ReviewService
             if (!$guest) {
                 $nameParts = explode(' ', $user->name ?? 'Guest', 2);
                 $guest = Guest::create([
-                    'hotel_id' => $hotelId,
                     'first_name' => $nameParts[0] ?? 'Guest',
                     'last_name' => $nameParts[1] ?? '',
                     'email' => $user->email,
@@ -54,7 +52,6 @@ class ReviewService
 
         if (!$guestId) {
             $guest = Guest::create([
-                'hotel_id' => $hotelId,
                 'first_name' => 'Guest',
                 'last_name' => '',
                 'email' => 'guest_' . substr(uniqid(), -6) . '@guest.local',
@@ -81,7 +78,6 @@ class ReviewService
             ]);
         } else {
             $review = MenuItemReview::create([
-                'hotel_id' => $hotelId,
                 'guest_id' => $guestId,
                 'order_id' => $orderId,
                 'menu_item_id' => $data['menu_item_id'],
@@ -194,7 +190,6 @@ class ReviewService
         }
 
         $menuItem = MenuItem::findOrFail($data['menu_item_id']);
-        $hotelId = $menuItem->hotel_id ?? app(TenantContext::class)->getHotelId();
 
         $guestEmail = !empty($data['guest_email']) ? trim($data['guest_email']) : null;
         $guestName = !empty($data['guest_name']) ? trim($data['guest_name']) : 'Guest';
@@ -211,7 +206,6 @@ class ReviewService
             $email = $guestEmail ?: ('guest_' . substr(uniqid(), -6) . '@guest.local');
 
             $guest = Guest::create([
-                'hotel_id' => $hotelId,
                 'first_name' => $firstName,
                 'last_name' => $lastName,
                 'email' => $email,
@@ -238,7 +232,6 @@ class ReviewService
             ]);
         } else {
             $review = MenuItemReview::create([
-                'hotel_id' => $hotelId,
                 'guest_id' => $guest->id,
                 'order_id' => $orderId,
                 'menu_item_id' => $data['menu_item_id'],
