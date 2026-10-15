@@ -4,12 +4,10 @@ namespace App\Services;
 
 use App\Models\RestaurantSection;
 use App\Models\RestaurantTable;
-use App\Services\TenantContext;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class RestaurantSectionService
@@ -25,14 +23,10 @@ class RestaurantSectionService
         if (!Schema::hasTable('restaurant_sections')) {
             Schema::create('restaurant_sections', function (Blueprint $table) {
                 $table->uuid('id')->primary();
-                $table->uuid('hotel_id')->nullable();
-                $table->string('name', 100);
+                $table->string('name', 100)->unique();
                 $table->text('description')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
-
-                $table->index(['hotel_id', 'is_active']);
-                $table->index('name');
             });
         }
 
@@ -47,24 +41,16 @@ class RestaurantSectionService
     }
 
     /**
-     * Get all sections for a hotel with table counts.
+     * Get all sections for the single hotel with table counts.
      */
     public function getSections(?string $hotelId = null, bool $activeOnly = false): Collection
     {
         $this->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
-
-        if ($hotelId) {
-            $this->seedDefaultSectionsIfNone($hotelId);
-        }
+        $this->seedDefaultSectionsIfNone();
 
         $query = RestaurantSection::query()
             ->withCount('tables')
             ->orderBy('name', 'asc');
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if ($activeOnly) {
             $query->where('is_active', true);
@@ -79,14 +65,10 @@ class RestaurantSectionService
     public function getSection(string $id, ?string $hotelId = null): RestaurantSection
     {
         $this->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
 
-        $query = RestaurantSection::query()->withCount('tables');
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
-
-        return $query->findOrFail($id);
+        return RestaurantSection::query()
+            ->withCount('tables')
+            ->findOrFail($id);
     }
 
     /**
@@ -95,28 +77,18 @@ class RestaurantSectionService
     public function createSection(array $data, ?string $hotelId = null): RestaurantSection
     {
         $this->ensureSchema();
-        $hotelId = $hotelId ?: TenantContext::id();
-
-        if (!$hotelId) {
-            throw ValidationException::withMessages([
-                'hotel_id' => ['Active hotel tenant context is required.'],
-            ]);
-        }
 
         $name = trim($data['name']);
 
-        $exists = RestaurantSection::where('hotel_id', $hotelId)
-            ->where('name', $name)
-            ->exists();
+        $exists = RestaurantSection::where('name', $name)->exists();
 
         if ($exists) {
             throw ValidationException::withMessages([
-                'name' => ['A section with this name already exists in this hotel.'],
+                'name' => ['A section with this name already exists.'],
             ]);
         }
 
         return RestaurantSection::create([
-            'hotel_id'    => $hotelId,
             'name'        => $name,
             'description' => $data['description'] ?? null,
             'is_active'   => isset($data['is_active']) ? (bool) $data['is_active'] : true,
@@ -128,19 +100,16 @@ class RestaurantSectionService
      */
     public function updateSection(RestaurantSection $section, array $data, ?string $hotelId = null): RestaurantSection
     {
-        $hotelId = $hotelId ?: $section->hotel_id ?: TenantContext::id();
-
         if (isset($data['name'])) {
             $name = trim($data['name']);
             if ($name !== $section->name) {
-                $conflict = RestaurantSection::where('hotel_id', $hotelId)
-                    ->where('name', $name)
+                $conflict = RestaurantSection::where('name', $name)
                     ->where('id', '!=', $section->id)
                     ->exists();
 
                 if ($conflict) {
                     throw ValidationException::withMessages([
-                        'name' => ['A section with this name already exists in this hotel.'],
+                        'name' => ['A section with this name already exists.'],
                     ]);
                 }
             }
@@ -170,7 +139,6 @@ class RestaurantSectionService
     public function deleteSection(RestaurantSection $section): void
     {
         DB::transaction(function () use ($section) {
-
             RestaurantTable::where('section_id', $section->id)
                 ->update(['section_id' => null]);
 
@@ -179,11 +147,11 @@ class RestaurantSectionService
     }
 
     /**
-     * Ensure default sections exist for a hotel if none exist.
+     * Ensure default sections exist if none exist.
      */
-    public function seedDefaultSectionsIfNone(string $hotelId): void
+    public function seedDefaultSectionsIfNone(?string $hotelId = null): void
     {
-        $hasSections = RestaurantSection::where('hotel_id', $hotelId)->exists();
+        $hasSections = RestaurantSection::exists();
         if (!$hasSections) {
             $defaults = [
                 ['name' => 'Main Dining', 'description' => 'Main indoor dining room'],
@@ -195,7 +163,6 @@ class RestaurantSectionService
 
             foreach ($defaults as $sec) {
                 RestaurantSection::create([
-                    'hotel_id'    => $hotelId,
                     'name'        => $sec['name'],
                     'description' => $sec['description'],
                     'is_active'   => true,
@@ -204,4 +171,3 @@ class RestaurantSectionService
         }
     }
 }
-
