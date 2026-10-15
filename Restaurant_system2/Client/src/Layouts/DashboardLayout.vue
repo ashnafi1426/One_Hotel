@@ -1,35 +1,18 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted } from 'vue'
 import Sidebar from '../components/dashboard/Sidebar.vue'
 import Navbar from '../components/dashboard/Navbar.vue'
-import { useRouter } from 'vue-router'
 import { useThemeStore } from '../stores/theme'
 import { useSidebarStore } from '../stores/sidebarStore'
-import { useHotelStore } from '../stores/hotelStore'
-import { useAuthStore } from '../stores/auth'
 import { useLanguageStore } from '../stores/language'
-import { platformService } from '../services/platformService'
-import { ShieldAlert, LogOut, X } from 'lucide-vue-next'
 
 const themeStore = useThemeStore()
 const sidebarStore = useSidebarStore()
-const hotelStore = useHotelStore()
-const authStore = useAuthStore()
 const languageStore = useLanguageStore()
-const router = useRouter()
 
 onMounted(() => {
   themeStore.initTheme()
 })
-const exitPlatformView = async () => {
-  try {
-    await platformService.exitHotelViewMode()
-  } catch (e) {
-    console.error('[DashboardLayout] Error exiting hotel view mode:', e)
-  }
-  hotelStore.exitPlatformViewMode()
-  router.push('/admin/hotels')
-}
 
 const closeMobileSidebar = () => {
   if (window.innerWidth < 1024) {
@@ -76,47 +59,16 @@ const closeMobileSidebar = () => {
             : 'w-full',
         ]"
       >
-        <Sidebar
-          :key="hotelStore.hotelId || authStore.currentHotel?.id || 'sidebar-main'"
-          @navigate="closeMobileSidebar"
-        />
+        <Sidebar @navigate="closeMobileSidebar" />
       </div>
     </div>
     <div class="flex-1 flex flex-col min-w-0 overflow-hidden">
       <Navbar />
 
-      <div
-        v-if="hotelStore.isViewingAsPlatformAdmin"
-        :class="[
-          'bg-amber-500 text-slate-950 font-black py-2 flex items-center justify-between shadow-md text-xs tracking-wide flex-shrink-0 z-20 animate-in fade-in duration-200 transition-all duration-300 ease-in-out',
-          sidebarStore.sidebarCollapsed && sidebarStore.hoverExpand
-            ? 'px-4 sm:px-6 lg:pl-[232px]'
-            : 'px-4 sm:px-6',
-        ]"
-      >
-        <div class="flex items-center gap-2">
-          <ShieldAlert class="w-4 h-4 text-slate-950 flex-shrink-0" />
-          <span
-            >⚠ PLATFORM ADMIN VIEW &mdash; Currently viewing:
-            <strong class="underline">{{ hotelStore.hotelName }}</strong></span
-          >
-          <span class="hidden md:inline text-[11px] font-semibold opacity-90"
-            >(Audit logging active for all operations)</span
-          >
-        </div>
-        <button
-          @click="exitPlatformView"
-          class="px-3 py-1 bg-slate-950 hover:bg-slate-900 text-white rounded-lg transition font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-        >
-          <LogOut class="w-3.5 h-3.5" />
-          <span>{{ languageStore.t('Exit Hotel View', 'Exit Hotel View') }}</span>
-        </button>
-      </div>
-
       <main
         class="flex-1 overflow-y-auto bg-slate-50/50 dark:bg-slate-950 transition-colors duration-300"
       >
-        <div :key="hotelStore.hotelId" class="w-full px-4 sm:px-6 lg:px-8 py-6">
+        <div class="w-full px-4 sm:px-6 lg:px-8 py-6">
           <div>
             <slot name="header"></slot>
           </div>
@@ -135,97 +87,27 @@ const closeMobileSidebar = () => {
             class="flex flex-col sm:flex-row items-center gap-2 sm:gap-4 text-center sm:text-left"
           >
             <span class="whitespace-nowrap"
-              >&copy; 2024
+              >&copy; 2026
               {{ languageStore.t('hotel_management_system', 'Hotel Management System') }}</span
             >
-            <span class="hidden sm:inline text-slate-300 dark:text-slate-600">•</span>
-            <span class="flex items-center justify-center gap-1">
-              <span class="relative flex h-2 w-2">
-                <span
-                  class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 dark:bg-emerald-500 opacity-75"
-                ></span>
-                <span
-                  class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 dark:bg-emerald-400"
-                ></span>
-              </span>
-              <span class="whitespace-nowrap">{{
-                languageStore.t('all_systems_operational', 'All systems operational')
+            <span class="hidden sm:inline text-slate-300 dark:text-slate-600">&bull;</span>
+            <span class="whitespace-nowrap">{{
+              languageStore.t('all_rights_reserved', 'All rights reserved')
+            }}</span>
+          </div>
+
+          <div class="flex items-center gap-4">
+            <span class="flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span class="font-medium text-emerald-600 dark:text-emerald-400">{{
+                languageStore.t('system_online', 'System Online')
               }}</span>
             </span>
-          </div>
-          <div class="flex items-center gap-3 md:gap-4 font-bold">
-            <router-link
-              to="/contact"
-              class="hover:text-slate-700 dark:hover:text-slate-200 transition-colors whitespace-nowrap"
-              >{{ languageStore.t('privacy', 'Privacy') }}</router-link
-            >
-            <router-link
-              to="/contact"
-              class="hover:text-slate-700 dark:hover:text-slate-200 transition-colors whitespace-nowrap"
-              >{{ languageStore.t('terms', 'Terms') }}</router-link
-            >
-            <router-link
-              to="/contact"
-              class="hover:text-slate-700 dark:hover:text-slate-200 transition-colors whitespace-nowrap hidden sm:inline"
-              >{{ languageStore.t('support', 'Support') }}</router-link
-            >
-            <span class="text-slate-300 dark:text-slate-600 hidden sm:inline">|</span>
-            <span class="text-slate-400 dark:text-slate-500 whitespace-nowrap">v2.0.0</span>
+            <span class="text-slate-300 dark:text-slate-600">&bull;</span>
+            <span>v2.0.0</span>
           </div>
         </div>
       </footer>
     </div>
   </div>
 </template>
-
-<style scoped>
-main {
-  scrollbar-gutter: stable;
-}
-
-main::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-main::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-main::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 3px;
-}
-
-main::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
-}
-
-.dark main::-webkit-scrollbar-thumb {
-  background: #475569;
-}
-
-.dark main::-webkit-scrollbar-thumb:hover {
-  background: #64748b;
-}
-
-main > div {
-  animation: fadeInUp 0.4s ease-out forwards;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-button:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-</style>

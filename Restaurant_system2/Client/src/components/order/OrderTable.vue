@@ -284,7 +284,7 @@ function handleClickOutside() {
                   class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 font-bold text-xs border border-emerald-200 dark:border-emerald-800"
                 >
                   <UtensilsCrossed class="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
-                  {{ order.table?.table_name || `Table ${order.table?.table_number || ''}` }}
+                  {{ `Table ${order.table?.table_number || ''}` }}
                 </span>
                 <span v-else class="text-slate-400 text-xs italic">N/A</span>
               </td>

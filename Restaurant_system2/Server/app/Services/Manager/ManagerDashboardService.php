@@ -8,7 +8,6 @@ use App\Models\Reservation;
 use App\Models\User;
 use App\Models\Order;
 use App\Models\Guest;
-use App\Models\HotelUser;
 use App\Models\ManagerActivityLog;
 use App\Models\HousekeepingTask;
 use App\Models\RoomServiceDelivery;
@@ -24,21 +23,7 @@ class ManagerDashboardService
 {
     protected function getHotelId(): ?string
     {
-        $hotelId = request()->header('X-Hotel-ID')
-            ?: request()->query('hotel_id')
-            ?: request()->input('hotel_id')
-            ?: app(TenantContext::class)->getHotelId()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null);
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
+        return TenantContext::id();
     }
 
     public function statistics(): array
@@ -123,10 +108,7 @@ class ManagerDashboardService
         $pendingLaundry = (clone $laundryQuery)->where('status', 'pending')->count();
         $pendingHousekeeping = (clone $housekeepingQuery)->where('status', 'pending')->count();
 
-        $activeStaff = 0;
-        if ($hotelId) {
-            $activeStaff = HotelUser::where('hotel_id', $hotelId)->where('is_active', true)->count();
-        }
+        $activeStaff = User::where('is_active', true)->where('role', '!=', 'guest')->count();
 
         $todayRevenue = (float) ((clone $orders)->whereDate('served_at', $today)->where('status', Order::STATUS_SERVED)->sum('total') ?: 0);
         $monthlyRevenue = (float) ((clone $orders)->whereMonth('served_at', $today->month)->where('status', Order::STATUS_SERVED)->sum('total') ?: 0);
@@ -364,23 +346,18 @@ class ManagerDashboardService
 
     public function getStaff(): array
     {
-        $hotelId = $this->getHotelId();
-        if (!$hotelId) return [];
-
-        return HotelUser::where('hotel_id', $hotelId)
-            ->with(['user', 'roleModel'])
-            ->whereHas('user', fn($q) => $q->where('role', '!=', 'guest'))
+        return User::where('role', '!=', 'guest')
+            ->with('roles')
             ->limit(10)
             ->get()
-            ->map(function ($membership) {
-                $user = $membership->user;
-                $roleName = $membership->roleModel?->name ?? ucfirst($membership->role ?: 'staff');
+            ->map(function ($user) {
+                $roleName = $user->roles->first()?->name ?? ucfirst($user->role ?: 'staff');
                 return [
                     'id' => $user->id,
-                    'name' => $user->first_name . ' ' . $user->last_name,
+                    'name' => trim(($user->first_name ?? '') . ' ' . ($user->last_name ?? '')) ?: $user->email,
                     'phone' => $user->phone,
                     'role' => $roleName,
-                    'status' => ($user->is_active && $membership->is_active) ? 'active' : 'inactive',
+                    'status' => $user->is_active ? 'active' : 'inactive',
                 ];
             })
             ->toArray();

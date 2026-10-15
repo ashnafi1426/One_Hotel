@@ -198,27 +198,6 @@ interface MenuItem {
 
 const operationalMenuItems: MenuItem[] = [
   {
-    name: 'Hotels',
-    path: '/admin/hotels',
-    icon: 'Hotels',
-    superAdminOnly: true,
-    section: 'Platform',
-  },
-  {
-    name: 'Hotel Admins',
-    path: '/admin/hotel-admins',
-    icon: 'Staff',
-    superAdminOnly: true,
-    section: 'Platform',
-  },
-  {
-    name: 'All Users & Staff',
-    path: '/admin/platform-users',
-    icon: 'Users',
-    superAdminOnly: true,
-    section: 'Platform',
-  },
-  {
     name: 'Users & Staff',
     path: '/users',
     icon: 'Users',

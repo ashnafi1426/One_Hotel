@@ -28,64 +28,7 @@ const sidebarStore = useSidebarStore()
 const languageStore = useLanguageStore()
 const profileOpen = ref(false)
 const isFullscreen = ref(false)
-const hotelDropdownOpen = ref(false)
 
-const handleSwitchHotel = async (hotelId: string) => {
-  hotelDropdownOpen.value = false
-  const success = await hotelStore.switchHotel(hotelId)
-  if (success) {
-    const newRole = String(hotelStore.currentHotel?.role || auth.currentRole || 'admin')
-      .toLowerCase()
-      .trim()
-
-    let targetRoute = '/admin'
-    if (auth.isPlatformAdmin || newRole === 'admin') {
-      targetRoute = '/admin'
-    } else if (newRole === 'manager') {
-      targetRoute = '/manager'
-    } else if (newRole === 'receptionist') {
-      targetRoute = '/receptionist'
-    } else if (newRole === 'cashier') {
-      targetRoute = '/cashier'
-    } else if (newRole === 'chef' || newRole === 'kitchen') {
-      targetRoute = '/chef'
-    } else if (newRole === 'waiter') {
-      targetRoute = '/waiter'
-    } else {
-      targetRoute = `/${newRole}`
-    }
-
-    const currentPath = router.currentRoute.value.path
-    const canStayOnCurrent =
-      auth.isPlatformAdmin ||
-      newRole === 'admin' ||
-      (newRole === 'manager' &&
-        (currentPath.startsWith('/manager') || currentPath.startsWith('/reviews'))) ||
-      (newRole === 'receptionist' &&
-        (currentPath.startsWith('/receptionist') ||
-          currentPath === '/reports' ||
-          currentPath.startsWith('/reservations') ||
-          currentPath.startsWith('/guests'))) ||
-      (newRole === 'cashier' && currentPath.startsWith('/cashier')) ||
-      (newRole === 'chef' && currentPath.startsWith('/chef')) ||
-      (newRole === 'kitchen' &&
-        (currentPath.startsWith('/kitchen') || currentPath.startsWith('/chef')))
-
-    if (canStayOnCurrent) {
-      await router.replace({
-        path: currentPath,
-        query: { ...router.currentRoute.value.query, _t: Date.now().toString() },
-      })
-      return
-    }
-
-    if (router.currentRoute.value.path !== targetRoute) {
-      await router.push(targetRoute)
-    } else {
-      await router.replace({ path: targetRoute, query: { _t: Date.now().toString() } })
-    }
-  }
-}
 
 const toggleProfile = () => {
   profileOpen.value = !profileOpen.value
@@ -173,52 +116,11 @@ const toggleSidebar = () => {
       </div>
 
       <div v-if="hotelStore.currentHotel" class="relative hidden sm:block shrink-0">
-        <button
-          v-if="hotelStore.hasMultipleHotels"
-          @click="hotelDropdownOpen = !hotelDropdownOpen"
-          class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 transition-colors shadow-xs whitespace-nowrap"
-        >
-          <Building2 class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
-          <span class="max-w-[120px] lg:max-w-[180px] truncate">{{ hotelStore.hotelName }}</span>
-          <ChevronDown class="w-3.5 h-3.5 text-slate-400 shrink-0" />
-        </button>
         <div
-          v-else
           class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-xs whitespace-nowrap"
         >
           <Building2 class="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
           <span class="max-w-[120px] lg:max-w-[180px] truncate">{{ hotelStore.hotelName }}</span>
-        </div>
-
-        <div
-          v-if="hotelDropdownOpen && hotelStore.hasMultipleHotels"
-          class="absolute left-0 mt-2 w-64 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 animate-in fade-in slide-in-from-top-2 duration-150"
-        >
-          <div
-            class="px-3 py-1.5 text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider"
-          >
-            {{ languageStore.t('switch_hotel', 'Switch Hotel') }}
-          </div>
-          <button
-            v-for="h in hotelStore.availableHotels"
-            :key="h.id"
-            @click="handleSwitchHotel(String(h.id))"
-            class="w-full px-3 py-2 text-left flex items-center justify-between hover:bg-slate-50 dark:hover:bg-slate-700/50 text-xs sm:text-sm transition-colors"
-            :class="
-              String(h.id).trim().toLowerCase() === String(hotelStore.hotelId).trim().toLowerCase()
-                ? 'text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-50/50 dark:bg-emerald-950/20'
-                : 'text-slate-700 dark:text-slate-300'
-            "
-          >
-            <span class="truncate">{{ h.name }}</span>
-            <Check
-              v-if="
-                String(h.id).trim().toLowerCase() ===
-                String(hotelStore.hotelId).trim().toLowerCase()
-              "
-              class="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
-            />
-          </button>
         </div>
       </div>
     </div>

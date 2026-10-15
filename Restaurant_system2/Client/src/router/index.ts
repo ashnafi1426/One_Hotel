@@ -641,24 +641,6 @@ const router = createRouter({
       meta: { requiresAuth: false, title: '403 Unauthorized' },
     },
     {
-      path: '/admin/hotels',
-      name: 'admin-hotels',
-      component: () => import('@/views/Admin/hotels/HotelManagementView.vue'),
-      meta: { requiresAuth: true, superAdminOnly: true, title: 'Hotel Management' },
-    },
-    {
-      path: '/admin/hotel-admins',
-      name: 'admin-hotel-admins',
-      component: () => import('@/views/Admin/hotels/HotelAdminManagementView.vue'),
-      meta: { requiresAuth: true, superAdminOnly: true, title: 'Hotel Admins' },
-    },
-    {
-      path: '/admin/platform-users',
-      name: 'admin-platform-users',
-      component: () => import('@/views/Admin/hotels/PlatformUsersView.vue'),
-      meta: { requiresAuth: true, superAdminOnly: true, title: 'All Users & Staff' },
-    },
-    {
       path: '/admin/roles',
       name: 'admin-roles',
       component: RoleManagementView,

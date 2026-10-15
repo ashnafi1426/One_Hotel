@@ -64,12 +64,7 @@ class WaiterContextResolver
         }
 
         try {
-            $hotelId = app(\App\Services\TenantContext::class)->getHotelId()
-                ?? $user->hotel_id
-                ?? \App\Models\HotelUser::where('user_id', $user->id)->value('hotel_id');
-
             $createdWaiter = Waiter::create([
-                'hotel_id' => $hotelId,
                 'user_id' => (string) $user->id,
                 'section' => 'All Sections',
                 'shift' => 'morning',
@@ -80,7 +75,6 @@ class WaiterContextResolver
             \Log::info(' [RESOLVER] Auto-linked Waiter profile for user', [
                 'user_id' => $user->id,
                 'waiter_id' => $createdWaiter->id,
-                'hotel_id' => $hotelId,
                 'primary_role' => $user->role,
             ]);
 

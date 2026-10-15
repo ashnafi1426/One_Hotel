@@ -5,7 +5,6 @@ namespace App\Services\Manager;
 use App\Models\Room;
 use App\Models\Reservation;
 use App\Models\Order;
-use App\Models\HotelUser;
 use App\Models\User;
 use App\Models\MenuItem;
 use App\Services\TenantContext;
@@ -120,22 +119,17 @@ class DashboardService
             $preparingOrders = (int) ($orderStats->preparing_orders ?? 0);
             $delayedOrders = 0;
 
-            $waiterCount = 0;
-            $activeWaiters = 0;
-            if ($hotelId) {
-                $waiterStats = HotelUser::where('hotel_id', $hotelId)
-                    ->where(function($q) {
-                        $q->where('role', 'waiter')
-                          ->orWhereHas('roleModel', fn($r) => $r->where('slug', 'waiter'));
-                    })
-                    ->selectRaw("
-                        COUNT(*) as total_waiters,
-                        SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_waiters
-                    ")->first();
+            $waiterStats = User::where(function($q) {
+                    $q->where('role', 'waiter')
+                      ->orWhereHas('roles', fn($r) => $r->where('slug', 'waiter'));
+                })
+                ->selectRaw("
+                    COUNT(*) as total_waiters,
+                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_waiters
+                ")->first();
 
-                $waiterCount = (int) ($waiterStats->total_waiters ?? 0);
-                $activeWaiters = (int) ($waiterStats->active_waiters ?? 0);
-            }
+            $waiterCount = (int) ($waiterStats->total_waiters ?? 0);
+            $activeWaiters = (int) ($waiterStats->active_waiters ?? 0);
 
             return [
                 'reception' => [

@@ -4,15 +4,12 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import { useLanguageStore } from '@/stores/language'
-import HotelSelectorModal from '@/components/guest/HotelSelectorModal.vue'
 import LanguageSelector from '@/components/common/LanguageSelector.vue'
 import {
   Sun,
   Moon,
   Menu as MenuIcon,
   X as CloseIcon,
-  Building2,
-  ChevronDown,
 } from 'lucide-vue-next'
 
 const route = useRoute()
@@ -53,16 +50,6 @@ const currentHotelLogo = computed(() => {
 
 const mobileMenu = ref(false)
 const scrolled = ref(false)
-const isHotelModalOpen = ref(false)
-
-function openHotelModal() {
-  isHotelModalOpen.value = true
-  guestHotelStore.openHotelSelector()
-}
-
-function handleHotelSelected() {
-  isHotelModalOpen.value = false
-}
 
 function isItemActive(itemRoute: string) {
   if (itemRoute === '/') {
@@ -88,11 +75,6 @@ function closeMenu() {
   mobileMenu.value = false
 }
 
-function handleMobileHotelSwitch() {
-  openHotelModal()
-  closeMenu()
-}
-
 function handleScroll() {
   scrolled.value = window.scrollY > 20
 }
@@ -104,9 +86,6 @@ function handleThemeToggle() {
 onMounted(() => {
   theme.initializeTheme()
   window.addEventListener('scroll', handleScroll, { passive: true })
-  if (!guestHotelStore.hasSelectedHotel) {
-    isHotelModalOpen.value = true
-  }
 })
 
 onUnmounted(() => {
@@ -119,9 +98,9 @@ onUnmounted(() => {
     class="fixed inset-x-0 top-0 z-50 transition-colors duration-200 bg-white/95 dark:bg-[#0B1B35]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs"
   >
     <div
-      class="mx-auto flex h-16 sm:h-20 w-full max-w-[1600px] items-center justify-between px-3 sm:px-6 lg:px-8 xl:px-10"
+      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between"
     >
-      <!-- Left: Logo & Brand + Desktop Navigation -->
+      <!-- Logo + Brand + Main Nav -->
       <div class="flex items-center gap-4 lg:gap-10 min-w-0 flex-1 mr-2 sm:mr-4">
         <RouterLink
           to="/"
@@ -168,22 +147,17 @@ onUnmounted(() => {
             v-for="menu in menus"
             :key="menu.route"
             :to="menu.route"
-            class="relative py-1.5 px-1 text-[14px] font-medium transition-colors duration-200 whitespace-nowrap select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A] rounded"
+            class="text-[13px] xl:text-[14px] font-semibold tracking-wide transition-colors relative py-1 focus:outline-none focus-visible:text-[#E9A11A]"
             :class="[
               isItemActive(menu.route)
-                ? 'text-[#0B1B35] dark:text-white font-semibold'
-                : 'text-slate-600 hover:text-[#0B1B35] dark:text-slate-300 dark:hover:text-white',
+                ? 'text-[#0B1B35] dark:text-white font-bold'
+                : 'text-slate-600 dark:text-slate-300 hover:text-[#0B1B35] dark:hover:text-white',
             ]"
           >
-            <span>{{ menu.title }}</span>
-
+            {{ menu.title }}
             <span
               v-if="isItemActive(menu.route)"
-              class="absolute -bottom-1 inset-x-0 h-[2px] bg-primary rounded-full transition-all"
-            />
-            <span
-              v-else
-              class="absolute -bottom-1 left-1/2 right-1/2 h-[2px] bg-primary/40 rounded-full transition-all duration-200 group-hover:inset-x-0 opacity-0 group-hover:opacity-100"
+              class="absolute inset-x-0 bottom-0 h-0.5 bg-[#E9A11A] rounded-full"
             />
           </RouterLink>
         </nav>
@@ -208,23 +182,6 @@ onUnmounted(() => {
           <Moon v-else class="w-4.5 h-4.5 text-slate-700 dark:text-slate-300" />
         </button>
 
-        <button
-          @click.stop="openHotelModal"
-          type="button"
-          class="inline-flex items-center gap-2 h-10 px-4 rounded-full border border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:text-[#0B1B35] dark:hover:text-white hover:border-[#E9A11A] dark:hover:border-[#E9A11A] transition-colors duration-200 cursor-pointer group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A]"
-          title="Switch Hotel / Property"
-        >
-          <Building2
-            class="w-4 h-4 shrink-0 text-slate-500 dark:text-slate-400 group-hover:text-[#E9A11A] transition-colors"
-          />
-          <span class="text-[13px] font-medium whitespace-nowrap">{{
-            languageStore.t('switch_hotel', 'Switch Hotel')
-          }}</span>
-          <ChevronDown
-            class="w-3.5 h-3.5 shrink-0 text-slate-400 transition-transform duration-200 group-hover:translate-y-0.5"
-          />
-        </button>
-
         <RouterLink
           to="/rooms"
           class="h-10 px-6 flex items-center justify-center rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-[13px] tracking-wide shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
@@ -245,17 +202,6 @@ onUnmounted(() => {
         >
           <Sun v-if="theme.isDark" class="w-4 h-4 text-[#E9A11A]" />
           <Moon v-else class="w-4 h-4" />
-        </button>
-
-        <!-- Switch hotel button: shown on tablets/sm screens; on mobile phones accessible in the drawer -->
-        <button
-          @click.stop="openHotelModal"
-          type="button"
-          class="hidden sm:flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-          title="Switch Hotel"
-          aria-label="Switch Hotel"
-        >
-          <Building2 class="w-4 h-4 text-slate-500 dark:text-slate-400" />
         </button>
 
         <button
@@ -284,18 +230,6 @@ onUnmounted(() => {
         v-if="mobileMenu"
         class="lg:hidden bg-white dark:bg-[#0B1B35] border-b border-slate-200 dark:border-slate-800 px-4 py-4 space-y-3 shadow-lg"
       >
-        <button
-          @click.stop="handleMobileHotelSwitch"
-          type="button"
-          class="w-full flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-        >
-          <span class="flex items-center gap-2.5 truncate">
-            <Building2 class="w-4 h-4 text-[#E9A11A]" />
-            <span class="truncate">{{ guestHotelStore.hotelName }}</span>
-          </span>
-          <span class="text-[11px] font-semibold text-[#E9A11A]">Switch</span>
-        </button>
-
         <div class="flex flex-col space-y-1">
           <RouterLink
             v-for="menu in menus"
@@ -322,11 +256,5 @@ onUnmounted(() => {
         </RouterLink>
       </div>
     </Transition>
-
-    <HotelSelectorModal
-      :open="isHotelModalOpen"
-      @close="isHotelModalOpen = false"
-      @select="handleHotelSelected"
-    />
   </header>
 </template>

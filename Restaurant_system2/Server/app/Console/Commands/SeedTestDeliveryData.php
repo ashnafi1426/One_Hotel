@@ -4,7 +4,7 @@ namespace App\Console\Commands;
 
 use App\Models\DeliveryTask;
 use App\Models\Guest;
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\Order;
 use App\Models\Room;
 use App\Models\User;
@@ -57,9 +57,9 @@ class SeedTestDeliveryData extends Command
             return 1;
         }
 
-        $floor = HotelFloor::first();
+        $floor = Floor::first();
         if (!$floor) {
-            $floor = HotelFloor::create([
+            $floor = Floor::create([
                 'id' => Str::uuid(),
                 'floor_number' => 1,
                 'name' => 'Ground Floor',
