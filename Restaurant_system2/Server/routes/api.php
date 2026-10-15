@@ -75,7 +75,6 @@ use App\Http\Controllers\Api\ResponseController;
 use App\Http\Controllers\Api\AnalyticsController;
 use App\Http\Controllers\Api\ReviewNotificationController;
 use App\Http\Controllers\Api\Admin\AdminBookingController;
-use App\Http\Controllers\Api\Platform\PlatformHotelController;
 use App\Http\Controllers\Api\Guests\PublicHotelController;
 use App\Http\Controllers\Api\Guests\ContactMessageController;
 use App\Http\Controllers\Api\Guests\GuestBookingController;
@@ -108,30 +107,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 });
 
-Route::middleware(['auth:sanctum', 'platform.admin'])->prefix('platform')->group(function () {
-    Route::get('/statistics', [PlatformHotelController::class, 'statistics']);
-    Route::get('/hotels', [PlatformHotelController::class, 'index']);
-    Route::post('/hotels', [PlatformHotelController::class, 'store']);
-    Route::get('/hotels/{id}', [PlatformHotelController::class, 'show']);
-    Route::put('/hotels/{id}', [PlatformHotelController::class, 'update']);
-    Route::patch('/hotels/{id}/status', [PlatformHotelController::class, 'updateStatus']);
-    Route::post('/hotels/{id}/archive', [PlatformHotelController::class, 'archive']);
-    Route::delete('/hotels/{id}', [PlatformHotelController::class, 'destroy']);
-    Route::get('/hotels/{id}/admins', [PlatformHotelController::class, 'getAdmins']);
-    Route::post('/hotels/{id}/admins', [PlatformHotelController::class, 'assignAdmin']);
-    Route::delete('/hotels/{id}/admins/{userId}', [PlatformHotelController::class, 'removeAdmin']);
-    Route::get('/admins', [PlatformHotelController::class, 'allAdmins']);
-    Route::post('/hotel-admins', [PlatformHotelController::class, 'createHotelAdmin']);
-    Route::post('/hotel-admins/{id}/reset-password', [PlatformHotelController::class, 'resetAdminPassword']);
-    Route::post('/hotel-admins/{id}/resend-password', [PlatformHotelController::class, 'resendAdminPassword']);
-    Route::patch('/hotel-admins/{id}/toggle-status', [PlatformHotelController::class, 'toggleAdminStatus']);
-    Route::post('/hotels/{id}/enter-view', [PlatformHotelController::class, 'enterViewMode']);
-    Route::post('/hotels/exit-view', [PlatformHotelController::class, 'exitViewMode']);
-    Route::get('/users', [PlatformHotelController::class, 'allUsers']);
-    Route::get('/audit-logs', [PlatformHotelController::class, 'auditLogs']);
-    Route::get('/settings', [PlatformHotelController::class, 'getSettings']);
-    Route::put('/settings', [PlatformHotelController::class, 'updateSettings']);
-});
 Route::get('/activation/{token}', [ActivationController::class, 'validateToken']);
 Route::post('/activate-account', [ActivationController::class, 'activateAccount']);
 Route::post('/resend-activation', [ActivationController::class, 'resendActivation']);
