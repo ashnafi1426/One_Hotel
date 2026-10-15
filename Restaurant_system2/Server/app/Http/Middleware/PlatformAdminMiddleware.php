@@ -12,10 +12,10 @@ class PlatformAdminMiddleware
     {
         $user = $request->user();
 
-        if (!$user || !$user->isPlatformAdmin()) {
+        if (!$user || !($user->isAdmin() || $user->hasRole('admin'))) {
             return response()->json([
                 'success' => false,
-                'message' => 'Platform administrator access required.',
+                'message' => 'Administrator access required.',
             ], 403);
         }
 

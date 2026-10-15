@@ -10,56 +10,18 @@ class PublicHotelController extends Controller
 {
     public function index(): JsonResponse
     {
-        $hotels = Hotel::where('status', 'active')
-            ->select(
-                'id',
-                'name',
-                'slug',
-                'logo',
-                'address',
-                'city',
-                'country',
-                'phone',
-                'email',
-                'reservation_email',
-                'reservation_phone',
-                'front_desk_hours',
-                'dining_hours',
-                'currency',
-                'status'
-            )
-            ->get();
+        $hotel = Hotel::first();
 
         return response()->json([
             'success' => true,
-            'data' => $hotels,
+            'data' => $hotel ? [$hotel] : [],
+            'hotel' => $hotel,
         ]);
     }
 
-    public function show(string $slug): JsonResponse
+    public function show(?string $slug = null): JsonResponse
     {
-        $hotel = Hotel::where('status', 'active')
-            ->where(function ($q) use ($slug) {
-                $q->where('slug', $slug)->orWhere('id', $slug);
-            })
-            ->select(
-                'id',
-                'name',
-                'slug',
-                'logo',
-                'address',
-                'city',
-                'country',
-                'phone',
-                'email',
-                'reservation_email',
-                'reservation_phone',
-                'front_desk_hours',
-                'dining_hours',
-                'currency',
-                'status'
-            )
-            ->first();
+        $hotel = Hotel::first();
 
         if (!$hotel) {
             return response()->json([
@@ -74,4 +36,3 @@ class PublicHotelController extends Controller
         ]);
     }
 }
-
