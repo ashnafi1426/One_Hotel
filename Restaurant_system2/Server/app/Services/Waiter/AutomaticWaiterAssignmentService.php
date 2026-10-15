@@ -2,7 +2,7 @@
 
 namespace App\Services\Waiter;
 
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\HotelShift;
 use App\Models\Order;
 use App\Models\DeliveryTask;

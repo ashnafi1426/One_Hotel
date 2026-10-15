@@ -2,7 +2,7 @@
 
 namespace App\Services\Waiter;
 
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\HotelShift;
 use App\Models\Waiter;
 use App\Models\WaiterFloorAssignment;
@@ -15,7 +15,7 @@ class AssignmentStrategy
         private WaiterAvailabilityService $availabilityService
     ) {}
 
-    public function findBestWaiter(HotelFloor $floor, HotelShift $shift): ?Waiter
+    public function findBestWaiter(Floor $floor, HotelShift $shift): ?Waiter
     {
         try {
             $priorities = ['primary', 'secondary', 'backup'];

@@ -28,15 +28,7 @@ class AssignFloorRequest extends FormRequest
             'assignments.*.floor_id' => [
                 'required',
                 'uuid',
-                function ($attribute, $value, $fail) {
-                    $existsInFloors = \Illuminate\Support\Facades\Schema::hasTable('floors')
-                        && \Illuminate\Support\Facades\DB::table('floors')->where('id', $value)->exists();
-                    $existsInHotelFloors = \Illuminate\Support\Facades\Schema::hasTable('hotel_floors')
-                        && \Illuminate\Support\Facades\DB::table('hotel_floors')->where('id', $value)->exists();
-                    if (!$existsInFloors && !$existsInHotelFloors) {
-                        $fail('Selected floor does not exist.');
-                    }
-                }
+                'exists:floors,id',
             ],
             'assignments.*.shift_id' => [
                 'nullable',

@@ -13,7 +13,6 @@ class DeliveryTask extends Model
     use HasFactory, HasUuids, BelongsToTenant;
     protected $table = 'delivery_tasks';
     protected $fillable = [
-        'hotel_id',
         'order_id',
         'reservation_id',
         'room_id',
@@ -44,7 +43,7 @@ class DeliveryTask extends Model
 
     public function floor(): BelongsTo
     {
-        return $this->belongsTo(HotelFloor::class);
+        return $this->belongsTo(Floor::class, 'floor_id');
     }
 
     public function room(): BelongsTo
