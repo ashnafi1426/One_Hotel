@@ -1,0 +1,468 @@
+html {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease !important;
+}
+
+html.dark {
+  background-color: var(--color-background, #0b1120) !important;
+  color: var(--color-text, #f8fafc) !important;
+  background-image: none !important;
+}
+
+html:not(.dark) {
+  background-color: var(--color-background, #f8fafc) !important;
+  color: var(--color-text, #0f172a) !important;
+}
+
+body {
+  background-color: var(--color-background, #f8fafc);
+  color: var(--color-text, #0f172a);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+body.dark,
+html.dark body {
+  background-color: var(--color-background, #0b1120) !important;
+  color: var(--color-text, #f8fafc);
+}
+
+#app {
+  background-color: var(--color-background, #f8fafc);
+  color: var(--color-text, #0f172a);
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html.dark #app {
+  background-color: var(--color-background, #0b1120) !important;
+  color: var(--color-text, #f8fafc);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+html.dark h1,
+html.dark h2,
+html.dark h3,
+html.dark h4,
+html.dark h5,
+html.dark h6 {
+  color: #f1f5f9;
+}
+
+p:not([class*='text-']),
+span:not([class*='text-']),
+label:not([class*='text-']),
+li:not([class*='text-']) {
+  color: #4b5563;
+  transition: color 0.3s ease;
+}
+
+html.dark p:not([class*='text-']),
+html.dark span:not([class*='text-']),
+html.dark label:not([class*='text-']),
+html.dark li:not([class*='text-']) {
+  color: #cbd5e1;
+}
+
+html.dark .text-slate-900,
+html.dark .text-gray-900 {
+  color: #f8fafc !important;
+}
+
+html.dark .text-slate-800,
+html.dark .text-gray-800 {
+  color: #e2e8f0 !important;
+}
+
+html.dark .text-slate-700,
+html.dark .text-gray-700 {
+  color: #cbd5e1 !important;
+}
+
+html.dark .text-slate-600,
+html.dark .text-gray-600 {
+  color: #94a3b8 !important;
+}
+
+html.dark .text-slate-500,
+html.dark .text-gray-500 {
+  color: #64748b !important;
+}
+
+html.dark .text-slate-400,
+html.dark .text-gray-400 {
+  color: #94a3b8 !important;
+}
+
+.bg-white {
+  background-color: var(--color-surface, #ffffff);
+  transition: background-color 0.3s ease;
+}
+
+html.dark .bg-white:not([class*='dark:bg-']) {
+  background-color: var(--color-surface, #111827);
+}
+
+.bg-gray-50,
+.bg-slate-50 {
+  background-color: var(--color-background, #f8fafc);
+  transition: background-color 0.3s ease;
+}
+
+html.dark .bg-gray-50:not([class*='dark:bg-']),
+html.dark .bg-slate-50:not([class*='dark:bg-']) {
+  background-color: var(--color-surface-secondary, #1e293b);
+}
+
+.bg-gray-100,
+.bg-slate-100 {
+  background-color: var(--color-surface-secondary, #f1f5f9);
+  transition: background-color 0.3s ease;
+}
+
+html.dark .bg-gray-100:not([class*='dark:bg-']),
+html.dark .bg-slate-100:not([class*='dark:bg-']) {
+  background-color: var(--color-surface-secondary, #1e293b);
+}
+
+/* Let scoped gradients and dark: utilities control gradient styling */
+
+.border {
+  border-color: var(--color-border, #e2e8f0);
+  transition: border-color 0.3s ease;
+}
+
+html.dark .border {
+  border-color: var(--color-border, #334155);
+}
+
+.border-t,
+.border-b,
+.border-l,
+.border-r {
+  border-color: var(--color-border, #e2e8f0);
+  transition: border-color 0.3s ease;
+}
+
+html.dark .border-t,
+html.dark .border-b,
+html.dark .border-l,
+html.dark .border-r {
+  border-color: var(--color-border, #334155);
+}
+
+html.dark .border-slate-200,
+html.dark .border-gray-200 {
+  border-color: var(--color-border, #334155) !important;
+}
+
+html.dark .border-slate-100,
+html.dark .border-gray-100 {
+  border-color: var(--color-border-subtle, #1e293b) !important;
+}
+
+button {
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+input,
+textarea,
+select {
+  background-color: #ffffff;
+  color: #1f2937;
+  border-color: #d1d5db;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html.dark input,
+html.dark textarea,
+html.dark select {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9ca3af;
+  transition: color 0.3s ease;
+}
+
+html.dark input::placeholder,
+html.dark textarea::placeholder {
+  color: #64748b;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+html.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+html.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+.card,
+[class*='card'] {
+  background-color: #ffffff;
+  color: #1f2937;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html.dark .card,
+html.dark [class*='card'] {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.shadow-sm,
+.shadow,
+.shadow-md,
+.shadow-lg {
+  transition: box-shadow 0.3s ease;
+}
+
+html.dark .shadow-sm,
+html.dark .shadow,
+html.dark .shadow-md,
+html.dark .shadow-lg {
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+}
+
+table {
+  background-color: #ffffff;
+  color: #1f2937;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html.dark table {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+thead {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html.dark thead {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+tbody tr {
+  border-color: #e5e7eb;
+  transition: border-color 0.3s ease;
+}
+
+html.dark tbody tr {
+  border-color: #334155;
+}
+
+tbody tr:hover {
+  background-color: #f9fafb;
+  transition: background-color 0.3s ease;
+}
+
+html.dark tbody tr:hover {
+  background-color: #334155;
+}
+
+[role='dialog'],
+.modal {
+  background-color: #ffffff;
+  color: #1f2937;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease;
+}
+
+html.dark [role='dialog'],
+html.dark .modal {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.modal-overlay {
+  background-color: rgba(0, 0, 0, 0.5);
+  transition: background-color 0.3s ease;
+}
+
+html.dark .modal-overlay {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dropdown,
+[class*='dropdown'],
+.menu,
+[class*='menu'] {
+  background-color: #ffffff;
+  color: #1f2937;
+  border-color: #e5e7eb;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html.dark .dropdown,
+html.dark [class*='dropdown'],
+html.dark .menu,
+html.dark [class*='menu'] {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.alert:not([class*='bg-']),
+.notification:not([class*='bg-']),
+[class*='toast']:not([class*='bg-']) {
+  background-color: #f9fafb;
+  color: #1f2937;
+  border-color: #e5e7eb;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html.dark .alert:not([class*='bg-']),
+html.dark .notification:not([class*='bg-']),
+html.dark [class*='toast']:not([class*='bg-']) {
+  background-color: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.form-control,
+.form-group {
+  color: #1f2937;
+  transition: color 0.3s ease;
+}
+
+html.dark .form-control,
+html.dark .form-group {
+  color: #f1f5f9;
+}
+
+code,
+pre {
+  background-color: #f3f4f6;
+  color: #1f2937;
+  border-color: #e5e7eb;
+  transition:
+    background-color 0.3s ease,
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+html.dark code,
+html.dark pre {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+a {
+  color: #3b82f6;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #2563eb;
+}
+
+html.dark a {
+  color: #60a5fa;
+}
+
+html.dark a:hover {
+  color: #93c5fd;
+}
+
+:disabled,
+[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--color-focus, #2563eb);
+  outline-offset: 2px;
+}
+
+html.dark *:focus-visible {
+  outline: 2px solid var(--color-focus, #93c5fd);
+  outline-offset: 2px;
+}
+
+* {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}
+
+.light-only {
+  display: block;
+}
+
+html.dark .light-only {
+  display: none;
+}
+
+.dark-only {
+  display: none;
+}
+
+html.dark .dark-only {
+  display: block;
+}
+
+html.dark * {
+  transition-property: background-color, border-color, color, box-shadow;
+  transition-duration: 300ms;
+  transition-timing-function: ease;
+}

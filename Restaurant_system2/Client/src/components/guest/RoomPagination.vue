@@ -1,0 +1,105 @@
+<script setup lang="ts">
+import { useLanguageStore } from '@/stores/language'
+
+const languageStore = useLanguageStore()
+
+interface PaginationMeta {
+  current_page: number
+  last_page: number
+  per_page: number
+  total: number
+  from: number
+  to: number
+}
+
+const props = defineProps<{
+  meta: PaginationMeta
+}>()
+
+const emit = defineEmits<{
+  'change-page': [page: number]
+}>()
+
+function goToPage(page: number) {
+  if (page >= 1 && page <= props.meta.last_page) {
+    emit('change-page', page)
+  }
+}
+
+function getPageNumbers() {
+  const pages: (number | string)[] = []
+  const { current_page, last_page } = props.meta
+
+  pages.push(1)
+
+  if (current_page > 3) {
+    pages.push('...')
+  }
+
+  for (let i = Math.max(2, current_page - 1); i <= Math.min(last_page - 1, current_page + 1); i++) {
+    if (!pages.includes(i)) {
+      pages.push(i)
+    }
+  }
+
+  if (last_page > 1) {
+    pages.push(last_page)
+  }
+
+  return pages
+}
+</script>
+
+<template>
+  <div
+    v-if="props.meta.last_page > 1"
+    class="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6"
+  >
+    <div class="text-sm text-slate-600 order-2 sm:order-1">
+      {{ languageStore.t('showing', 'Showing') }}
+      <span class="font-semibold">{{ props.meta.from }}</span> {{ languageStore.t('to', 'to') }}
+      <span class="font-semibold">{{ props.meta.to }}</span> {{ languageStore.t('of', 'of') }}
+      <span class="font-semibold">{{ props.meta.total }}</span>
+      {{ languageStore.t('rooms', 'rooms') }}
+    </div>
+
+    <div class="flex items-center gap-2 order-1 sm:order-2 flex-wrap justify-center sm:justify-end">
+      <button
+        @click="goToPage(props.meta.current_page - 1)"
+        :disabled="props.meta.current_page === 1"
+        class="px-3 sm:px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+      >
+        ← {{ languageStore.t('previous', 'Prev') }}
+      </button>
+
+      <div class="flex items-center gap-1 sm:gap-2">
+        <button
+          v-for="(page, idx) in getPageNumbers()"
+          :key="idx"
+          @click="page !== '...' && goToPage(page as number)"
+          :disabled="page === '...' || page === props.meta.current_page"
+          :class="[
+            'px-2.5 sm:px-3.5 py-2 text-sm font-medium rounded-lg transition-all cursor-pointer',
+            page === props.meta.current_page
+              ? 'bg-amber-500 text-white border border-amber-500'
+              : page === '...'
+                ? 'text-slate-500 cursor-default'
+                : 'border border-slate-300 text-slate-700 hover:bg-slate-100',
+          ]"
+        >
+          {{ page }}
+        </button>
+      </div>
+
+      <button
+        @click="goToPage(props.meta.current_page + 1)"
+        :disabled="props.meta.current_page === props.meta.last_page"
+        class="px-3 sm:px-4 py-2 text-sm font-medium rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-100 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+      >
+        {{ languageStore.t('next', 'Next') }} →
+      </button>
+    </div>
+  </div>
+</template>
+
+<style scoped></style>

@@ -1,0 +1,41 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\CheckIn;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Queue\SerializesModels;
+
+class CheckInConfirmationMail extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public $checkIn;
+
+    public function __construct(CheckIn $checkIn)
+    {
+        $this->checkIn = $checkIn;
+    }
+
+    public function build()
+    {
+        $guestName = $this->checkIn->guest->first_name . ' ' . $this->checkIn->guest->last_name;
+        $roomNumber = $this->checkIn->room->room_number;
+        $roomType = $this->checkIn->room->roomType->name ?? 'Room';
+        $checkInDate = $this->checkIn->checked_in_at->format('F d, Y');
+        $checkOutDate = $this->checkIn->expected_check_out_at->format('F d, Y');
+
+        return $this->subject('Welcome to Hotel Management System! Your Check-in is Confirmed')
+                    ->view('emails.check-in-confirmation')
+                    ->with([
+                        'guestName' => $guestName,
+                        'roomNumber' => $roomNumber,
+                        'roomType' => $roomType,
+                        'checkInDate' => $checkInDate,
+                        'checkOutDate' => $checkOutDate,
+                        'bookingReference' => $this->checkIn->reservation->booking_reference,
+                    ]);
+    }
+}
+

@@ -1,0 +1,342 @@
+<script setup lang="ts">
+import { onMounted, ref, watch } from 'vue'
+import { useManagerOperationsStore } from '@/stores/manager/operationsStore'
+import { useHotelStore } from '@/stores/hotelStore'
+import { useLanguageStore } from '@/stores/language'
+import RestaurantMonitor from '@/components/manager/RestaurantMonitor.vue'
+import RoomServiceMonitor from '@/components/manager/RoomServiceMonitor.vue'
+import DashboardLayout from '../../Layouts/DashboardLayout.vue'
+import {
+  Activity,
+  ChefHat,
+  AlertCircle,
+  Search,
+  Filter,
+  X,
+  RefreshCw,
+  Maximize2,
+  Minimize2,
+  RotateCcw,
+  Building2,
+  Clock,
+  Truck,
+  Shirt,
+} from 'lucide-vue-next'
+
+const operationsStore = useManagerOperationsStore()
+const hotelStore = useHotelStore()
+const languageStore = useLanguageStore()
+
+const isFilterOpen = ref(false)
+const isFullscreen = ref(false)
+const searchQuery = ref('')
+const selectedDepartment = ref('all')
+
+const toggleFilter = () => {
+  isFilterOpen.value = !isFilterOpen.value
+}
+
+const toggleFullscreen = () => {
+  isFullscreen.value = !isFullscreen.value
+}
+
+const resetFilters = () => {
+  searchQuery.value = ''
+  selectedDepartment.value = 'all'
+}
+
+const refreshData = async () => {
+  await operationsStore.initialize()
+}
+
+onMounted(async () => {
+  await operationsStore.initialize()
+})
+
+watch(
+  () => hotelStore.hotelId,
+  async () => {
+    await operationsStore.initialize()
+  },
+)
+</script>
+
+<template>
+  <DashboardLayout>
+    <div
+      class="space-y-4 sm:space-y-6 bg-slate-50 dark:bg-slate-950 min-h-screen p-3 sm:p-6 max-w-full font-sans"
+      :class="{ 'fixed inset-0 z-50 p-6 overflow-y-auto bg-white dark:bg-slate-950': isFullscreen }"
+    >
+      <div
+        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3.5 sm:p-5 rounded-2xl shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div class="flex items-center gap-3">
+          <div
+            class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-600 to-indigo-700 flex items-center justify-center shadow-md flex-shrink-0 text-white"
+          >
+            <Activity class="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div>
+            <div class="flex items-center gap-2 flex-wrap">
+              <h1 class="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                {{ languageStore.t('daily_operations', 'Daily Operations') }}
+              </h1>
+              <span
+                v-if="hotelStore.hotelName"
+                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50"
+              >
+                <Building2 class="w-3 h-3" />
+                {{ hotelStore.hotelName }}
+              </span>
+            </div>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              {{
+                languageStore.t(
+                  'live_monitoring_subtitle',
+                  'Real-time live monitoring of dining rooms, kitchen queues, and room service deliveries.',
+                )
+              }}
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <div
+            class="px-3.5 sm:px-4 py-1.5 sm:py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 font-extrabold text-xs sm:text-sm flex items-center gap-1.5"
+          >
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>{{ languageStore.t('live_system_active', 'Live System Active') }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-4">
+        <div
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+            >
+              {{ languageStore.t('pending_orders', 'Pending Orders') }}
+            </p>
+            <h3
+              class="text-xl sm:text-2xl font-black text-rose-600 dark:text-rose-400 mt-0.5 sm:mt-1"
+            >
+              {{ operationsStore.pendingOrders?.length || 0 }}
+            </h3>
+          </div>
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-rose-500/10 text-rose-600 dark:text-rose-400 shrink-0"
+          >
+            <Clock class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+            >
+              {{ languageStore.t('kitchen_prep', 'Kitchen Prep') }}
+            </p>
+            <h3
+              class="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-0.5 sm:mt-1"
+            >
+              {{ operationsStore.preparingOrders?.length || 0 }}
+            </h3>
+          </div>
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 shrink-0"
+          >
+            <ChefHat class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+            >
+              {{ languageStore.t('active_deliveries', 'Active Deliveries') }}
+            </p>
+            <h3
+              class="text-xl sm:text-2xl font-black text-blue-600 dark:text-blue-400 mt-0.5 sm:mt-1"
+            >
+              {{ operationsStore.activeDeliveries?.length || 0 }}
+            </h3>
+          </div>
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 shrink-0"
+          >
+            <Truck class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3.5 sm:p-4 shadow-xs flex items-center justify-between"
+        >
+          <div>
+            <p
+              class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider"
+            >
+              {{ languageStore.t('pending_laundry', 'Pending Laundry') }}
+            </p>
+            <h3
+              class="text-xl sm:text-2xl font-black text-purple-600 dark:text-purple-400 mt-0.5 sm:mt-1"
+            >
+              {{ operationsStore.pendingLaundry?.length || 0 }}
+            </h3>
+          </div>
+          <div
+            class="p-2 sm:p-2.5 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 shrink-0"
+          >
+            <Shirt class="w-4 h-4 sm:w-5 sm:h-5" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5 sm:gap-3 rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0b1527] p-3 sm:p-4 shadow-xs transition-all"
+      >
+        <div class="flex items-center gap-2 flex-1 w-full sm:w-auto">
+          <div class="relative flex-1 min-w-0">
+            <Search
+              class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+            />
+            <input
+              v-model="searchQuery"
+              type="text"
+              :placeholder="
+                languageStore.t('search_operations_placeholder', 'Search operations, orders...')
+              "
+              class="w-full h-[38px] rounded-xl border border-slate-200 dark:border-[#1e3455] bg-slate-50/80 dark:bg-[#13233c] text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-slate-500 pl-9 pr-3 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-400 transition outline-none"
+            />
+          </div>
+
+          <button
+            type="button"
+            @click="toggleFilter"
+            class="inline-flex items-center justify-center gap-1.5 h-[38px] rounded-xl px-3 sm:px-4 text-xs sm:text-sm font-semibold transition cursor-pointer flex-shrink-0"
+            :class="[
+              isFilterOpen
+                ? 'bg-blue-600/10 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-500/40'
+                : 'border border-slate-200 dark:border-[#1e3455] bg-white dark:bg-[#13233c]/80 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c3356]',
+            ]"
+          >
+            <component :is="isFilterOpen ? X : Filter" class="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            <span class="hidden xs:inline">{{
+              isFilterOpen
+                ? languageStore.t('hide_filter', 'Hide')
+                : languageStore.t('filter', 'Filter')
+            }}</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-1.5 justify-end">
+          <button
+            type="button"
+            @click="refreshData"
+            :disabled="operationsStore.loading"
+            :title="languageStore.t('refresh', 'Refresh')"
+            class="inline-flex items-center justify-center h-[38px] w-[38px] rounded-xl border border-slate-200 dark:border-[#1e3455] bg-white dark:bg-[#13233c]/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c3356] hover:text-slate-900 dark:hover:text-white transition disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': operationsStore.loading }" />
+          </button>
+
+          <button
+            type="button"
+            @click="toggleFullscreen"
+            :title="languageStore.t('toggle_fullscreen', 'Toggle Fullscreen')"
+            class="inline-flex items-center justify-center h-[38px] w-[38px] rounded-xl border border-slate-200 dark:border-[#1e3455] bg-white dark:bg-[#13233c]/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c3356] hover:text-slate-900 dark:hover:text-white transition cursor-pointer"
+          >
+            <component :is="isFullscreen ? Minimize2 : Maximize2" class="w-4 h-4" />
+          </button>
+        </div>
+      </div>
+
+      <Transition
+        enter-active-class="transition duration-200 ease-out"
+        enter-from-class="transform -translate-y-2 opacity-0 scale-98"
+        enter-to-class="transform translate-y-0 opacity-100 scale-100"
+        leave-active-class="transition duration-150 ease-in"
+        leave-from-class="transform translate-y-0 opacity-100 scale-100"
+        leave-to-class="transform -translate-y-2 opacity-0 scale-98"
+      >
+        <div
+          v-if="isFilterOpen"
+          class="rounded-2xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-[#0b1527] p-4 sm:p-5 shadow-sm space-y-4"
+        >
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+            <div>
+              <label class="mb-1.5 block text-xs font-semibold text-slate-600 dark:text-slate-300">
+                {{ languageStore.t('department_focus', 'Department Focus') }}
+              </label>
+              <select
+                v-model="selectedDepartment"
+                class="w-full rounded-xl border border-slate-200 dark:border-[#1e3455] bg-slate-50/80 dark:bg-[#13233c] text-slate-900 dark:text-white px-3.5 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-400 transition cursor-pointer font-medium outline-none"
+              >
+                <option value="all">
+                  {{ languageStore.t('all_departments', 'All Departments') }}
+                </option>
+                <option value="dining">
+                  {{ languageStore.t('restaurant_dining_room', 'Restaurant Dining Room') }}
+                </option>
+                <option value="room_service">
+                  {{ languageStore.t('room_service_deliveries', 'Room Service Deliveries') }}
+                </option>
+                <option value="laundry">
+                  {{ languageStore.t('laundry_operations', 'Laundry Operations') }}
+                </option>
+              </select>
+            </div>
+
+            <div class="flex items-end">
+              <button
+                type="button"
+                @click="resetFilters"
+                class="w-full inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 dark:border-[#1e3455] bg-slate-100/70 dark:bg-[#13233c] px-3.5 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-[#1c3356] transition cursor-pointer"
+              >
+                <RotateCcw class="w-3.5 h-3.5" />
+                <span>{{ languageStore.t('reset_filters', 'Reset Filters') }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <div
+        v-if="operationsStore.loading"
+        class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-16 text-center space-y-3"
+      >
+        <Loader2 class="w-8 h-8 text-blue-500 animate-spin mx-auto" />
+        <p class="text-xs font-bold text-slate-500 dark:text-slate-400">
+          {{ languageStore.t('updating_operations_feed', 'Updating live operations feed...') }}
+        </p>
+      </div>
+
+      <div
+        v-else-if="operationsStore.error"
+        class="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs font-bold flex items-center gap-2.5"
+      >
+        <AlertCircle class="w-4 h-4 text-rose-500 flex-shrink-0" />
+        <span>{{ operationsStore.error }}</span>
+      </div>
+
+      <div v-else class="space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <RestaurantMonitor
+            v-if="selectedDepartment === 'all' || selectedDepartment === 'dining'"
+          />
+          <RoomServiceMonitor
+            v-if="selectedDepartment === 'all' || selectedDepartment === 'room_service'"
+          />
+        </div>
+      </div>
+    </div>
+  </DashboardLayout>
+</template>

@@ -1,0 +1,109 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreOrderRequest;
+use App\Http\Requests\UpdateOrderRequest;
+use App\Http\Resources\OrderCollection;
+use App\Http\Resources\OrderResource;
+use App\Models\Order;
+use App\Services\orderService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+
+class OrderController extends Controller
+{
+    public function __construct(protected orderService $orderService) {}
+
+    public function index(Request $request): OrderCollection
+    {
+        $filters = $request->only(['search', 'status', 'payment_type', 'date_from', 'date_to']);
+        $perPage = $request->integer('per_page', 15);
+
+        $orders = $this->orderService->index($filters, $perPage);
+        $statistics = $this->orderService->getStatistics();
+
+        return (new OrderCollection($orders))->additional([
+            'statistics' => $statistics,
+        ]);
+    }
+
+    public function store(
+        StoreOrderRequest $request
+    ): JsonResponse {
+        $order = $this->orderService->create(
+            $request->validated()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order created successfully.',
+            'data' => new OrderResource($order),
+        ], 201);
+    }
+
+    public function show(string $id): OrderResource
+    {
+        $order = $this->orderService->show($id);
+
+        return new OrderResource($order);
+    }
+
+    public function update(
+        UpdateOrderRequest $request,
+        string $id
+    ): JsonResponse {
+        $order = $this->orderService->update(
+            $id,
+            $request->validated()
+        );
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order updated successfully.',
+            'data' => new OrderResource($order),
+        ]);
+    }
+
+    public function destroy(string $id): JsonResponse
+    {
+        $this->orderService->cancel($id);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Order cancelled successfully.',
+        ]);
+    }
+
+    public function changeStatus(
+        Request $request,
+        string $id
+    ): JsonResponse {
+        $request->validate([
+            'status' => [
+                'required',
+                'in:pending,preparing,ready,served,cancelled',
+            ],
+        ]);
+
+        try {
+            $order = $this->orderService->changeStatus(
+                $id,
+                $request->string('status')->toString()
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order status updated successfully.',
+                'data' => new OrderResource($order),
+            ]);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
+    }
+}
+

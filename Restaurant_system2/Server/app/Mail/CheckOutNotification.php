@@ -1,0 +1,51 @@
+<?php
+
+namespace App\Mail;
+
+use App\Models\Reservation;
+use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+class CheckOutNotification extends Mailable
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(
+        public Reservation $reservation
+    ) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Thank You for Your Stay - ' . config('app.name'),
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(
+            view: 'emails.check-out-notification',
+            with: [
+                'guest' => $this->reservation->guest,
+                'reservation' => $this->reservation,
+                'room' => $this->reservation->room,
+                'checkInDate' => $this->reservation->check_in_date->format('F j, Y'),
+                'checkOutDate' => $this->reservation->check_out_date->format('F j, Y'),
+                'nights' => $this->reservation->check_out_date->diffInDays($this->reservation->check_in_date),
+                'hotelName' => config('app.name'),
+                'hotelPhone' => env('HOTEL_PHONE', '+1-800-000-0000'),
+                'hotelEmail' => env('HOTEL_EMAIL', 'info@hotel.com'),
+                'hotelWebsite' => env('APP_URL', 'https://hotel.com'),
+            ],
+        );
+    }
+
+    public function attachments(): array
+    {
+        return [];
+    }
+}
+

@@ -1,0 +1,749 @@
+<template>
+  <div class="min-h-screen bg-slate-50 dark:bg-slate-950 p-4 transition-colors">
+    <div class="max-w-md mx-auto py-6">
+      <div v-if="isVerifying" class="min-h-[60vh] flex flex-col items-center justify-center">
+        <div
+          class="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 p-8 text-center max-w-sm w-full"
+        >
+          <div class="mb-6 flex justify-center">
+            <div class="relative">
+              <div
+                class="w-20 h-20 border-4 border-emerald-200 dark:border-emerald-900 border-t-emerald-600 rounded-full animate-spin"
+              ></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <svg
+                  class="w-10 h-10 text-emerald-600 dark:text-emerald-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="3"
+                    d="M5 13l4 4L19 7"
+                  ></path>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          <h2 class="text-2xl font-bold text-slate-900 dark:text-white mb-3">
+            Verifying payment...
+          </h2>
+          <p class="text-slate-600 dark:text-slate-400 text-sm mb-4">
+            Please wait while we confirm your payment
+          </p>
+
+          <div class="flex items-center justify-center gap-1">
+            <div
+              class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+              style="animation-delay: 0ms"
+            ></div>
+            <div
+              class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+              style="animation-delay: 150ms"
+            ></div>
+            <div
+              class="w-2 h-2 bg-emerald-500 rounded-full animate-bounce"
+              style="animation-delay: 300ms"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <div v-else-if="orderData">
+        <div
+          class="bg-emerald-600 dark:bg-emerald-700 rounded-2xl p-4 mb-6 shadow-lg flex items-center gap-3"
+        >
+          <div
+            class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center flex-shrink-0"
+          >
+            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="3"
+                d="M5 13l4 4L19 7"
+              ></path>
+            </svg>
+          </div>
+          <span class="text-white font-semibold text-lg">Payment successful!</span>
+        </div>
+
+        <div
+          class="bg-white dark:bg-slate-900 rounded-3xl shadow-lg border border-slate-200 dark:border-slate-800 overflow-hidden"
+        >
+          <div class="p-6 text-center border-b border-slate-100 dark:border-slate-800">
+            <h1 class="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+              Payment Successful!
+            </h1>
+            <p class="text-sm text-slate-600 dark:text-slate-400">
+              Thank you for your payment. Your order has been confirmed.
+            </p>
+          </div>
+
+          <div class="p-6 space-y-6">
+            <div class="flex items-center gap-2 text-slate-800 dark:text-slate-200 mb-4">
+              <svg
+                class="w-5 h-5 text-emerald-600 dark:text-emerald-400"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z"></path>
+                <path
+                  fill-rule="evenodd"
+                  d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z"
+                  clip-rule="evenodd"
+                ></path>
+              </svg>
+              <h2 class="text-lg font-bold">Payment Receipt</h2>
+            </div>
+
+            <div class="space-y-3 text-sm">
+              <div
+                class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800"
+              >
+                <span class="text-slate-500 dark:text-slate-400">Transaction ID</span>
+                <span class="font-mono text-slate-900 dark:text-slate-100 font-semibold">{{
+                  txRef || 'AP5AFGGSXZT9'
+                }}</span>
+              </div>
+
+              <div
+                class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800"
+              >
+                <span class="text-slate-500 dark:text-slate-400">Status</span>
+                <span class="font-semibold text-emerald-600 dark:text-emerald-400">Paid</span>
+              </div>
+
+              <div
+                class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800"
+              >
+                <span class="text-slate-500 dark:text-slate-400">Order Number</span>
+                <span class="font-semibold text-slate-900 dark:text-slate-100"
+                  >#{{ orderData?.order_number || '160' }}</span
+                >
+              </div>
+
+              <div
+                class="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800"
+              >
+                <span class="text-slate-500 dark:text-slate-400">{{
+                  orderData?.is_walk_in ? 'Table' : 'Room'
+                }}</span>
+                <span class="font-semibold text-slate-900 dark:text-slate-100">{{
+                  orderData?.is_walk_in
+                    ? orderData?.table_number || 'Table 11'
+                    : orderData?.room_number || roomNumber || 'Room Guest'
+                }}</span>
+              </div>
+
+              <div class="flex justify-between items-center py-3">
+                <span class="text-slate-500 dark:text-slate-400">Amount Paid</span>
+                <span class="text-2xl font-black text-slate-900 dark:text-white"
+                  >ETB {{ formatAmountSimple(orderData?.calculation?.total || 540) }}</span
+                >
+              </div>
+            </div>
+
+            <button
+              @click="trackOrder"
+              v-if="orderData?.is_walk_in !== false"
+              class="w-full py-4 bg-amber-500 hover:bg-amber-600 text-slate-950 rounded-2xl font-bold text-lg shadow-lg hover:shadow-amber-500/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              Track My Order
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7l5 5m0 0l-5 5m5-5H6"
+                ></path>
+              </svg>
+            </button>
+
+            <button
+              v-if="txRef && !orderData?.id"
+              @click="manualComplete"
+              class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-semibold text-sm shadow-sm transition-all cursor-pointer"
+            >
+              🔧 Manual Complete Order (Debug)
+            </button>
+
+            <button
+              @click="backToMenu"
+              class="w-full py-3.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-900 dark:text-slate-100 border-2 border-slate-200 dark:border-slate-700 rounded-2xl font-semibold text-base shadow-sm transition-all cursor-pointer"
+            >
+              Back to Menu
+            </button>
+          </div>
+        </div>
+
+        <div class="text-center mt-6 px-4">
+          <p class="text-sm text-slate-500 dark:text-slate-400">
+            Thank you for ordering with us! Need assistance? Our team is always ready to serve you.
+          </p>
+        </div>
+      </div>
+
+      <div
+        v-else
+        class="bg-white dark:bg-slate-800 rounded-3xl shadow-lg p-8 text-center space-y-4"
+      >
+        <div
+          class="w-16 h-16 bg-slate-100 dark:bg-slate-700 text-slate-500 rounded-full flex items-center justify-center mx-auto text-2xl font-bold"
+        >
+          ℹ️
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 dark:text-white">No Order Found</h2>
+        <p class="text-sm text-gray-500 dark:text-gray-400 max-w-md mx-auto">
+          We could not find an active completed payment session. If you recently placed an order,
+          please check your status or return to the menu.
+        </p>
+        <div class="pt-2">
+          <button
+            @click="backToMenu"
+            class="px-6 py-3 bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold rounded-xl shadow-md hover:shadow-amber-500/20 transition cursor-pointer"
+          >
+            Return to Menu
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { onMounted, ref } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { generateAndDownloadReceipt } from '@/services/receiptService'
+import { publicAxios } from '@/services/axios'
+
+const router = useRouter()
+const route = useRoute()
+
+const txRef = ref<string>('')
+const orderData = ref<any>(null)
+const roomNumber = ref<string>('')
+const isLoading = ref(false)
+const isVerifying = ref(true)
+
+onMounted(async () => {
+  console.log('[OrderPaymentSuccess] Mounted')
+  console.log('[OrderPaymentSuccess] Query params:', route.query)
+
+  txRef.value =
+    (route.query.tx_ref as string) ||
+    (route.query.trx_ref as string) ||
+    (route.query.transaction_ref as string) ||
+    localStorage.getItem('pending_order_tx_ref') ||
+    sessionStorage.getItem('pending_order_tx_ref') ||
+    ''
+
+  console.log('[OrderPaymentSuccess] tx_ref resolved:', txRef.value)
+
+  const walkInData =
+    localStorage.getItem('walk_in_payment_data') || sessionStorage.getItem('walk_in_payment_data')
+  console.log(
+    '[OrderPaymentSuccess] walk_in_payment_data (localStorage):',
+    localStorage.getItem('walk_in_payment_data'),
+  )
+  console.log(
+    '[OrderPaymentSuccess] walk_in_payment_data (sessionStorage):',
+    sessionStorage.getItem('walk_in_payment_data'),
+  )
+  const isWalkInOrder = !!walkInData
+
+  if (walkInData) {
+    try {
+      const data = JSON.parse(walkInData)
+      console.log('[OrderPaymentSuccess] Parsed walk-in data:', data)
+      orderData.value = {
+        ...data,
+        is_walk_in: true,
+        room_number: null,
+      }
+
+      if (data.qr_token) {
+        localStorage.setItem('guest_qr_token', data.qr_token)
+        sessionStorage.setItem('guest_qr_token', data.qr_token)
+      }
+      if (data.hotel_id) {
+        localStorage.setItem('hotel_id', data.hotel_id)
+      }
+
+      if (!txRef.value && data.tx_ref) {
+        txRef.value = data.tx_ref
+        console.log('[OrderPaymentSuccess] Using tx_ref from sessionStorage:', txRef.value)
+      }
+
+      if (data.order_id) {
+        localStorage.setItem('last_order_id', data.order_id)
+        console.log('[OrderPaymentSuccess] Stored order ID from walk-in data:', data.order_id)
+      }
+    } catch (error) {
+      console.error('[OrderPaymentSuccess] Error parsing walk-in data:', error)
+    }
+  } else {
+    const roomServiceData =
+      localStorage.getItem('order_payment_data') || sessionStorage.getItem('order_payment_data')
+    console.log(
+      '[OrderPaymentSuccess] order_payment_data (localStorage):',
+      localStorage.getItem('order_payment_data'),
+    )
+    console.log(
+      '[OrderPaymentSuccess] order_payment_data (sessionStorage):',
+      sessionStorage.getItem('order_payment_data'),
+    )
+    if (roomServiceData) {
+      try {
+        const data = JSON.parse(roomServiceData)
+        console.log('[OrderPaymentSuccess] Parsed room service data:', data)
+        orderData.value = {
+          ...data,
+          is_walk_in: false,
+        }
+        roomNumber.value = data.room_number || 'N/A'
+
+        if (data.qr_token) {
+          localStorage.setItem('guest_qr_token', data.qr_token)
+          sessionStorage.setItem('guest_qr_token', data.qr_token)
+        }
+        if (data.hotel_id) {
+          localStorage.setItem('hotel_id', data.hotel_id)
+        }
+
+        if (!txRef.value && data.tx_ref) {
+          txRef.value = data.tx_ref
+          console.log(
+            '[OrderPaymentSuccess] Using tx_ref from room service sessionStorage:',
+            txRef.value,
+          )
+        }
+
+        if (data.order_id) {
+          localStorage.setItem('last_order_id', data.order_id)
+          console.log(
+            '[OrderPaymentSuccess] Stored order ID from room service data:',
+            data.order_id,
+          )
+        }
+      } catch (error) {
+        console.error('[OrderPaymentSuccess] Error parsing room service data:', error)
+      }
+    }
+  }
+
+  if (route.query.qr_token) {
+    localStorage.setItem('guest_qr_token', route.query.qr_token as string)
+    sessionStorage.setItem('guest_qr_token', route.query.qr_token as string)
+  }
+
+  if (!orderData.value) {
+    const directOrderId = (route.query.order_id as string) || localStorage.getItem('last_order_id')
+    if (directOrderId) {
+      try {
+        const directRes = await publicAxios.get(`/orders/${directOrderId}`)
+        if (directRes.data?.success && directRes.data?.data) {
+          orderData.value = directRes.data.data
+        }
+      } catch (err) {
+        console.warn('[OrderPaymentSuccess] Direct order fetch failed:', err)
+      }
+    }
+  }
+
+  // If still no tx_ref and no order data, stop verification
+  if (!txRef.value && !orderData.value) {
+    isVerifying.value = false
+    return
+  }
+
+  if (txRef.value) {
+    try {
+      console.log('[OrderPaymentSuccess] Verifying payment with tx_ref:', txRef.value)
+      const verifyRes = await publicAxios.get(`/payments/verify/${txRef.value}`)
+      const verifyData = verifyRes.data
+
+      if (verifyData?.success) {
+        const completeEndpoint = isWalkInOrder
+          ? `/walk-in-payments/complete/${txRef.value}`
+          : `/order-payments/complete/${txRef.value}`
+
+        console.log('[OrderPaymentSuccess] Completing payment at:', completeEndpoint)
+        const completeRes = await publicAxios.post(completeEndpoint)
+        const completeData = completeRes.data
+        console.log('[OrderPaymentSuccess] Complete response:', completeData)
+
+        if (completeData?.success && completeData.order) {
+          console.log('[OrderPaymentSuccess] Order completed, ID:', completeData.order.id)
+
+          if (isWalkInOrder && walkInData) {
+            const walkInPaymentData = JSON.parse(walkInData)
+            orderData.value = {
+              ...orderData.value,
+              id: completeData.order.id, // Store order ID
+              order_id: completeData.order.id, // Alternative field
+              order_number: completeData.order.order_number,
+              table_number: walkInPaymentData.table_number || completeData.order.table_number,
+              room_number: null,
+              estimated_time: completeData.order.estimated_time || 30,
+              items: walkInPaymentData.items || orderData.value?.items || [],
+              calculation: walkInPaymentData.calculation || orderData.value?.calculation,
+              is_walk_in: true,
+            }
+          } else {
+            orderData.value = {
+              ...orderData.value,
+              id: completeData.order.id, // Store order ID
+              order_id: completeData.order.id, // Alternative field
+              order_number: completeData.order.order_number,
+              room_number: completeData.order.room?.room_number || orderData.value?.room_number,
+              estimated_time: completeData.order.estimated_time || 30,
+              items:
+                completeData.order.order_items?.map((item: any) => ({
+                  name: item.menu_item?.name || 'Unknown',
+                  quantity: item.quantity,
+                  total: item.line_total,
+                })) ||
+                orderData.value?.items ||
+                [],
+              calculation: orderData.value?.calculation,
+              is_walk_in: false,
+            }
+          }
+
+          // Store order ID in localStorage for tracking
+          if (completeData.order.id) {
+            localStorage.setItem('last_order_id', completeData.order.id)
+            console.log(
+              '[OrderPaymentSuccess] Stored order ID in localStorage:',
+              completeData.order.id,
+            )
+          }
+        }
+      }
+    } catch (error) {
+      console.error('[OrderPaymentSuccess] Error verifying/completing payment:', error)
+    } finally {
+      // Always stop loading state after verification attempt
+      isVerifying.value = false
+    }
+  }
+
+  console.log('[OrderPaymentSuccess] Final orderData:', orderData.value)
+})
+
+function formatAmountSimple(price?: number): string {
+  return Number(price || 0).toFixed(2)
+}
+
+function formatPrice(price?: number): string {
+  return `${Number(price || 0).toLocaleString()} ETB`
+}
+
+function trackOrder(): void {
+  console.log('[OrderPaymentSuccess] trackOrder called')
+  console.log('[OrderPaymentSuccess] orderData:', orderData.value)
+
+  // PRIORITY 1: Get order ID directly from orderData (from payment completion API)
+  let orderId = orderData.value?.id || orderData.value?.order_id
+  console.log('[OrderPaymentSuccess] Order ID from orderData:', orderId)
+
+  // PRIORITY 2: Check localStorage last_order_id
+  if (!orderId) {
+    orderId = localStorage.getItem('last_order_id')
+    console.log('[OrderPaymentSuccess] Order ID from localStorage last_order_id:', orderId)
+  }
+
+  // PRIORITY 3: Check pending_order_data in localStorage
+  if (!orderId) {
+    const storedOrder = localStorage.getItem('pending_order_data')
+    if (storedOrder) {
+      try {
+        const orderDataParsed = JSON.parse(storedOrder)
+        orderId = orderDataParsed.id || orderDataParsed.order_id
+        console.log('[OrderPaymentSuccess] Order ID from pending_order_data:', orderId)
+      } catch (error) {
+        console.error('[OrderPaymentSuccess] Error parsing stored order:', error)
+      }
+    }
+  }
+
+  // PRIORITY 4: Check walk_in_payment_data in localStorage OR sessionStorage
+  if (!orderId) {
+    const walkInData =
+      localStorage.getItem('walk_in_payment_data') || sessionStorage.getItem('walk_in_payment_data')
+    if (walkInData) {
+      try {
+        const data = JSON.parse(walkInData)
+        orderId = data.order_id || data.id
+        console.log('[OrderPaymentSuccess] Order ID from walk_in_payment_data:', orderId)
+      } catch (error) {
+        console.error('[OrderPaymentSuccess] Error parsing walk-in data:', error)
+      }
+    }
+  }
+
+  // PRIORITY 5: Fetch order by transaction reference as last resort
+  if (!orderId && txRef.value) {
+    console.log('[OrderPaymentSuccess] Attempting to fetch order by tx_ref:', txRef.value)
+    fetchOrderByTxRef(txRef.value)
+    return
+  }
+
+  console.log('[OrderPaymentSuccess] Final Order ID:', orderId)
+
+  if (orderId) {
+    const qrToken =
+      orderData.value?.qr_token ||
+      (route.query.qr_token as string) ||
+      localStorage.getItem('guest_qr_token') ||
+      sessionStorage.getItem('guest_qr_token')
+
+    if (qrToken) {
+      localStorage.setItem('guest_qr_token', qrToken)
+    }
+
+    const hotelId =
+      orderData.value?.hotel_id ||
+      (route.query.hotel_id as string) ||
+      localStorage.getItem('hotel_id') ||
+      localStorage.getItem('active_hotel_id')
+
+    console.log('[OrderPaymentSuccess] Navigating to order status with:', {
+      orderId,
+      qrToken: qrToken ? qrToken.substring(0, 8) + '...' : 'none',
+      hotelId: hotelId ? hotelId.substring(0, 8) + '...' : 'none',
+    })
+
+    const tipVal = Number(
+      orderData.value?.calculation?.tip ?? orderData.value?.tip ?? orderData.value?.tip_amount ?? 0,
+    )
+    const amountPaidVal = Number(
+      orderData.value?.calculation?.total ??
+        orderData.value?.amount_paid ??
+        orderData.value?.final_total ??
+        orderData.value?.total ??
+        0,
+    )
+
+    const updatedPendingData = {
+      ...(orderData.value || {}),
+      id: orderId,
+      order_id: orderId,
+      status: orderData.value?.status || 'pending',
+      payment_status: 'paid',
+      payment_type: 'chapa',
+      payment_method: 'chapa',
+      tip: tipVal,
+      tip_amount: tipVal,
+      amount_paid: amountPaidVal,
+      final_total: amountPaidVal,
+      tx_ref: txRef.value || undefined,
+    }
+    localStorage.setItem('pending_order_data', JSON.stringify(updatedPendingData))
+
+    router.push({
+      name: 'order-status',
+      params: { orderId },
+      query: {
+        qr_token: qrToken || undefined,
+        hotel_id: hotelId || undefined,
+        order_number: orderData.value?.order_number || undefined,
+        tx_ref: txRef.value || undefined,
+      },
+    })
+  } else {
+    console.error('[OrderPaymentSuccess] No order ID found after checking all sources!')
+    console.error('[OrderPaymentSuccess] Debug info:', {
+      orderData: orderData.value,
+      localStorage_last_order_id: localStorage.getItem('last_order_id'),
+      localStorage_pending_order_data: localStorage.getItem('pending_order_data'),
+      localStorage_walk_in: localStorage.getItem('walk_in_payment_data'),
+      sessionStorage_walk_in: sessionStorage.getItem('walk_in_payment_data'),
+      txRef: txRef.value,
+      query_params: route.query,
+    })
+    alert(
+      'Unable to track order. Order ID not found. Please contact staff or check your order history.',
+    )
+  }
+}
+
+async function fetchOrderByTxRef(txRefValue: string): Promise<void> {
+  try {
+    console.log('[OrderPaymentSuccess] Fetching order by tx_ref:', txRefValue)
+    const response = await publicAxios.get(`/order-payments/${txRefValue}`)
+    const data = response.data
+    console.log('[OrderPaymentSuccess] Fetched order data:', data)
+
+    if (data?.success && data.order?.id) {
+      const orderId = data.order.id
+      localStorage.setItem('last_order_id', orderId)
+      console.log('[OrderPaymentSuccess] Got order ID from API, redirecting:', orderId)
+
+      const qrToken =
+        data.order?.qr_token ||
+        data.order?.table?.qr_token ||
+        data.order?.room?.qr_token ||
+        orderData.value?.qr_token ||
+        localStorage.getItem('guest_qr_token')
+      if (qrToken) {
+        localStorage.setItem('guest_qr_token', qrToken)
+      }
+
+      const hotelId =
+        data.order?.hotel_id ||
+        orderData.value?.hotel_id ||
+        localStorage.getItem('hotel_id') ||
+        localStorage.getItem('active_hotel_id')
+
+      router.push({
+        name: 'order-status',
+        params: { orderId },
+        query: {
+          qr_token: qrToken || undefined,
+          hotel_id: hotelId || undefined,
+          order_number: data.order.order_number || undefined,
+        },
+      })
+      return
+    }
+
+    throw new Error('Failed to fetch order by transaction reference')
+  } catch (error) {
+    console.error('[OrderPaymentSuccess] Error fetching order by tx_ref:', error)
+    alert('Unable to track order. Please contact staff for assistance.')
+  }
+}
+
+function backToMenu(): void {
+  const qrToken = orderData.value?.qr_token || localStorage.getItem('guest_qr_token')
+  if (qrToken) {
+    router.push({
+      name: 'qr-menu',
+      params: { token: qrToken },
+    })
+  } else {
+    router.push('/')
+  }
+}
+
+async function manualComplete(): Promise<void> {
+  if (!txRef.value) {
+    alert('No tx_ref found. Please complete a payment first.')
+    return
+  }
+
+  try {
+    console.log('[OrderPaymentSuccess] Manual complete triggered')
+    console.log('[OrderPaymentSuccess] tx_ref:', txRef.value)
+
+    // Get walk-in data
+    const walkInDataString =
+      localStorage.getItem('walk_in_payment_data') || sessionStorage.getItem('walk_in_payment_data')
+    const isWalkInOrder = !!walkInDataString
+
+    // Verify payment
+    const verifyRes = await publicAxios.get(`/payments/verify/${txRef.value}`)
+    const verifyData = verifyRes.data
+    console.log('[Manual] Verify response:', verifyData)
+
+    if (!verifyData?.success) {
+      alert('Payment verification failed: ' + (verifyData?.message || 'Unknown error'))
+      return
+    }
+
+    // Complete order
+    const completeEndpoint = isWalkInOrder
+      ? `/walk-in-payments/complete/${txRef.value}`
+      : `/order-payments/complete/${txRef.value}`
+
+    console.log('[Manual] Completing at:', completeEndpoint)
+    const completeRes = await publicAxios.post(completeEndpoint)
+    const completeData = completeRes.data
+    console.log('[Manual] Complete response:', completeData)
+
+    if (completeData?.success && completeData.order) {
+      // Update orderData with real order
+      orderData.value = {
+        ...orderData.value,
+        id: completeData.order.id,
+        order_id: completeData.order.id,
+        order_number: completeData.order.order_number,
+      }
+
+      localStorage.setItem('last_order_id', completeData.order.id)
+
+      alert('Order completed successfully! Order ID: ' + completeData.order.id)
+      console.log('[Manual] Order ID stored:', completeData.order.id)
+    } else {
+      alert('Order completion failed: ' + (completeData.message || 'Unknown error'))
+    }
+  } catch (error: any) {
+    console.error('[Manual] Error:', error)
+    alert('Error: ' + error.message)
+  }
+}
+
+async function downloadReceipt(): Promise<void> {
+  if (!orderData.value) {
+    alert('Error: Order details not found. Please refresh the page and try again.')
+    return
+  }
+
+  const referenceId = txRef.value || orderData.value.tx_ref || 'ORDER-' + Date.now()
+
+  try {
+    isLoading.value = true
+
+    await generateAndDownloadReceipt({
+      booking_reference:
+        orderData.value.order_number || 'ORD-' + referenceId.substring(0, 8).toUpperCase(),
+      first_name: orderData.value.is_walk_in ? 'Table' : 'Room',
+      last_name: orderData.value.is_walk_in
+        ? String(orderData.value.table_number || '')
+        : String(orderData.value.room_number || roomNumber.value || 'Guest'),
+      email: orderData.value.email || 'guest@hotel.com',
+      phone: orderData.value.phone || 'N/A',
+      check_in_date: new Date().toISOString().split('T')[0],
+      check_out_date: new Date().toISOString().split('T')[0],
+      room_number: orderData.value.is_walk_in
+        ? `Table ${orderData.value.table_number || ''}`
+        : orderData.value.room_number || roomNumber.value || 'N/A',
+      number_of_guests: 1,
+      total_amount: orderData.value.calculation?.total || 0,
+      currency: 'ETB',
+      status: 'Confirmed',
+      tx_ref: referenceId,
+      payment_date: new Date().toISOString(),
+      special_requests: `Order Items:\n${orderData.value.items?.map((item: any) => `• ${item.name} x${item.quantity} - ${formatPrice(item.total)}`).join('\n') || 'N/A'}`,
+    })
+  } catch (error: any) {
+    console.error('[OrderPaymentSuccess] Failed to generate receipt:', error)
+    alert('Failed to generate receipt: ' + error.message)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+function goToMenu(): void {
+  const qrToken = orderData.value?.qr_token || localStorage.getItem('guest_qr_token')
+  if (qrToken) {
+    router.push({
+      name: 'qr-menu',
+      params: { token: qrToken },
+    })
+  } else {
+    router.push('/')
+  }
+}
+
+function goHome(): void {
+  sessionStorage.removeItem('order_payment_data')
+  sessionStorage.removeItem('walk_in_payment_data')
+  router.push('/')
+}
+</script>

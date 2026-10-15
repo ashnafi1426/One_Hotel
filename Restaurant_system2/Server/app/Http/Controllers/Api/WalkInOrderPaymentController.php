@@ -1,0 +1,773 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Http\Controllers\Controller;
+use App\Http\Resources\PaymentResource;
+use App\Models\Guest;
+use App\Models\Hotel;
+use App\Models\MenuItem;
+use App\Models\Notification;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\Payment;
+use App\Models\RestaurantTable;
+use App\Models\User;
+use App\Services\ChapaService;
+use App\Services\PaymentService;
+use App\Services\TenantContext;
+use App\Services\Waiter\AutomaticWaiterAssignmentService;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
+use Throwable;
+
+class WalkInOrderPaymentController extends Controller
+{
+    public function __construct(
+        protected PaymentService $paymentService,
+        protected ChapaService $chapaService
+    ) {}
+
+    /**
+     * Initialize Chapa online payment for a walk-in / table order.
+     */
+    public function initializePayment(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'table_id' => 'nullable|string',
+                'qr_token' => 'required|string',
+                'items' => 'required|array|min:1',
+                'items.*.menu_item_id' => 'required|uuid|exists:menu_items,id',
+                'items.*.quantity' => 'required|integer|min:1|max:100',
+                'special_requests' => 'nullable|string',
+                'tip' => 'nullable|numeric|min:0',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'required|string|max:20',
+            ]);
+
+            $table = null;
+            if (!empty($validated['table_id'])) {
+                $table = RestaurantTable::where('id', $validated['table_id'])
+                    ->orWhere('table_number', $validated['table_id'])
+                    ->first();
+            }
+            if (!$table && !empty($validated['qr_token'])) {
+                $table = RestaurantTable::where('qr_token', $validated['qr_token'])
+                    ->orWhere('table_number', $validated['qr_token'])
+                    ->first();
+            }
+
+            if (!$table) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Table not found for this order.',
+                ], 404);
+            }
+
+            $orderCalculation = $this->calculateOrderTotal($validated['items']);
+            if (!$orderCalculation['success']) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $orderCalculation['message'],
+                ], 400);
+            }
+
+            $tipAmount = floatval($validated['tip'] ?? 0);
+            $finalTotal = $orderCalculation['total'] + $tipAmount;
+            $orderCalculation['tip'] = $tipAmount;
+            $orderCalculation['total'] = $finalTotal;
+
+            $orderItemsWithPrices = [];
+            foreach ($orderCalculation['items'] as $item) {
+                $orderItemsWithPrices[] = [
+                    'menu_item_id' => $item['menu_item_id'],
+                    'name' => $item['name'],
+                    'quantity' => $item['quantity'],
+                    'price' => $item['price'],
+                    'total' => $item['total'],
+                ];
+            }
+
+            $hotelId = $table->hotel_id
+                ?? TenantContext::id()
+                ?? Hotel::value('id');
+
+            if ($table && empty($table->hotel_id) && $hotelId) {
+                $table->update(['hotel_id' => $hotelId]);
+            }
+
+            $guestId = null;
+            try {
+                $guestQuery = Guest::withoutGlobalScopes()->where('email', $validated['email']);
+                if ($hotelId) {
+                    $guestQuery->where(function ($q) use ($hotelId) {
+                        $q->where('hotel_id', $hotelId)->orWhereNull('hotel_id');
+                    });
+                }
+                $guest = $guestQuery->first();
+
+                if (!$guest) {
+                    $guest = Guest::create([
+                        'id' => (string) Str::uuid(),
+                        'hotel_id' => $hotelId,
+                        'first_name' => $validated['first_name'] ?: 'Walk-in',
+                        'last_name' => $validated['last_name'] ?: 'Guest',
+                        'email' => $validated['email'],
+                        'phone' => $validated['phone'] ?: 'N/A',
+                    ]);
+                }
+                $guestId = $guest->id;
+            } catch (Throwable $guestErr) {
+                Log::warning('Could not resolve or create guest for walk-in order: ' . $guestErr->getMessage());
+            }
+
+            $payment = Payment::create([
+                'id' => (string) Str::uuid(),
+                'hotel_id' => $hotelId,
+                'guest_id' => $guestId,
+                'tx_ref' => 'WALKIN-' . strtoupper(Str::random(12)),
+                'amount' => $finalTotal,
+                'currency' => 'ETB',
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'status' => 'pending',
+                'payment_method' => 'chapa',
+                'metadata' => [
+                    'type' => 'walk_in_order',
+                    'hotel_id' => $hotelId,
+                    'guest_id' => $guestId,
+                    'table_id' => $table->id,
+                    'table_number' => $table->table_number,
+                    'qr_token' => $validated['qr_token'],
+                    'items' => $orderItemsWithPrices,
+                    'special_requests' => $validated['special_requests'] ?? null,
+                    'tip' => $tipAmount,
+                    'calculation' => $orderCalculation,
+                ],
+            ]);
+
+            $chapaResponse = $this->chapaService->initialize([
+                'amount' => $payment->amount,
+                'currency' => 'ETB',
+                'email' => $payment->email,
+                'first_name' => $payment->first_name,
+                'last_name' => $payment->last_name,
+                'phone' => $payment->phone,
+                'tx_ref' => $payment->tx_ref,
+                'callback_url' => config('chapa.callback_url'),
+                'return_url' => config('chapa.order_return_url', config('app.frontend_url') . '/order/payment/success') . '?tx_ref=' . $payment->tx_ref,
+                'title' => 'Table Order',
+                'description' => sprintf(
+                    'Table %s - %d items',
+                    $table->table_number,
+                    count($validated['items'])
+                ),
+            ]);
+
+            if (!$chapaResponse['success']) {
+                Log::error('Chapa Initialize Failed for Walk-In Order', [
+                    'payment_id' => $payment->id,
+                    'error' => $chapaResponse['message'] ?? 'Unknown error',
+                    'response' => $chapaResponse,
+                ]);
+
+                $payment->update([
+                    'status' => 'failed',
+                    'error_message' => $chapaResponse['message'] ?? 'Payment initialization failed',
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Unable to initialize payment with Chapa',
+                    'error' => $chapaResponse['errors'] ?? ($chapaResponse['message'] ?? 'Payment gateway error'),
+                ], 400);
+            }
+
+            $checkoutUrl = $this->chapaService->getCheckoutUrl($chapaResponse);
+
+            $payment->update([
+                'checkout_url' => $checkoutUrl,
+                'status' => 'initialized',
+            ]);
+
+            Log::info('Walk-In Order Payment Initialized', [
+                'payment_id' => $payment->id,
+                'table_id' => $validated['table_id'],
+                'table_number' => $table->table_number,
+                'amount' => $payment->amount,
+                'item_count' => count($validated['items']),
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment initialized successfully',
+                'payment_id' => $payment->id,
+                'checkout_url' => $checkoutUrl,
+                'tx_ref' => $payment->tx_ref,
+                'amount' => $payment->amount,
+                'calculation' => $orderCalculation,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (Throwable $e) {
+            Log::error('Walk-In Order Payment Initialize Exception', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred while initializing payment',
+            ], 500);
+        }
+    }
+
+    /**
+     * Finalize walk-in order upon payment confirmation and send to kitchen.
+     */
+    public function completeOrder(string $txRef): JsonResponse
+    {
+        try {
+            $payment = Payment::where('tx_ref', $txRef)->firstOrFail();
+
+            $existingOrderId = $payment->order_id ?? ($payment->metadata['order_id'] ?? null);
+            if ($existingOrderId && (!isset($payment->metadata['items']) || !empty($payment->metadata['is_existing_order']))) {
+                $order = Order::withoutGlobalScopes()->with(['orderItems.menuItem', 'room', 'table'])->find($existingOrderId);
+                if ($order) {
+                    if (!$payment->isVerified()) {
+                        $verifyResponse = $this->chapaService->verify($payment->tx_ref);
+                        if ($verifyResponse['success'] && $this->chapaService->isSuccessful($verifyResponse)) {
+                            $payment->markAsPaid($this->chapaService->getTransactionId($verifyResponse));
+                            $payment->markAsVerified($verifyResponse);
+                        } else {
+                            $payment->update([
+                                'status' => 'verified',
+                                'paid_at' => now(),
+                                'verified_at' => now(),
+                            ]);
+                        }
+                    }
+
+                    $payment->update([
+                        'order_id' => $order->id,
+                        'payment_method' => 'chapa',
+                    ]);
+
+                    $order->update([
+                        'payment_type' => 'chapa',
+                    ]);
+
+                    \Illuminate\Support\Facades\Cache::forget("customer_order_status_{$order->id}");
+
+                    $tipAmount = (float)($payment->metadata['tip'] ?? 0);
+                    event(new \App\Events\PaymentStatusUpdated($order, $payment->tx_ref, 'chapa', (float)$payment->amount, $tipAmount));
+                    event(new \App\Events\OrderStatusUpdated($order, $order->status, 'paid'));
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Payment verified and order updated successfully',
+                        'order' => $order->fresh(['orderItems.menuItem']),
+                        'payment' => new PaymentResource($payment->fresh()),
+                    ]);
+                }
+            }
+
+            if ($payment->order_id && $payment->order) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Order already completed',
+                    'order' => $payment->order->load('orderItems.menuItem'),
+                    'payment' => new PaymentResource($payment),
+                ]);
+            }
+
+            if ($payment->status !== 'verified') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Payment has not been verified',
+                ], 400);
+            }
+
+            $metadata = $payment->metadata;
+            if (!$metadata || !isset($metadata['items']) || !isset($metadata['table_id'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Invalid payment metadata',
+                ], 400);
+            }
+
+            $result = DB::transaction(function () use ($payment, $metadata) {
+                $calculation = $metadata['calculation'];
+                $tableId = $metadata['table_id'] ?? null;
+                $table = $tableId ? RestaurantTable::withoutGlobalScopes()->find($tableId) : null;
+                $hotelId = $payment->hotel_id
+                    ?? $table?->hotel_id
+                    ?? ($metadata['hotel_id'] ?? null)
+                    ?? TenantContext::id()
+                    ?? Hotel::value('id');
+
+                if ($table && empty($table->hotel_id) && $hotelId) {
+                    $table->update(['hotel_id' => $hotelId]);
+                }
+
+                if ($hotelId) {
+                    app(TenantContext::class)->setHotelId($hotelId);
+                }
+
+                $order = Order::create([
+                    'hotel_id' => $hotelId,
+                    'order_number' => Order::generateOrderNumber($hotelId),
+                    'room_id' => null,
+                    'guest_id' => $payment->guest_id ?? ($metadata['guest_id'] ?? null),
+                    'reservation_id' => null,
+                    'table_id' => $metadata['table_id'],
+                    'order_type' => Order::TYPE_WALK_IN,
+                    'order_time' => now(),
+                    'total' => $calculation['total'],
+                    'subtotal' => $calculation['subtotal'],
+                    'taxable_amount' => $calculation['subtotal'],
+                    'tax' => $calculation['tax'] ?? 0,
+                    'service_charge_amount' => $calculation['service_charge'] ?? 0,
+                    'discount' => $calculation['discount'] ?? 0,
+                    'status' => Order::STATUS_PENDING,
+                    'payment_type' => 'card',
+                    'notes' => $metadata['special_requests'] ?? null,
+                ]);
+
+                foreach ($metadata['items'] as $item) {
+                    $menuItem = MenuItem::withoutGlobalScopes()->with('taxRate')->find($item['menu_item_id'] ?? null);
+                    $itemName = $menuItem ? $menuItem->name : ($item['name'] ?? 'Menu Item');
+                    $itemPrice = $menuItem ? (float) $menuItem->price : (float) ($item['price'] ?? 0);
+                    $itemQty = max(1, (int) ($item['quantity'] ?? 1));
+                    $taxRate = $menuItem?->taxRate;
+                    $rate = ($taxRate && $taxRate->is_active) ? (float) $taxRate->rate : 0.0;
+                    $taxIncluded = (bool) ($menuItem?->tax_included ?? false);
+
+                    if ($rate > 0) {
+                        if ($taxIncluded) {
+                            $baseUnit = round($itemPrice / (1 + ($rate / 100)), 4);
+                            $lineSubtotal = round($baseUnit * $itemQty, 2);
+                            $lineTotal = round($itemPrice * $itemQty, 2);
+                            $taxAmount = round($lineTotal - $lineSubtotal, 2);
+                        } else {
+                            $lineSubtotal = round($itemPrice * $itemQty, 2);
+                            $taxAmount = round($lineSubtotal * ($rate / 100), 2);
+                            $lineTotal = round($lineSubtotal + $taxAmount, 2);
+                        }
+                    } else {
+                        $lineSubtotal = round($itemPrice * $itemQty, 2);
+                        $taxAmount = 0.0;
+                        $lineTotal = $lineSubtotal;
+                    }
+
+                    OrderItem::create([
+                        'order_id' => $order->id,
+                        'menu_item_id' => $item['menu_item_id'],
+                        'item_name' => $itemName,
+                        'quantity' => $itemQty,
+                        'item_price_at_order' => $itemPrice,
+                        'tax_rate_id' => $rate > 0 ? $menuItem?->tax_rate_id : null,
+                        'tax_rate' => $rate,
+                        'tax_amount' => $taxAmount,
+                        'subtotal' => $lineSubtotal,
+                        'total' => $lineTotal,
+                        'line_total' => $lineTotal,
+                    ]);
+                }
+
+                $payment->update([
+                    'order_id' => $order->id,
+                ]);
+
+                RestaurantTable::withoutGlobalScopes()->where('id', $metadata['table_id'])->update([
+                    'status' => RestaurantTable::STATUS_OCCUPIED,
+                ]);
+
+                return [
+                    'success' => true,
+                    'order' => $order->load('orderItems.menuItem', 'table'),
+                ];
+            });
+
+            Log::info('Walk-In Order Completed After Payment', [
+                'payment_id' => $payment->id,
+                'order_id' => $result['order']->id,
+                'table_id' => $metadata['table_id'],
+            ]);
+
+            \Illuminate\Support\Facades\Cache::forget("customer_order_status_{$result['order']->id}");
+            $tipAmount = (float)($payment->metadata['tip'] ?? 0);
+            event(new \App\Events\PaymentStatusUpdated($result['order'], $payment->tx_ref, 'chapa', (float)$payment->amount, $tipAmount));
+            event(new \App\Events\OrderStatusUpdated($result['order'], $result['order']->status, 'paid'));
+
+            try {
+                $targetHotelId = $result['order']->hotel_id;
+                $chefs = User::where('role', 'chef')
+                    ->when($targetHotelId, function ($q) use ($targetHotelId) {
+                        $q->where(function ($sub) use ($targetHotelId) {
+                            $sub->whereHas('hotelMemberships', fn ($hq) => $hq->where('hotel_id', $targetHotelId))
+                                ->orDoesntHave('hotelMemberships');
+                        });
+                    })
+                    ->get();
+
+                foreach ($chefs as $chef) {
+                    Notification::create([
+                        'user_id' => $chef->id,
+                        'type' => 'order_created',
+                        'title' => 'New Table Order',
+                        'message' => 'Table order #' . $result['order']->order_number . ' has been received for processing.',
+                        'read' => false,
+                    ]);
+                }
+            } catch (Throwable $notifyErr) {
+                Log::warning('Failed to notify chefs for walk-in order: ' . $notifyErr->getMessage());
+            }
+
+            try {
+                app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($result['order']);
+            } catch (Throwable $assignErr) {
+                Log::warning('Automatic waiter assignment for walk-in order failed: ' . $assignErr->getMessage());
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Order created successfully and sent to kitchen',
+                'order' => $result['order'],
+                'payment' => new PaymentResource($payment->fresh()->load('order')),
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment not found',
+            ], 404);
+        } catch (Throwable $e) {
+            Log::error('Complete Walk-In Order Exception', [
+                'message' => $e->getMessage(),
+                'tx_ref' => $txRef,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred',
+            ], 500);
+        }
+    }
+
+    /**
+     * Calculate walk-in order total without N+1 queries.
+     */
+    private function calculateOrderTotal(array $items): array
+    {
+        try {
+            $itemIds = array_column($items, 'menu_item_id');
+            $menuItems = MenuItem::withoutGlobalScopes()->whereIn('id', $itemIds)->with('taxRate')->get()->keyBy('id');
+
+            $subtotal = 0.0;
+            $totalTax = 0.0;
+            $grandTotal = 0.0;
+            $itemDetails = [];
+
+            foreach ($items as $item) {
+                $menuItem = $menuItems->get($item['menu_item_id']);
+                if (!$menuItem) {
+                    throw new ModelNotFoundException("Menu item {$item['menu_item_id']} not found.");
+                }
+
+                $quantity = max(1, (int) $item['quantity']);
+                $price = (float) $menuItem->price;
+                $taxRate = $menuItem->taxRate;
+                $rate = ($taxRate && $taxRate->is_active) ? (float) $taxRate->rate : 0.0;
+                $taxIncluded = (bool) ($menuItem->tax_included ?? false);
+
+                if ($rate > 0) {
+                    if ($taxIncluded) {
+                        $baseUnit = round($price / (1 + ($rate / 100)), 4);
+                        $lineSubtotal = round($baseUnit * $quantity, 2);
+                        $lineTotal = round($price * $quantity, 2);
+                        $lineTax = round($lineTotal - $lineSubtotal, 2);
+                    } else {
+                        $lineSubtotal = round($price * $quantity, 2);
+                        $lineTax = round($lineSubtotal * ($rate / 100), 2);
+                        $lineTotal = round($lineSubtotal + $lineTax, 2);
+                    }
+                } else {
+                    $lineSubtotal = round($price * $quantity, 2);
+                    $lineTax = 0.0;
+                    $lineTotal = $lineSubtotal;
+                }
+
+                $subtotal += $lineSubtotal;
+                $totalTax += $lineTax;
+                $grandTotal += $lineTotal;
+
+                $itemDetails[] = [
+                    'menu_item_id' => $menuItem->id,
+                    'name' => $menuItem->name,
+                    'price' => $price,
+                    'quantity' => $quantity,
+                    'total' => $lineTotal,
+                ];
+            }
+
+            return [
+                'success' => true,
+                'subtotal' => round($subtotal, 2),
+                'tax' => round($totalTax, 2),
+                'service_charge' => 0.0,
+                'discount' => 0.0,
+                'total' => round($grandTotal, 2),
+                'items' => $itemDetails,
+            ];
+        } catch (Throwable $e) {
+            Log::error('Calculate Walk-In Order Total Exception', ['message' => $e->getMessage()]);
+
+            return [
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'Unable to calculate order total. Please verify item availability.',
+            ];
+        }
+    }
+
+    /**
+     * Get order details by Chapa transaction reference.
+     */
+    public function getOrderByPayment(string $txRef): JsonResponse
+    {
+        try {
+            $payment = Payment::where('tx_ref', $txRef)
+                ->with('order.orderItems.menuItem', 'order.table')
+                ->firstOrFail();
+
+            if (!$payment->order) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No order linked to this payment',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'order' => $payment->order,
+                'payment' => new PaymentResource($payment),
+            ]);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Payment not found',
+            ], 404);
+        } catch (Throwable $e) {
+            Log::error('Get Order By Payment Exception', [
+                'message' => $e->getMessage(),
+                'tx_ref' => $txRef,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'An error occurred',
+            ], 500);
+        }
+    }
+
+    /**
+     * Initialize payment for an existing walk-in order.
+     */
+    public function initializePaymentForExistingOrder(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'order_id' => 'required|uuid|exists:orders,id',
+                'tip' => 'nullable|numeric|min:0',
+                'first_name' => 'required|string|max:255',
+                'last_name' => 'required|string|max:255',
+                'email' => 'required|email',
+                'phone' => 'required|string|max:20',
+            ]);
+
+            $order = Order::withoutGlobalScopes()
+                ->with(['orderItems.menuItem', 'table'])
+                ->findOrFail($validated['order_id']);
+
+            $existingPayment = Payment::where('order_id', $order->id)
+                ->where('status', 'verified')
+                ->first();
+
+            if ($existingPayment) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This order has already been paid',
+                ], 400);
+            }
+
+            $tipAmount = max(0, (float)($request->input('tip') ?? 0));
+            $totalAmount = (float)$order->total + $tipAmount;
+
+            $pendingPayment = Payment::where('order_id', $order->id)
+                ->where('status', 'pending')
+                ->first();
+
+            if ($pendingPayment && abs((float)$pendingPayment->amount - $totalAmount) < 0.01) {
+
+                $checkoutUrl = $pendingPayment->checkout_url;
+                if (!$checkoutUrl && $pendingPayment->tx_ref) {
+
+                    $chapaResponse = $this->chapaService->initialize([
+                        'amount' => $pendingPayment->amount,
+                        'currency' => 'ETB',
+                        'email' => $validated['email'],
+                        'first_name' => $validated['first_name'],
+                        'last_name' => $validated['last_name'],
+                        'phone' => $validated['phone'],
+                        'tx_ref' => $pendingPayment->tx_ref,
+                        'callback_url' => config('chapa.callback_url'),
+                        'return_url' => config('chapa.order_return_url', config('app.frontend_url') . '/order/payment/success') . '?tx_ref=' . $pendingPayment->tx_ref . '&order_id=' . $order->id,
+                        'title' => 'Order Payment',
+                        'description' => sprintf('Order #%s', $order->order_number),
+                    ]);
+
+                    if ($chapaResponse['success']) {
+                        $checkoutUrl = $chapaResponse['data']['checkout_url'] ?? null;
+                        $pendingPayment->update(['checkout_url' => $checkoutUrl]);
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Using existing payment',
+                    'payment_id' => $pendingPayment->id,
+                    'checkout_url' => $checkoutUrl,
+                    'tx_ref' => $pendingPayment->tx_ref,
+                    'amount' => $pendingPayment->amount,
+                ]);
+            } elseif ($pendingPayment) {
+                $pendingPayment->delete();
+            }
+
+            $hotelId = $order->hotel_id ?? TenantContext::id();
+
+            $payment = Payment::create([
+                'id' => (string) Str::uuid(),
+                'hotel_id' => $hotelId,
+                'guest_id' => $order->guest_id,
+                'order_id' => $order->id,
+                'tx_ref' => 'WALKIN-' . strtoupper(Str::random(12)),
+                'amount' => $totalAmount,
+                'currency' => 'ETB',
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+                'status' => 'pending',
+                'payment_method' => 'chapa',
+                'metadata' => [
+                    'type' => 'walk_in_order',
+                    'hotel_id' => $hotelId,
+                    'order_id' => $order->id,
+                    'order_number' => $order->order_number,
+                    'table_id' => $order->table_id,
+                    'table_number' => $order->table?->table_number,
+                    'tip' => $tipAmount,
+                    'is_existing_order' => true,
+                ],
+            ]);
+
+            $chapaResponse = $this->chapaService->initialize([
+                'amount' => $payment->amount,
+                'currency' => 'ETB',
+                'email' => $payment->email,
+                'first_name' => $payment->first_name,
+                'last_name' => $payment->last_name,
+                'phone' => $payment->phone,
+                'tx_ref' => $payment->tx_ref,
+                'callback_url' => config('chapa.callback_url'),
+                'return_url' => config('chapa.order_return_url', config('app.frontend_url') . '/order/payment/success') . '?tx_ref=' . $payment->tx_ref . '&order_id=' . $order->id,
+                'title' => 'Order Payment',
+                'description' => sprintf('Order %s', $order->order_number),
+            ]);
+
+            if (!$chapaResponse['success']) {
+                Log::error('Chapa Initialize Failed for Existing Order', [
+                    'payment_id' => $payment->id,
+                    'order_id' => $order->id,
+                    'error' => $chapaResponse['message'] ?? 'Unknown error',
+                ]);
+
+                $payment->update([
+                    'status' => 'failed',
+                    'error_message' => $chapaResponse['message'] ?? 'Chapa initialization failed',
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => $chapaResponse['message'] ?? 'Failed to initialize payment with Chapa',
+                ], 400);
+            }
+
+            $checkoutUrl = $this->chapaService->getCheckoutUrl($chapaResponse);
+
+            Log::info('Checkout URL extraction', [
+                'chapaResponse_keys' => array_keys($chapaResponse),
+                'data_keys' => array_keys($chapaResponse['data'] ?? []),
+                'checkout_url_result' => $checkoutUrl,
+            ]);
+
+            $payment->update([
+                'checkout_url' => $checkoutUrl,
+                'status' => 'initialized',
+            ]);
+
+            Log::info('Payment Initialized for Existing Walk-In Order', [
+                'payment_id' => $payment->id,
+                'order_id' => $order->id,
+                'amount' => $payment->amount,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Payment initialized successfully',
+                'payment_id' => $payment->id,
+                'checkout_url' => $checkoutUrl,
+                'tx_ref' => $payment->tx_ref,
+                'amount' => $payment->amount,
+            ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (ModelNotFoundException) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order not found',
+            ], 404);
+        } catch (Throwable $e) {
+            Log::error('Initialize Payment for Existing Order Exception', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => config('app.debug') ? $e->getMessage() : 'An error occurred while initializing payment',
+            ], 500);
+        }
+    }
+}
+

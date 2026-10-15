@@ -1,0 +1,88 @@
+import api from '../api/auth'
+import { publicAxios } from './axios'
+
+function getGuestHotelHeaders() {
+  for (const key of ['guest_current_hotel', 'current_hotel']) {
+    try {
+      const hotelData = localStorage.getItem(key)
+      if (hotelData) {
+        const hotel = JSON.parse(hotelData)
+        if (hotel && hotel.id) {
+          return { 'X-Hotel-ID': String(hotel.id) }
+        }
+      }
+    } catch (err: any) {
+      console.error(`[MenuService] Error parsing ${key}:`, err)
+    }
+  }
+  const fallbackId = localStorage.getItem('guest_hotel_id') || localStorage.getItem('hotel_id')
+  if (fallbackId && fallbackId !== 'undefined' && fallbackId !== 'null') {
+    return { 'X-Hotel-ID': String(fallbackId) }
+  }
+  return {}
+}
+
+export default {
+  getMenus(params: any = {}) {
+    return api.get('/menu-items', { params })
+  },
+
+  getMenuItems(params: any = {}) {
+    return publicAxios.get('/guest/menu/items', { params, headers: getGuestHotelHeaders() })
+  },
+
+  getPublicMenus(params: any = {}) {
+    return publicAxios.get('/guest/menu/items', { params, headers: getGuestHotelHeaders() })
+  },
+
+  createMenu(data: any) {
+    if (data instanceof FormData) {
+      return api.post('/menu-items', data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        transformRequest: [(d) => d],
+      })
+    }
+
+    if (data?.image_url) {
+      return api.post('/menu-items', data)
+    }
+
+    return api.post('/menu-items', data)
+  },
+
+  updateMenu(id: string | number, data: any) {
+    if (data instanceof FormData) {
+      return api.post(`/menu-items/${id}?_method=PUT`, data, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+        transformRequest: [(d) => d],
+      })
+    }
+    if (data?.image_url) {
+      return api.put(`/menu-items/${id}`, data)
+    }
+
+    return api.put(`/menu-items/${id}`, data)
+  },
+
+  deleteMenu(id: string | number) {
+    const endpoint = `/menu-items/${id}`
+    return api.delete(endpoint)
+  },
+
+  toggleStatus(id: string | number) {
+    const endpoint = `/menu-items/${id}/toggle-availability`
+    return api.patch(endpoint)
+  },
+
+  statistics() {
+    return api.get('/menu-items/statistics')
+  },
+
+  categories() {
+    return api.get('/categories')
+  },
+}
