@@ -3,37 +3,22 @@
 namespace App\Services;
 
 use App\Models\Hotel;
-use App\Models\HotelUser;
 
 class TenantContext
 {
     protected ?Hotel $hotel = null;
-    protected ?HotelUser $membership = null;
-
-    public function setHotel(?Hotel $hotel, ?HotelUser $membership = null): void
-    {
-        $this->hotel = $hotel;
-        $this->membership = $membership;
-    }
-
-    public function setHotelId(?string $hotelId): void
-    {
-        if ($hotelId) {
-            $hotel = Hotel::find($hotelId);
-            $this->setHotel($hotel);
-        } else {
-            $this->setHotel(null);
-        }
-    }
 
     public function getHotel(): ?Hotel
     {
+        if ($this->hotel === null) {
+            $this->hotel = Hotel::first();
+        }
         return $this->hotel;
     }
 
     public function getHotelId(): ?string
     {
-        return $this->hotel?->id;
+        return $this->getHotel()?->id;
     }
 
     public static function id(): ?string
@@ -46,41 +31,38 @@ class TenantContext
         return app(self::class)->getHotel();
     }
 
-    public function getMembership(): ?HotelUser
+    public function setHotel(?Hotel $hotel, $membership = null): void
     {
-        return $this->membership;
+        $this->hotel = $hotel ?? Hotel::first();
+    }
+
+    public function setHotelId(?string $hotelId): void
+    {
+        $this->hotel = Hotel::first();
+    }
+
+    public function getMembership(): ?object
+    {
+        return null;
     }
 
     public function getCurrentRole(): ?string
     {
-        return $this->membership?->role;
+        return null;
     }
 
     public function getCurrentRoleModel(): ?\App\Models\Role
     {
-        if ($this->membership?->role_id) {
-            return $this->membership->roleModel;
-        }
-
-        if ($this->hotel && !empty($this->membership?->role)) {
-            return \App\Models\Role::withoutTenant()
-                ->where('hotel_id', $this->hotel->id)
-                ->where('slug', strtolower($this->membership->role))
-                ->first();
-        }
-
         return null;
     }
 
     public function hasTenant(): bool
     {
-        return $this->hotel !== null;
+        return true;
     }
 
     public function clear(): void
     {
         $this->hotel = null;
-        $this->membership = null;
     }
 }
-

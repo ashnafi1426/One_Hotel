@@ -62,31 +62,14 @@ class Hotel extends Model
         return $this->status === self::STATUS_ARCHIVED;
     }
 
-    public function users()
+    public static function instance(): ?self
     {
-        return $this->belongsToMany(User::class, 'hotel_users', 'hotel_id', 'user_id')
-            ->withPivot(['role', 'is_active'])
-            ->withTimestamps();
-    }
-
-    public function memberships()
-    {
-        return $this->hasMany(HotelUser::class, 'hotel_id');
-    }
-
-    public function roles()
-    {
-        return $this->hasMany(Role::class, 'hotel_id');
-    }
-
-    public function floors()
-    {
-        return $this->hasMany(Floor::class, 'hotel_id');
+        return static::first();
     }
 
     public function contactMessages()
     {
-        return $this->hasMany(ContactMessage::class, 'hotel_id');
+        return $this->hasMany(ContactMessage::class);
     }
 }
 

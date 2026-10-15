@@ -20,7 +20,6 @@ class User extends Authenticatable
         'role_id',
         'is_active',
         'must_change_password',
-        'is_platform_admin',
         'activation_token',
         'activation_token_expires_at',
         'activation_status',
@@ -35,7 +34,6 @@ class User extends Authenticatable
         return [
             'is_active' => 'boolean',
             'must_change_password' => 'boolean',
-            'is_platform_admin' => 'boolean',
             'activation_token_expires_at' => 'datetime',
             'email_verified_at' => 'datetime'
         ];
@@ -61,7 +59,7 @@ class User extends Authenticatable
     }
     public function isPlatformAdmin(): bool
     {
-        return (bool) $this->is_platform_admin;
+        return false;
     }
     public function isAdmin()
     {
@@ -215,57 +213,22 @@ class User extends Authenticatable
 
     public function hotels()
     {
-        return $this->belongsToMany(Hotel::class, 'hotel_users', 'user_id', 'hotel_id')
-            ->withPivot(['role', 'is_active'])
-            ->withTimestamps();
+        return $this->hasMany(Hotel::class, 'id', 'id')->whereRaw('1=0');
     }
 
     public function hotelMemberships()
     {
-        return $this->hasMany(HotelUser::class, 'user_id');
+        return $this->hasMany(Hotel::class, 'id', 'id')->whereRaw('1=0');
     }
 
-    public function belongsToHotel(string $hotelId): bool
+    public function belongsToHotel(?string $hotelId = null): bool
     {
-        return $this->hotelMemberships()
-            ->where('hotel_id', $hotelId)
-            ->where('is_active', true)
-            ->exists();
+        return true;
     }
 
-    public function getHotelRole(string $hotelId): ?string
+    public function getHotelRole(?string $hotelId = null): ?string
     {
-        $roleFromUserRoles = \App\Models\Role::withoutTenant()
-            ->where('hotel_id', $hotelId)
-            ->where('is_active', true)
-            ->whereHas('users', function ($q) use ($hotelId) {
-                $q->where('user_roles.user_id', $this->id)
-                  ->where('user_roles.hotel_id', $hotelId);
-            })
-            ->first();
-
-        if ($roleFromUserRoles) {
-            return strtolower($roleFromUserRoles->slug);
-        }
-
-        $membership = $this->hotelMemberships()
-            ->where('hotel_id', $hotelId)
-            ->where('is_active', true)
-            ->first();
-
-        if ($membership) {
-            if ($membership->role_id) {
-                $roleModel = \App\Models\Role::withoutTenant()->find($membership->role_id);
-                if ($roleModel) {
-                    return strtolower($roleModel->slug);
-                }
-            }
-            if (!empty($membership->role)) {
-                return strtolower($membership->role);
-            }
-        }
-
-        return !empty($this->role) ? strtolower($this->role) : null;
+        return !empty($this->role) ? strtolower($this->role) : ($this->roles->first()?->slug ?? null);
     }
 }
 

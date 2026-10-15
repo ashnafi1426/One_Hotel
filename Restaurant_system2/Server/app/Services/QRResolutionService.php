@@ -81,8 +81,8 @@ class QRResolutionService
                     'success' => true,
                     'context' => 'room',
                     'data' => [
-                        'hotel_id' => $room->hotel_id,
-                        'hotel_name' => $room->hotel?->name,
+                        'hotel_id' => \App\Models\Hotel::first()?->id,
+                        'hotel_name' => \App\Models\Hotel::first()?->name ?? 'Sheraten Hotel',
                         'room_id' => $room->id,
                         'room_number' => $room->room_number,
                         'floor' => $room->floor,
@@ -156,8 +156,8 @@ class QRResolutionService
                     'success' => true,
                     'context' => 'table',
                     'data' => [
-                        'hotel_id' => $table->hotel_id,
-                        'hotel_name' => $table->hotel?->name,
+                        'hotel_id' => \App\Models\Hotel::first()?->id,
+                        'hotel_name' => \App\Models\Hotel::first()?->name ?? 'Sheraten Hotel',
                         'table_id' => $table->id,
                         'table_number' => $table->table_number,
                         'table_name' => $table->table_name ?? ('Table ' . $table->table_number),
