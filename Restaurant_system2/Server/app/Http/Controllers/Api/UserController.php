@@ -7,10 +7,8 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use App\Http\Resources\UserResource;
 use App\Mail\NewUserCreated;
-use App\Models\HotelUser;
 use App\Models\Role;
 use App\Models\User;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -24,57 +22,38 @@ use Throwable;
 class UserController extends Controller
 {
     /**
-     * Invalidate cached user listings for a hotel or across platform.
+     * Invalidate cached user listings.
      */
     protected function invalidateUserCaches(?string $hotelId = null): void
     {
-        if ($hotelId) {
-            $cur = (int) Cache::get("users_ver:{$hotelId}", 1);
-            Cache::put("users_ver:{$hotelId}", $cur + 1, 86400);
-            Cache::forget("rbac_roles:{$hotelId}");
-        }
-        $allCur = (int) Cache::get('users_ver:all', 1);
-        Cache::put('users_ver:all', $allCur + 1, 86400);
-        Cache::forget('rbac_roles:platform');
+        Cache::forget('rbac_roles');
+        Cache::forget('rbac_active_roles');
+        $cur = (int) Cache::get('users_ver', 1);
+        Cache::put('users_ver', $cur + 1, 86400);
     }
 
     /**
-     * Display a listing of users, scoped to the current hotel context.
-     * Optimized with column pruning, indexed subqueries, and intelligent Cache::remember.
+     * Display a listing of users for the single hotel.
      */
     public function index(Request $request): JsonResponse
     {
-        $hotelId = $request->header('X-Hotel-ID')
-            ?: TenantContext::id()
-            ?: $request->query('hotel_id');
-
-        $isAllHotels = $request->boolean('all_hotels') && $request->user()?->isPlatformAdmin();
-
-        if (!$isAllHotels && !$hotelId && $request->user()) {
-            $hotelId = $request->user()->hotelMemberships()->first()?->hotel_id;
-        }
-
-        $tenantScope = $isAllHotels ? 'all' : ($hotelId ?: 'default');
         $forceRefresh = $request->boolean('refresh') || $request->header('X-Refresh') === 'true';
 
-        $ver = (int) Cache::get("users_ver:{$tenantScope}", 1);
-        $filterHash = md5(json_encode([
-            's' => $request->search,
-            'r' => $request->role,
-            'a' => $request->input('is_active'),
-            'p' => $request->input('page', 1),
-            'pp' => (int) $request->get('per_page', 500),
-        ]));
-        $cacheKey = "users_list:{$tenantScope}:v{$ver}:{$filterHash}";
+        $page = (int) $request->input('page', 1);
+        $perPage = min((int) $request->input('per_page', 15), 100);
+        $search = trim((string) $request->input('search', ''));
+        $role = trim((string) $request->input('role', ''));
+        $status = $request->input('status');
+        $ver = (int) Cache::get('users_ver', 1);
+
+        $cacheKey = 'users_list:' . md5(json_encode([$ver, $page, $perPage, $search, $role, $status]));
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        $cachedPayload = Cache::remember($cacheKey, 600, function () use ($request, $hotelId, $isAllHotels) {
-            $query = User::query();
-
-            $query->select([
+        $result = Cache::remember($cacheKey, 120, function () use ($request, $perPage) {
+            $query = User::select([
                 'id',
                 'first_name',
                 'last_name',
@@ -86,13 +65,6 @@ class UserController extends Controller
                 'created_at',
                 'updated_at',
             ]);
-
-            if (!$isAllHotels && $hotelId) {
-                $scopedUserIds = DB::table('hotel_users')
-                    ->where('hotel_id', $hotelId)
-                    ->pluck('user_id');
-                $query->whereIn('id', $scopedUserIds);
-            }
 
             if ($request->filled('search')) {
                 $search = trim($request->search);
@@ -108,87 +80,67 @@ class UserController extends Controller
                 $query->where('role', $request->role);
             }
 
-            if ($request->filled('is_active')) {
-                $query->where('is_active', $request->boolean('is_active'));
+            if ($request->has('status') && $request->status !== null && $request->status !== '') {
+                $isActive = filter_var($request->status, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($isActive !== null) {
+                    $query->where('is_active', $isActive);
+                }
             }
 
-            $perPage = (int) $request->get('per_page', 500);
-            $paginated = $query->latest('created_at')->paginate($perPage);
+            $sortBy = in_array($request->input('sort_by'), ['created_at', 'first_name', 'email', 'role'])
+                ? $request->input('sort_by')
+                : 'created_at';
+            $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-            return [
-                'data' => UserResource::collection($paginated->items())->toArray($request),
-                'links' => [
-                    'first' => $paginated->url(1),
-                    'last' => $paginated->url($paginated->lastPage()),
-                    'prev' => $paginated->previousPageUrl(),
-                    'next' => $paginated->nextPageUrl(),
-                ],
-                'meta' => [
-                    'current_page' => $paginated->currentPage(),
-                    'from' => $paginated->firstItem(),
-                    'last_page' => $paginated->lastPage(),
-                    'per_page' => $paginated->perPage(),
-                    'to' => $paginated->lastItem(),
-                    'total' => $paginated->total(),
-                ],
-            ];
+            return $query->orderBy($sortBy, $sortDir)->paginate($perPage);
         });
 
-        return response()->json($cachedPayload);
+        return response()->json([
+            'success' => true,
+            'data' => UserResource::collection($result),
+            'meta' => [
+                'current_page' => $result->currentPage(),
+                'last_page' => $result->lastPage(),
+                'per_page' => $result->perPage(),
+                'total' => $result->total(),
+            ],
+            'cached' => !$forceRefresh,
+        ]);
     }
 
     /**
-     * Store a newly created user in storage with temporary credentials.
+     * Store a newly created user in storage.
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
         DB::beginTransaction();
         try {
-            $temporaryPassword = $this->generateSecurePassword();
+            $plainPassword = $request->password ?: Str::random(12);
 
             $user = User::create([
                 'first_name' => $request->first_name,
                 'last_name' => $request->last_name,
                 'email' => $request->email,
                 'phone' => $request->phone,
-                'password_hash' => Hash::make($temporaryPassword),
+                'password' => Hash::make($plainPassword),
                 'role' => $request->role,
                 'is_active' => $request->boolean('is_active', true),
                 'activation_status' => 'activated',
                 'email_verified_at' => now(),
             ]);
 
-            $hotelId = TenantContext::id()
-                ?: $request->header('X-Hotel-ID')
-                ?: auth()->user()?->hotelMemberships()->first()?->hotel_id;
-
-            $targetRole = null;
-            if (!empty($user->role) && $hotelId) {
+            if (!empty($user->role)) {
                 $roleSearch = strtolower(trim($user->role));
                 $targetRole = Role::withoutTenant()
-                    ->where('hotel_id', $hotelId)
                     ->where(function ($q) use ($roleSearch) {
                         $q->whereRaw('LOWER(slug) = ?', [$roleSearch])
                           ->orWhereRaw('LOWER(name) = ?', [$roleSearch]);
                     })
                     ->first();
-            }
-
-            if ($hotelId) {
-                HotelUser::firstOrCreate([
-                    'hotel_id' => $hotelId,
-                    'user_id' => $user->id,
-                ], [
-                    'id' => (string) Str::uuid(),
-                    'role' => $user->role ?: 'staff',
-                    'role_id' => $targetRole?->id,
-                    'is_active' => true,
-                ]);
 
                 if ($targetRole) {
                     DB::table('user_roles')->updateOrInsert(
                         [
-                            'hotel_id' => $hotelId,
                             'user_id' => $user->id,
                             'role_id' => $targetRole->id,
                         ],
@@ -204,7 +156,6 @@ class UserController extends Controller
                     \App\Models\Waiter::firstOrCreate(
                         ['user_id' => $user->id],
                         [
-                            'hotel_id' => $hotelId,
                             'section' => 'All Sections',
                             'shift' => 'morning',
                             'experience_level' => 'junior',
@@ -216,30 +167,24 @@ class UserController extends Controller
                 }
             }
 
-            $emailSent = true;
+            DB::commit();
+
+            $this->invalidateUserCaches();
+
             try {
-                Mail::to($user->email)->send(new NewUserCreated($user, $temporaryPassword));
+                Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
             } catch (Throwable $mailException) {
-                $emailSent = false;
-                Log::error('Failed to send new user email', [
+                Log::warning('User created successfully, but welcome email could not be sent', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'error' => $mailException->getMessage(),
                 ]);
             }
 
-            DB::commit();
-
-            $this->invalidateUserCaches($hotelId);
-
             return response()->json([
                 'success' => true,
-                'message' => $emailSent
-                    ? 'User created successfully. Login credentials sent to ' . $user->email
-                    : 'User created successfully but failed to send email. Temporary password: ' . $temporaryPassword,
+                'message' => 'User created successfully.',
                 'data' => new UserResource($user),
-                'temporary_password' => $emailSent ? null : $temporaryPassword,
-                'email_sent' => $emailSent,
             ], 201);
         } catch (Throwable $exception) {
             DB::rollBack();
@@ -251,8 +196,7 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to create user.',
-                'error' => $exception->getMessage(),
+                'message' => 'Unable to create user: ' . $exception->getMessage(),
             ], 500);
         }
     }
@@ -264,7 +208,6 @@ class UserController extends Controller
     {
         return response()->json([
             'success' => true,
-            'message' => 'User retrieved successfully.',
             'data' => new UserResource($user),
         ], 200);
     }
@@ -276,28 +219,32 @@ class UserController extends Controller
     {
         DB::beginTransaction();
         try {
-            $user->fill($request->only([
-                'first_name',
-                'last_name',
-                'email',
-                'phone',
-                'role',
-            ]));
+            $user->first_name = $request->first_name;
+            $user->last_name = $request->last_name;
+            $user->email = $request->email;
+            $user->phone = $request->phone;
+
+            if ($request->has('role')) {
+                $user->role = $request->role;
+            }
 
             if ($request->has('is_active')) {
                 $user->is_active = $request->boolean('is_active');
             }
 
             if ($request->filled('password')) {
-                $user->password_hash = Hash::make($request->password);
+                $user->password = Hash::make($request->password);
             }
 
             $user->save();
 
-            if (!empty($user->role)) {
-                $roleSearch = strtolower(trim($user->role));
-                $roleModel = Role::whereRaw('LOWER(slug) = ?', [$roleSearch])
-                    ->orWhereRaw('LOWER(name) = ?', [$roleSearch])
+            if ($request->has('role')) {
+                $roleSearch = strtolower(trim((string) $request->role));
+                $roleModel = Role::withoutTenant()
+                    ->where(function ($q) use ($roleSearch) {
+                        $q->whereRaw('LOWER(slug) = ?', [$roleSearch])
+                          ->orWhereRaw('LOWER(name) = ?', [$roleSearch]);
+                    })
                     ->first();
 
                 if ($roleModel) {
@@ -309,8 +256,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            $hotelId = $user->hotelMemberships()->first()?->hotel_id;
-            $this->invalidateUserCaches($hotelId);
+            $this->invalidateUserCaches();
 
             return response()->json([
                 'success' => true,
@@ -345,14 +291,12 @@ class UserController extends Controller
             ], 403);
         }
 
-        $hotelId = $user->hotelMemberships()->first()?->hotel_id;
-
         DB::beginTransaction();
         try {
             $user->delete();
             DB::commit();
 
-            $this->invalidateUserCaches($hotelId);
+            $this->invalidateUserCaches();
 
             return response()->json([
                 'success' => true,
@@ -386,8 +330,7 @@ class UserController extends Controller
 
             DB::commit();
 
-            $hotelId = $user->hotelMemberships()->first()?->hotel_id;
-            $this->invalidateUserCaches($hotelId);
+            $this->invalidateUserCaches();
 
             return response()->json([
                 'success' => true,
@@ -406,34 +349,44 @@ class UserController extends Controller
 
             return response()->json([
                 'success' => false,
-                'message' => 'Unable to update user status.',
+                'message' => 'Unable to toggle user status.',
                 'error' => $exception->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * Generate a cryptographically secure temporary password.
+     * Restore a soft-deleted user.
      */
-    private function generateSecurePassword(int $length = 12): string
+    public function restore(string $id): JsonResponse
     {
-        $uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ';
-        $lowercase = 'abcdefghjkmnpqrstuvwxyz';
-        $numbers = '23456789';
-        $symbols = '!@#$%&*';
+        DB::beginTransaction();
+        try {
+            $user = User::onlyTrashed()->findOrFail($id);
+            $user->restore();
 
-        $password =
-            $uppercase[random_int(0, strlen($uppercase) - 1)] .
-            $lowercase[random_int(0, strlen($lowercase) - 1)] .
-            $numbers[random_int(0, strlen($numbers) - 1)] .
-            $symbols[random_int(0, strlen($symbols) - 1)];
+            DB::commit();
 
-        $allChars = $uppercase . $lowercase . $numbers . $symbols;
-        for ($i = 4; $i < $length; $i++) {
-            $password .= $allChars[random_int(0, strlen($allChars) - 1)];
+            $this->invalidateUserCaches();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'User restored successfully.',
+                'data' => new UserResource($user),
+            ], 200);
+        } catch (Throwable $exception) {
+            DB::rollBack();
+
+            Log::error('Failed to restore user', [
+                'user_id' => $id,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Unable to restore user.',
+                'error' => $exception->getMessage(),
+            ], 500);
         }
-
-        return str_shuffle($password);
     }
 }
-

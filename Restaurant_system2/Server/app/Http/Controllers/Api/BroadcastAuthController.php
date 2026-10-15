@@ -231,16 +231,7 @@ class BroadcastAuthController extends Controller
             return response()->json(['error' => 'Authentication required'], 401);
         }
 
-        $hasAccess = false;
-        if (method_exists($user, 'isPlatformAdmin') && $user->isPlatformAdmin()) {
-            $hasAccess = true;
-        } elseif (method_exists($user, 'belongsToHotel') && $user->belongsToHotel($hotelId)) {
-            $hasAccess = true;
-        } elseif (isset($user->hotel_id) && $user->hotel_id === $hotelId) {
-            $hasAccess = true;
-        } elseif (\App\Models\HotelUser::where('user_id', $user->id)->where('hotel_id', $hotelId)->where('is_active', true)->exists()) {
-            $hasAccess = true;
-        }
+        $hasAccess = (bool) $user;
 
         if (!$hasAccess) {
             Log::warning('[BroadcastAuth] Payments channel unauthorized', [

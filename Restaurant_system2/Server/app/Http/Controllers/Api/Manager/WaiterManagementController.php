@@ -14,24 +14,7 @@ class WaiterManagementController extends Controller
 {
     protected function getHotelId(): ?string
     {
-        $hotelId = request()->input('hotel_id')
-            ?: request()->query('hotel_id')
-            ?: request()->header('X-Hotel-ID');
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotel_id
-                ?: auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if (!$hotelId) {
-            $hotelId = app(\App\Services\TenantContext::class)->getHotelId();
-        }
-
-        if ($hotelId) {
-            app(\App\Services\TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
+        return \App\Services\TenantContext::id();
     }
 
     public function index(Request $request): JsonResponse
@@ -40,25 +23,15 @@ class WaiterManagementController extends Controller
             $hotelId = $this->getHotelId();
 
             try {
-                $waiterUsersQuery = User::where(function ($q) {
+                $waiterUsers = User::where(function ($q) {
                     $q->where('role', 'waiter')
-                      ->orWhereHas('hotelMemberships', fn($m) => $m->where('role', 'waiter'));
-                });
+                      ->orWhereHas('roles', fn($r) => $r->where('slug', 'waiter'));
+                })->get();
 
-                if ($hotelId) {
-                    $waiterUsersQuery->where(function ($q) use ($hotelId) {
-                        $q->where('hotel_id', $hotelId)
-                          ->orWhereHas('hotelMemberships', fn($m) => $m->where('hotel_id', $hotelId));
-                    });
-                }
-
-                $missingUsers = $waiterUsersQuery->get();
-                foreach ($missingUsers as $mu) {
-                    $targetHotel = $hotelId ?: ($mu->hotel_id ?: $mu->hotelMemberships()->value('hotel_id'));
+                foreach ($waiterUsers as $mu) {
                     Waiter::firstOrCreate(
                         ['user_id' => $mu->id],
                         [
-                            'hotel_id' => $targetHotel,
                             'section' => 'All Sections',
                             'shift' => 'morning',
                             'experience_level' => 'junior',
@@ -227,21 +200,12 @@ class WaiterManagementController extends Controller
         try {
             $hotelId = $this->getHotelId();
 
-            $existingUserIds = Waiter::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                ->pluck('user_id')
-                ->filter();
+            $existingUserIds = Waiter::pluck('user_id')->filter();
 
-            $usersQuery = User::whereNotIn('id', $existingUserIds)
-                ->where('is_active', true);
-
-            if ($hotelId) {
-                $usersQuery->where(function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId)
-                      ->orWhereHas('hotelMemberships', fn($m) => $m->where('hotel_id', $hotelId)->where('is_active', true));
-                });
-            }
-
-            $users = $usersQuery->select('id', 'first_name', 'last_name', 'email', 'phone')->get()
+            $users = User::whereNotIn('id', $existingUserIds)
+                ->where('is_active', true)
+                ->select('id', 'first_name', 'last_name', 'email', 'phone')
+                ->get()
                 ->map(function ($u) {
                     $userName = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: ($u->email ?? 'User');
                     return [
@@ -449,7 +413,6 @@ class WaiterManagementController extends Controller
                 $user = User::find($validated['user_id']);
 
                 $waiterData = [
-                    'hotel_id' => $hotelId,
                     'user_id' => $validated['user_id'],
                     'phone' => $validated['phone'] ?? null,
                     'section' => $validated['section'],
@@ -468,11 +431,15 @@ class WaiterManagementController extends Controller
 
                 $waiter = Waiter::create($waiterData);
 
-                if ($hotelId && $user) {
-                    \App\Models\HotelUser::firstOrCreate(
-                        ['hotel_id' => $hotelId, 'user_id' => $user->id],
-                        ['id' => (string) \Illuminate\Support\Str::uuid(), 'role' => 'waiter', 'is_active' => true]
-                    );
+                if ($user) {
+                    $user->update(['role' => 'waiter']);
+                    $waiterRole = \App\Models\Role::withoutTenant()->where('slug', 'waiter')->first();
+                    if ($waiterRole) {
+                        \Illuminate\Support\Facades\DB::table('user_roles')->updateOrInsert(
+                            ['user_id' => $user->id, 'role_id' => $waiterRole->id],
+                            ['is_primary' => true, 'updated_at' => now()]
+                        );
+                    }
                 }
 
                 if (!empty($validated['floor_assignments'])) {

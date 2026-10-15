@@ -52,25 +52,7 @@ class KitchenService
      */
     public function getBaseKitchenQuery($authUser = null): Builder
     {
-        $tenantContext = app(TenantContext::class);
-        $hotelId = $tenantContext->getHotelId();
-
-        if (!$hotelId && $authUser) {
-            $hotelId = \App\Models\HotelUser::where('user_id', $authUser->id)->where('is_active', true)->value('hotel_id');
-            if ($hotelId) {
-                $tenantContext->setHotelId($hotelId);
-            }
-        }
-
-        $query = Order::withoutGlobalScope(\App\Models\Scopes\TenantScope::class);
-
-        if ($hotelId) {
-            $query->where(function ($q) use ($hotelId) {
-                $q->where('orders.hotel_id', $hotelId)
-                  ->orWhereHas('room', fn($rq) => $rq->withoutGlobalScopes()->where('hotel_id', $hotelId))
-                  ->orWhereHas('table', fn($tq) => $tq->withoutGlobalScopes()->where('hotel_id', $hotelId));
-            });
-        }
+        $query = Order::query();
 
         if ($authUser && in_array(strtolower($authUser->role ?? ''), ['chef', 'cook', 'kitchen_staff'])) {
             $query->where(function ($q) use ($authUser) {

@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Hotel;
-use App\Models\HotelUser;
 use App\Models\MenuItem;
 use App\Models\Order;
 use App\Models\Reservation;
@@ -65,17 +64,8 @@ class DashboardController extends Controller
                     ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
                     ->count();
 
-                if ($hotelId) {
-                    $totalUsers = HotelUser::where('hotel_id', $hotelId)->count();
-                    $activeStaff = HotelUser::where('hotel_id', $hotelId)->where('is_active', true)->count();
-                    if ($totalUsers === 0) {
-                        $totalUsers = User::where('hotel_id', $hotelId)->count();
-                        $activeStaff = User::where('hotel_id', $hotelId)->where('is_active', true)->count();
-                    }
-                } else {
-                    $totalUsers = User::count();
-                    $activeStaff = User::where('is_active', true)->count();
-                }
+                $totalUsers = User::count();
+                $activeStaff = User::where('is_active', true)->count();
 
                 $today = Carbon::today();
                 $todayRevenue = 0.0;
