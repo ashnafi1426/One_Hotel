@@ -14,25 +14,12 @@ class StoreRoomTypeRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = \App\Services\TenantContext::id()
-            ?: $this->input('hotel_id')
-            ?: $this->header('X-Hotel-ID')
-            ?: $this->header('x-hotel-id')
-            ?: $this->user()?->hotel_id
-            ?: $this->user()?->hotelMemberships()->where('is_active', true)->value('hotel_id');
-
-        $uniqueName = Rule::unique('room_types', 'name');
-        if ($hotelId) {
-            $uniqueName = $uniqueName->where('hotel_id', $hotelId);
-        }
-
         return [
-            'hotel_id' => ['nullable', 'string'],
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                $uniqueName,
+                Rule::unique('room_types', 'name'),
             ],
             'description' => [
                 'nullable',
@@ -55,24 +42,11 @@ class StoreRoomTypeRequest extends FormRequest
             ],
             'amenities.*' => [
                 'string',
-                'max:100',
             ],
             'is_active' => [
-                'required',
+                'nullable',
                 'boolean',
             ],
         ];
     }
-
-    public function messages(): array
-    {
-        return [
-            'name.required' => 'Room type name is required.',
-            'name.unique' => 'This room type already exists.',
-            'base_price_per_night.required' => 'Price is required.',
-            'capacity.required' => 'Capacity is required.',
-            'capacity.min' => 'Capacity must be at least 1.',
-        ];
-    }
 }
-

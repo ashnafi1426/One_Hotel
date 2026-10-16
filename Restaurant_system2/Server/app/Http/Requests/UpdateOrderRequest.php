@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Services\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,10 +14,6 @@ class UpdateOrderRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
         return [
             'notes' => [
                 'nullable',
@@ -48,7 +43,7 @@ class UpdateOrderRequest extends FormRequest
             'items.*.menu_item_id' => [
                 'required_with:items',
                 'uuid',
-                Rule::exists('menu_items', 'id')->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId)),
+                Rule::exists('menu_items', 'id'),
             ],
             'items.*.quantity' => [
                 'required_with:items',
@@ -64,4 +59,3 @@ class UpdateOrderRequest extends FormRequest
         ];
     }
 }
-

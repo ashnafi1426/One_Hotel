@@ -3,7 +3,6 @@
 namespace App\Http\Requests;
 
 use App\Models\RestaurantTable;
-use App\Services\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -16,7 +15,6 @@ class UpdateRestaurantTableRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = TenantContext::id() ?: $this->header('X-Hotel-ID') ?: $this->hotel_id;
         $tableId = $this->route('id') ?: $this->route('restaurant_table') ?: $this->route('table');
 
         return [
@@ -26,7 +24,6 @@ class UpdateRestaurantTableRequest extends FormRequest
                 'string',
                 'max:50',
                 Rule::unique('restaurant_tables', 'table_number')
-                    ->where(fn($q) => $hotelId ? $q->where('hotel_id', $hotelId) : $q)
                     ->whereNull('deleted_at')
                     ->ignore($tableId),
             ],
@@ -49,4 +46,3 @@ class UpdateRestaurantTableRequest extends FormRequest
         ];
     }
 }
-

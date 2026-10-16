@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests;
 
-use App\Services\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -15,16 +14,12 @@ class StoreCategoryRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
         return [
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                Rule::unique('categories', 'name')->where('hotel_id', $hotelId),
+                Rule::unique('categories', 'name'),
             ],
             'description' => 'nullable|string|max:500',
             'icon' => 'nullable|string|max:50',
@@ -43,4 +38,3 @@ class StoreCategoryRequest extends FormRequest
         ];
     }
 }
-

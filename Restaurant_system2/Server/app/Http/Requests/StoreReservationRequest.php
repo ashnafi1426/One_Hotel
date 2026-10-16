@@ -14,15 +14,8 @@ class StoreReservationRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = \App\Services\TenantContext::id();
-
-        $roomRule = Rule::exists('rooms', 'id');
+        $roomRule = Rule::exists('rooms', 'id')->where('is_active', true);
         $guestRule = Rule::exists('guests', 'id');
-
-        if ($hotelId) {
-            $roomRule = $roomRule->where('hotel_id', $hotelId)->where('is_active', true);
-            $guestRule = $guestRule->where('hotel_id', $hotelId);
-        }
 
         return [
             'guest_id' => [
@@ -58,7 +51,6 @@ class StoreReservationRequest extends FormRequest
             'check_in_date' => [
                 'required',
                 'date',
-                'after_or_equal:today',
             ],
             'check_out_date' => [
                 'required',
@@ -66,49 +58,21 @@ class StoreReservationRequest extends FormRequest
                 'after:check_in_date',
             ],
             'number_of_guests' => [
-                'required',
+                'nullable',
                 'integer',
                 'min:1',
                 'max:20',
             ],
-            'status' => [
-                'sometimes',
-                Rule::in([
-                    'pending',
-                    'confirmed',
-                    'checked_in',
-                    'checked_out',
-                    'cancelled',
-                ]),
+            'notes' => [
+                'nullable',
+                'string',
+                'max:1000',
             ],
             'special_requests' => [
                 'nullable',
                 'string',
-                'max:2000',
+                'max:1000',
             ],
         ];
     }
-
-    public function messages(): array
-    {
-        return [
-            'guest_id.required' =>
-                'Please select a guest.',
-            'guest_id.exists' =>
-                'Selected guest does not exist.',
-            'room_id.required' =>
-                'Please select a room.',
-            'room_id.exists' =>
-                'Selected room does not exist.',
-            'check_in_date.after_or_equal' =>
-                'Check-in date cannot be in the past.',
-            'check_out_date.after' =>
-                'Check-out must be after check-in.',
-            'number_of_guests.min' =>
-                'At least one guest is required.',
-            'number_of_guests.max' =>
-                'Guest count exceeds the allowed limit.',
-        ];
-    }
 }
-

@@ -11,32 +11,18 @@ class UpdateRoomTypeRequest extends FormRequest
     {
         return true;
     }
+
     public function rules(): array
     {
         $roomTypeParam = $this->route('roomType');
         $roomTypeId = is_object($roomTypeParam) ? $roomTypeParam->id : $roomTypeParam;
-        $roomTypeModel = is_object($roomTypeParam) ? $roomTypeParam : \App\Models\RoomType::withoutTenant()->find($roomTypeId);
-
-        $hotelId = \App\Services\TenantContext::id()
-            ?: $this->input('hotel_id')
-            ?: $this->header('X-Hotel-ID')
-            ?: $this->header('x-hotel-id')
-            ?: $roomTypeModel?->hotel_id
-            ?: $this->user()?->hotel_id
-            ?: $this->user()?->hotelMemberships()->where('is_active', true)->value('hotel_id');
-
-        $uniqueName = Rule::unique('room_types', 'name')->ignore($roomTypeId, 'id');
-        if ($hotelId) {
-            $uniqueName = $uniqueName->where('hotel_id', $hotelId);
-        }
 
         return [
-            'hotel_id' => ['nullable', 'string'],
             'name' => [
                 'required',
                 'string',
                 'max:100',
-                $uniqueName,
+                Rule::unique('room_types', 'name')->ignore($roomTypeId, 'id'),
             ],
             'description' => [
                 'nullable',
@@ -59,54 +45,11 @@ class UpdateRoomTypeRequest extends FormRequest
             ],
             'amenities.*' => [
                 'string',
-                'max:100',
             ],
             'is_active' => [
-                'required',
+                'nullable',
                 'boolean',
             ],
-
-        ];
-    }
-    public function messages(): array
-    {
-        return [
-
-            'name.required' =>
-
-                'Room type name is required.',
-
-            'name.unique' =>
-
-                'This room type name already exists.',
-
-            'base_price_per_night.required' =>
-                'Base price is required.',
-
-            'base_price_per_night.numeric' =>
-
-                'Base price must be numeric.',
-
-            'capacity.required' =>
-
-                'Capacity is required.',
-
-            'capacity.integer' =>
-                'Capacity must be an integer.',
-
-            'capacity.min' =>
-
-                'Capacity must be at least 1.',
-
-            'amenities.array' =>
-
-                'Amenities must be an array.',
-
-            'is_active.boolean' =>
-
-                'Status must be true or false.',
-
         ];
     }
 }
-
