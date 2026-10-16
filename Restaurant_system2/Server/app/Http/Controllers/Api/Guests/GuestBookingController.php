@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Services\ReservationService;
-use App\Services\TenantContext;
 use Exception;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -16,14 +15,8 @@ use Illuminate\Validation\ValidationException;
 class GuestBookingController extends Controller
 {
     public function __construct(
-        protected TenantContext $tenantContext,
         protected ReservationService $reservationService
     ) {}
-
-    protected function getHotelId(): ?string
-    {
-        return $this->tenantContext->getHotelId() ?? TenantContext::id() ?? auth()->user()?->hotel_id;
-    }
 
     public function checkAvailability(Request $request): JsonResponse
     {
@@ -44,20 +37,11 @@ class GuestBookingController extends Controller
                 'num_guests.max' => 'Maximum 10 guests allowed',
             ]);
 
-            $hotelId = $this->getHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Unauthorized',
-                    'message' => 'Hotel context not found',
-                ], 401);
-            }
-
             $res = $this->reservationService->checkAvailability([
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
                 'capacity' => $validated['num_guests'] ?? 1,
-            ], $hotelId);
+            ]);
 
             $availableRooms = $res['rooms'];
 
@@ -95,17 +79,7 @@ class GuestBookingController extends Controller
     public function getRoomDetails(string $roomId, Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Unauthorized',
-                    'message' => 'Hotel context not found',
-                ], 401);
-            }
-
             $room = Room::where('id', $roomId)
-                ->where('hotel_id', $hotelId)
                 ->with('roomType')
                 ->first();
 
@@ -183,16 +157,7 @@ class GuestBookingController extends Controller
                 'check_out_date.after' => 'Check-out date must be after check-in date',
             ]);
 
-            $hotelId = $this->getHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Unauthorized',
-                    'message' => 'Hotel context not found',
-                ], 401);
-            }
-
-            $reservation = $this->reservationService->createReservation($validated, $hotelId);
+            $reservation = $this->reservationService->createReservation($validated);
             $stayDuration = max(1, $reservation->check_out_date->diffInDays($reservation->check_in_date));
 
             return response()->json([
@@ -231,17 +196,7 @@ class GuestBookingController extends Controller
     public function getBookingStatus(string $bookingReference, Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Unauthorized',
-                    'message' => 'Hotel context not found',
-                ], 401);
-            }
-
-            $reservation = Reservation::where('hotel_id', $hotelId)
-                ->where('booking_reference', $bookingReference)
+            $reservation = Reservation::where('booking_reference', $bookingReference)
                 ->with(['guest', 'room'])
                 ->first();
 
@@ -292,18 +247,7 @@ class GuestBookingController extends Controller
                 'cancellation_reason' => 'nullable|string|max:500',
             ]);
 
-            $hotelId = $this->getHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'error' => 'Unauthorized',
-                    'message' => 'Hotel context not found',
-                ], 401);
-            }
-
-            $reservation = Reservation::where('hotel_id', $hotelId)
-                ->where('booking_reference', $bookingReference)
-                ->first();
+            $reservation = Reservation::where('booking_reference', $bookingReference)->first();
 
             if (!$reservation) {
                 return response()->json([
@@ -352,4 +296,3 @@ class GuestBookingController extends Controller
         }
     }
 }
-

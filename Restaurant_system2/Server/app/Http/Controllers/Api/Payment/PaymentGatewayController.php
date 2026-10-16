@@ -179,9 +179,7 @@ class PaymentGatewayController extends Controller
                 ]);
             }
 
-            if ($request->has('hotel_id')) {
-                $query->where('hotel_id', $request->get('hotel_id'));
-            }
+
 
             if ($request->has('search')) {
                 $search = $request->get('search');
@@ -323,7 +321,6 @@ class PaymentGatewayController extends Controller
             DB::table('payment_transaction_logs')->insert([
                 'payment_id' => $payment->id,
                 'tx_ref' => $payment->tx_ref,
-                'hotel_id' => $payment->hotel_id,
                 'status' => $status,
                 'amount' => $payment->amount,
                 'payment_method' => $payment->payment_method ?? 'unknown',
@@ -353,9 +350,7 @@ class PaymentGatewayController extends Controller
         try {
             $query = Payment::where('payment_status', 'completed');
 
-            if ($request->has('hotel_id')) {
-                $query->where('hotel_id', $request->get('hotel_id'));
-            }
+
 
             if ($request->has('from_date') && $request->has('to_date')) {
                 $query->whereBetween('created_at', [

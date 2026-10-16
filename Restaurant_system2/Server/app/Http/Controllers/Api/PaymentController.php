@@ -6,19 +6,16 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\InitializePaymentRequest;
 use App\Http\Resources\PaymentResource;
 use App\Mail\ReservationConfirmed;
-use App\Models\Hotel;
 use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Reservation;
 use App\Models\Room;
 use App\Services\ChapaService;
 use App\Services\PaymentService;
-use App\Services\TenantContext;
 use Exception;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Throwable;
@@ -36,29 +33,10 @@ class PaymentController extends Controller
     public function initialize(InitializePaymentRequest $request): JsonResponse
     {
         try {
-            $hotelId = TenantContext::id()
-                ?: Auth::user()?->hotel_id
-                ?: ($request->metadata['hotel_id'] ?? null)
-                ?: $request->header('X-Hotel-ID');
-
-            if ($hotelId) {
-                $hotel = Hotel::find($hotelId);
-                if (!$hotel || !$hotel->isActive()) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Invalid or inactive hotel selected for payment.',
-                    ], 422);
-                }
-            }
-
             $txRef = $this->chapa->generateTransactionReference();
             $metadata = $request->metadata ?? [];
-            if ($hotelId && empty($metadata['hotel_id'])) {
-                $metadata['hotel_id'] = $hotelId;
-            }
 
             $payment = Payment::create([
-                'hotel_id' => $hotelId,
                 'tx_ref' => $txRef,
                 'amount' => $request->amount,
                 'currency' => 'ETB',
@@ -354,17 +332,13 @@ class PaymentController extends Controller
     private function fulfillReservationPayment(Payment $payment, string $txRef): void
     {
         try {
-            $hotelId = $payment->hotel_id ?? ($payment->metadata['hotel_id'] ?? null);
-
             $existingReservation = null;
             if (!empty($payment->reservation_id)) {
-                $existingReservation = Reservation::withoutGlobalScopes()->find($payment->reservation_id);
+                $existingReservation = Reservation::find($payment->reservation_id);
             }
 
             if (!$existingReservation && !empty($payment->metadata['room_id'])) {
-                $existingReservation = Reservation::withoutGlobalScopes()
-                    ->where('hotel_id', $hotelId)
-                    ->where('guest_id', $payment->guest_id)
+                $existingReservation = Reservation::where('guest_id', $payment->guest_id)
                     ->where('room_id', $payment->metadata['room_id'])
                     ->where('check_in_date', $payment->metadata['check_in_date'])
                     ->where('check_out_date', $payment->metadata['check_out_date'])
@@ -379,17 +353,7 @@ class PaymentController extends Controller
                 return;
             }
 
-            if ($hotelId && !empty($payment->metadata['room_id'])) {
-                $roomBelongs = Room::where('hotel_id', $hotelId)
-                    ->where('id', $payment->metadata['room_id'])
-                    ->exists();
-                if (!$roomBelongs) {
-                    throw new Exception("Room {$payment->metadata['room_id']} does not belong to hotel {$hotelId}");
-                }
-            }
-
             $reservation = Reservation::create([
-                'hotel_id' => $hotelId,
                 'booking_reference' => Reservation::generateBookingReference(),
                 'guest_id' => $payment->guest_id,
                 'room_id' => $payment->metadata['room_id'],
@@ -428,10 +392,9 @@ class PaymentController extends Controller
     private function fulfillOrderPayment(Payment $payment, string $txRef): void
     {
         try {
-
             $existingOrderId = $payment->order_id ?? ($payment->metadata['order_id'] ?? null);
             if ($existingOrderId) {
-                $order = Order::withoutGlobalScopes()->find($existingOrderId);
+                $order = Order::find($existingOrderId);
                 if ($order) {
                     if (!$payment->order_id) {
                         $payment->update(['order_id' => $order->id]);
@@ -469,11 +432,8 @@ class PaymentController extends Controller
                 throw new Exception('No order items found in payment metadata');
             }
 
-            $hotelId = $payment->hotel_id ?? ($payment->metadata['hotel_id'] ?? null);
-
             $order = Order::create([
-                'hotel_id' => $hotelId,
-                'order_number' => Order::generateOrderNumber($hotelId),
+                'order_number' => Order::generateOrderNumber(),
                 'reservation_id' => null,
                 'guest_id' => $payment->guest_id,
                 'room_id' => $roomId,
@@ -511,4 +471,3 @@ class PaymentController extends Controller
         }
     }
 }
-

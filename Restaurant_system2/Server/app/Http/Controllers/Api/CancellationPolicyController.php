@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\CancellationPolicy;
 use App\Models\Reservation;
-use App\Services\TenantContext;
 use DateTime;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
@@ -17,20 +16,12 @@ use Throwable;
 class CancellationPolicyController extends Controller
 {
     /**
-     * Display a listing of cancellation policies for the current hotel.
+     * Display a listing of cancellation policies.
      */
     public function index(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->resolveHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hotel context not found',
-                ], 400);
-            }
-
-            $query = CancellationPolicy::where('hotel_id', $hotelId);
+            $query = CancellationPolicy::query();
 
             if ($request->has('active')) {
                 $query->where('is_active', $request->boolean('active'));
@@ -62,7 +53,7 @@ class CancellationPolicyController extends Controller
     public function show(string $policyId): JsonResponse
     {
         try {
-            $policy = $this->findPolicy($policyId);
+            $policy = CancellationPolicy::findOrFail($policyId);
 
             return response()->json([
                 'success' => true,
@@ -92,14 +83,6 @@ class CancellationPolicyController extends Controller
     public function store(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->resolveHotelId();
-            if (!$hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Hotel context not found',
-                ], 400);
-            }
-
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'type' => 'required|in:flexible,moderate,strict,non_refundable',
@@ -112,7 +95,6 @@ class CancellationPolicyController extends Controller
             ]);
 
             $policy = CancellationPolicy::create([
-                'hotel_id' => $hotelId,
                 'name' => $validated['name'],
                 'type' => $validated['type'],
                 'description' => $validated['description'] ?? null,
@@ -151,7 +133,7 @@ class CancellationPolicyController extends Controller
     public function update(string $policyId, Request $request): JsonResponse
     {
         try {
-            $policy = $this->findPolicy($policyId);
+            $policy = CancellationPolicy::findOrFail($policyId);
 
             $validated = $request->validate([
                 'name' => 'nullable|string|max:255',
@@ -201,7 +183,7 @@ class CancellationPolicyController extends Controller
     public function destroy(string $policyId): JsonResponse
     {
         try {
-            $policy = $this->findPolicy($policyId);
+            $policy = CancellationPolicy::findOrFail($policyId);
 
             $inUse = Reservation::where('cancellation_policy_id', $policyId)->exists();
             if ($inUse) {
@@ -247,7 +229,7 @@ class CancellationPolicyController extends Controller
                 'cancellation_date' => 'required|date|before_or_equal:check_in_date',
             ]);
 
-            $policy = $this->findPolicy($policyId);
+            $policy = CancellationPolicy::findOrFail($policyId);
 
             $checkInDate = new DateTime($validated['check_in_date']);
             $cancellationDate = new DateTime($validated['cancellation_date']);
@@ -285,28 +267,4 @@ class CancellationPolicyController extends Controller
             ], 500);
         }
     }
-
-    /**
-     * Resolve hotel ID for the current request.
-     */
-    private function resolveHotelId(): ?string
-    {
-        return TenantContext::id() ?? auth()->user()?->hotel_id;
-    }
-
-    /**
-     * Find a cancellation policy scoped to the current hotel.
-     */
-    private function findPolicy(string $policyId): CancellationPolicy
-    {
-        $hotelId = $this->resolveHotelId();
-
-        $query = CancellationPolicy::where('id', $policyId);
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
-
-        return $query->firstOrFail();
-    }
 }
-

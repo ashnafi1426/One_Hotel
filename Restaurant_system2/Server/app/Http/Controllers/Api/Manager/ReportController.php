@@ -14,21 +14,8 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use App\Services\TenantContext;
 class ReportController extends Controller
 {
-    private function resolveTenant(Request $request): ?string
-    {
-        $hotelId = $request->input('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId();
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
 
     public function revenue(Request $request): JsonResponse
     {

@@ -67,8 +67,7 @@ class ReservationPaymentController extends Controller
                 ], 422);
             }
 
-            $hasConflict = Reservation::where('hotel_id', $room->hotel_id)
-                ->where('room_id', $room->id)
+            $hasConflict = Reservation::where('room_id', $room->id)
                 ->whereNotIn('status', ['cancelled', 'checked_out'])
                 ->where(function ($query) use ($validated) {
                     $query->where('check_in_date', '<', $validated['check_out_date'])
@@ -84,16 +83,12 @@ class ReservationPaymentController extends Controller
             }
 
             if (!empty($validated['guest_id'])) {
-                $guest = Guest::withoutTenant()->findOrFail($validated['guest_id']);
+                $guest = Guest::findOrFail($validated['guest_id']);
             } else {
-                $guest = Guest::withoutTenant()
-                    ->where('hotel_id', $room->hotel_id)
-                    ->where('email', $validated['email'])
-                    ->first();
+                $guest = Guest::where('email', $validated['email'])->first();
 
                 if (!$guest) {
-                    $guest = Guest::withoutTenant()->create([
-                        'hotel_id' => $room->hotel_id,
+                    $guest = Guest::create([
                         'email' => $validated['email'],
                         'first_name' => $validated['first_name'],
                         'last_name' => $validated['last_name'],
@@ -114,7 +109,6 @@ class ReservationPaymentController extends Controller
 
             $metadata = [
                 'type' => 'reservation',
-                'hotel_id' => $room->hotel_id,
                 'room_id' => $validated['room_id'],
                 'check_in_date' => $validated['check_in_date'],
                 'check_out_date' => $validated['check_out_date'],
@@ -127,7 +121,6 @@ class ReservationPaymentController extends Controller
             ];
 
             $payment = $this->paymentService->createReservationPayment([
-                'hotel_id' => $room->hotel_id,
                 'amount' => $priceBreakdown['total'],
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],

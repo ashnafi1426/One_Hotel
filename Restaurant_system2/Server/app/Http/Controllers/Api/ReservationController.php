@@ -8,11 +8,9 @@ use App\Http\Requests\UpdateReservationRequest;
 use App\Http\Resources\ReservationCollection;
 use App\Http\Resources\ReservationResource;
 use App\Http\Resources\RoomResource;
-use App\Models\Hotel;
 use App\Models\Reservation;
 use App\Services\CheckInService;
 use App\Services\ReservationService;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -27,14 +25,12 @@ class ReservationController extends Controller
     ) {}
 
     /**
-     * List reservations for the current hotel.
+     * List reservations for the hotel.
      */
     public function index(Request $request): ReservationCollection
     {
-        $hotelId = TenantContext::id();
         $perPage = $request->integer('per_page', 10);
-
-        $reservations = $this->reservationService->getReservations($request->all(), $perPage, $hotelId);
+        $reservations = $this->reservationService->getReservations($request->all(), $perPage);
 
         return new ReservationCollection($reservations);
     }
@@ -44,19 +40,10 @@ class ReservationController extends Controller
      */
     public function store(StoreReservationRequest $request): JsonResponse
     {
-        $hotelId = TenantContext::id();
-
-        if (!$hotelId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'No active hotel tenant found. Please select a hotel before creating a reservation.',
-            ], 403);
-        }
-
         try {
             $reservation = $this->reservationService->createReservation(
                 $request->validated(),
-                $hotelId,
+                null,
                 Auth::id()
             );
 
@@ -75,21 +62,17 @@ class ReservationController extends Controller
     }
 
     /**
-     * Show a reservation by ID or booking reference with tenant check.
+     * Show a reservation by ID or booking reference.
      */
     public function show(mixed $reservation): ReservationResource|JsonResponse
     {
-        $hotelId = TenantContext::id();
-
         if ($reservation instanceof Reservation) {
             $model = $reservation;
         } else {
-            $model = Reservation::withoutGlobalScopes()
-                ->where(function ($q) use ($reservation) {
+            $model = Reservation::where(function ($q) use ($reservation) {
                     $q->where('id', $reservation)
                       ->orWhere('booking_reference', $reservation);
                 })
-                ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))
                 ->first();
 
             if (!$model) {
@@ -98,13 +81,6 @@ class ReservationController extends Controller
                     'message' => 'Reservation not found.',
                 ], 404);
             }
-        }
-
-        if ($hotelId && $model->hotel_id && $model->hotel_id !== $hotelId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Reservation not found.',
-            ], 404);
         }
 
         $model->loadMissing(['guest', 'room.roomType', 'creator', 'checkIn']);
@@ -117,20 +93,10 @@ class ReservationController extends Controller
      */
     public function update(UpdateReservationRequest $request, Reservation $reservation): JsonResponse
     {
-        $hotelId = TenantContext::id();
-
-        if ($hotelId && $reservation->hotel_id && $reservation->hotel_id !== $hotelId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Reservation not found.',
-            ], 404);
-        }
-
         try {
             $updated = $this->reservationService->updateReservation(
                 $reservation,
-                $request->validated(),
-                $hotelId
+                $request->validated()
             );
 
             return response()->json([
@@ -239,18 +205,6 @@ class ReservationController extends Controller
      */
     public function availability(Request $request): JsonResponse
     {
-        $hotelId = TenantContext::id()
-            ?: $request->header('X-Hotel-ID')
-            ?: $request->hotel_id
-            ?: Hotel::value('id');
-
-        if (!$hotelId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Active hotel tenant context is required.',
-            ], 400);
-        }
-
         $validated = $request->validate([
             'check_in_date' => 'required|date|after_or_equal:today',
             'check_out_date' => 'required|date|after:check_in_date',
@@ -259,7 +213,7 @@ class ReservationController extends Controller
             'capacity' => 'nullable|integer|min:1',
         ]);
 
-        $result = $this->reservationService->checkAvailability($validated, $hotelId);
+        $result = $this->reservationService->checkAvailability($validated);
 
         if (!empty($validated['room_id'])) {
             return response()->json([
@@ -270,7 +224,6 @@ class ReservationController extends Controller
 
         return response()->json([
             'success' => true,
-            'hotel_id' => $hotelId,
             'check_in_date' => $result['check_in_date'],
             'check_out_date' => $result['check_out_date'],
             'available_rooms_count' => $result['available_rooms_count'],
@@ -278,4 +231,3 @@ class ReservationController extends Controller
         ]);
     }
 }
-

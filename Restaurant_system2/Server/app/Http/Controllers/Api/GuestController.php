@@ -9,7 +9,6 @@ use App\Http\Resources\GuestResource;
 use App\Http\Resources\ReservationCollection;
 use App\Models\Guest;
 use App\Services\GuestService;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -20,26 +19,22 @@ class GuestController extends Controller
     ) {}
 
     /**
-     * Display a listing of guests for current hotel.
+     * Display a listing of guests.
      */
     public function index(Request $request): GuestCollection
     {
-        $hotelId = TenantContext::id();
         $perPage = $request->integer('per_page', 10);
-
-        $guests = $this->guestService->getGuests($request->all(), $perPage, $hotelId);
+        $guests = $this->guestService->getGuests($request->all(), $perPage);
 
         return new GuestCollection($guests);
     }
 
     /**
-     * Store or update guest profile with tenant isolation.
+     * Store or update guest profile.
      */
     public function store(GuestRequest $request): JsonResponse
     {
-        $hotelId = TenantContext::id();
-
-        $guest = $this->guestService->findOrCreateGuest($request->validated(), $hotelId);
+        $guest = $this->guestService->findOrCreateGuest($request->validated());
 
         return response()->json([
             'success' => true,
@@ -53,8 +48,6 @@ class GuestController extends Controller
      */
     public function show(Guest $guest): JsonResponse
     {
-        $this->authorizeGuest($guest);
-
         return response()->json([
             'success' => true,
             'data'    => new GuestResource($guest),
@@ -66,8 +59,6 @@ class GuestController extends Controller
      */
     public function reservations(Guest $guest, Request $request): ReservationCollection
     {
-        $this->authorizeGuest($guest);
-
         $perPage = $request->integer('per_page', 10);
         $reservations = $this->guestService->getGuestReservations($guest, $request->all(), $perPage);
 
@@ -79,8 +70,6 @@ class GuestController extends Controller
      */
     public function update(GuestRequest $request, Guest $guest): JsonResponse
     {
-        $this->authorizeGuest($guest);
-
         $guest->update($request->validated());
 
         return response()->json([
@@ -95,8 +84,6 @@ class GuestController extends Controller
      */
     public function destroy(Guest $guest): JsonResponse
     {
-        $this->authorizeGuest($guest);
-
         $guest->delete();
 
         return response()->json([
@@ -104,17 +91,4 @@ class GuestController extends Controller
             'message' => 'Guest deleted successfully.',
         ]);
     }
-
-    /**
-     * Ensure guest belongs to the active tenant hotel.
-     */
-    protected function authorizeGuest(Guest $guest): void
-    {
-        $hotelId = TenantContext::id();
-
-        if ($hotelId && $guest->hotel_id && $guest->hotel_id !== $hotelId) {
-            abort(404, 'Guest not found.');
-        }
-    }
 }
-

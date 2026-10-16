@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\KitchenOrderResource;
 use App\Models\Order;
 use App\Services\KitchenService;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 use Throwable;
 
@@ -18,41 +18,9 @@ class KitchenController extends Controller
         protected KitchenService $kitchenService
     ) {}
 
-    private function resolveTenant(Request $request): ?string
-    {
-        $hotelId = $request->input('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId();
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
-
-    private function validateOrderHotelAccess(Order $order, Request $request): void
-    {
-        $activeHotelId = $this->resolveTenant($request);
-        $user = auth()->user();
-
-        if ($user && $user->isPlatformAdmin()) {
-            return;
-        }
-
-        if ($activeHotelId && $order->hotel_id && $order->hotel_id !== $activeHotelId) {
-            abort(403, 'Order does not belong to the active hotel kitchen.');
-        }
-
-        if ($user && method_exists($user, 'belongsToHotel') && $order->hotel_id && !$user->belongsToHotel($order->hotel_id)) {
-            abort(403, 'You do not have kitchen access for this hotel.');
-        }
-    }
-
     public function index(Request $request): JsonResponse
     {
         try {
-            $this->resolveTenant($request);
             $orders = $this->kitchenService->getKitchenOrders(auth()->user());
 
             return response()->json([
@@ -66,7 +34,7 @@ class KitchenController extends Controller
                 ]
             ]);
         } catch (Throwable $e) {
-            \Log::error('[KITCHEN] Failed to load orders: ' . $e->getMessage());
+            Log::error('[KITCHEN] Failed to load orders: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
@@ -79,7 +47,6 @@ class KitchenController extends Controller
     public function start(Request $request, Order $order): JsonResponse
     {
         try {
-            $this->validateOrderHotelAccess($order, $request);
             $updatedOrder = $this->kitchenService->startPreparing($order, auth()->user());
 
             return response()->json([
@@ -103,7 +70,6 @@ class KitchenController extends Controller
     public function ready(Request $request, Order $order): JsonResponse
     {
         try {
-            $this->validateOrderHotelAccess($order, $request);
             $updatedOrder = $this->kitchenService->markReady($order);
 
             return response()->json([
@@ -127,7 +93,6 @@ class KitchenController extends Controller
     public function complete(Request $request, Order $order): JsonResponse
     {
         try {
-            $this->validateOrderHotelAccess($order, $request);
             $updatedOrder = $this->kitchenService->markServed($order);
 
             return response()->json([
@@ -151,7 +116,6 @@ class KitchenController extends Controller
     public function statistics(Request $request): JsonResponse
     {
         try {
-            $this->resolveTenant($request);
             $statistics = $this->kitchenService->statistics(auth()->user());
 
             return response()->json([
@@ -166,4 +130,3 @@ class KitchenController extends Controller
         }
     }
 }
-

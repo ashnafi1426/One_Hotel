@@ -155,9 +155,8 @@ class ManagerController extends Controller
     {
         try {
             $validated = $request->validated();
-            $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;
 
-            $waiter = DB::transaction(function () use ($validated, $hotelId) {
+            $waiter = DB::transaction(function () use ($validated) {
                 if (empty($validated['user_id'])) {
                     if (empty($validated['first_name']) || empty($validated['last_name']) ||
                         empty($validated['email']) || empty($validated['password'])) {
@@ -165,7 +164,6 @@ class ManagerController extends Controller
                     }
 
                     $user = User::create([
-                        'hotel_id' => $hotelId,
                         'first_name' => $validated['first_name'],
                         'last_name' => $validated['last_name'],
                         'email' => $validated['email'],
@@ -179,7 +177,6 @@ class ManagerController extends Controller
                 }
 
                 return Waiter::create([
-                    'hotel_id' => $hotelId,
                     'user_id' => $validated['user_id'],
                     'section' => $validated['section'],
                     'status' => $validated['status'],

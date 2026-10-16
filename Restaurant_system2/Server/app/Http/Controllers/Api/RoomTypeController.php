@@ -7,7 +7,6 @@ use App\Http\Requests\StoreRoomTypeRequest;
 use App\Http\Requests\UpdateRoomTypeRequest;
 use App\Http\Resources\RoomTypeResource;
 use App\Models\RoomType;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -20,17 +19,7 @@ class RoomTypeController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $hotelId = TenantContext::id()
-            ?: $request->input('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: $request->header('x-hotel-id')
-            ?: auth()->user()?->hotel_id;
-
         $query = RoomType::query()->withCount('rooms');
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if ($request->filled('search')) {
             $search = trim($request->input('search'));
@@ -56,13 +45,7 @@ class RoomTypeController extends Controller
     public function store(StoreRoomTypeRequest $request): JsonResponse
     {
         try {
-            $hotelId = TenantContext::id()
-                ?: $request->input('hotel_id')
-                ?: $request->header('X-Hotel-ID')
-                ?: $request->header('x-hotel-id');
-
             $validated = $request->validated();
-            $validated['hotel_id'] = $hotelId;
             $validated['amenities'] = $validated['amenities'] ?? [];
             $validated['is_active'] = $validated['is_active'] ?? true;
             $validated['capacity'] = $validated['capacity'] ?? 2;
@@ -147,4 +130,3 @@ class RoomTypeController extends Controller
         }
     }
 }
-

@@ -7,7 +7,6 @@ use App\Http\Requests\StoreTaxRateRequest;
 use App\Http\Requests\UpdateTaxRateRequest;
 use App\Http\Resources\TaxRateResource;
 use App\Models\TaxRate;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,17 +16,11 @@ use Throwable;
 class TaxRateController extends Controller
 {
     /**
-     * Display a listing of tax rates scoped to the current hotel.
+     * Display a listing of tax rates.
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $hotelId = TenantContext::id();
-
         $query = TaxRate::query();
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if ($request->has('is_active')) {
             $query->where('is_active', $request->boolean('is_active'));
@@ -67,21 +60,15 @@ class TaxRateController extends Controller
     public function store(StoreTaxRateRequest $request): JsonResponse
     {
         try {
-            $hotelId = TenantContext::id()
-                ?: $request->header('X-Hotel-ID')
-                ?: $request->header('x-hotel-id');
-
             $validated = $request->validated();
 
             if (!empty($validated['is_default'])) {
-                TaxRate::where('hotel_id', $hotelId)
-                    ->where('applies_to', $validated['applies_to'])
+                TaxRate::where('applies_to', $validated['applies_to'])
                     ->update(['is_default' => false]);
             }
 
             $taxRate = TaxRate::create([
                 'id' => (string) Str::uuid(),
-                'hotel_id' => $hotelId,
                 'name' => $validated['name'],
                 'code' => $validated['code'] ?? strtoupper(Str::slug($validated['name'], '_')),
                 'type' => $validated['type'],
@@ -128,8 +115,7 @@ class TaxRateController extends Controller
 
             if (!empty($validated['is_default'])) {
                 $appliesTo = $validated['applies_to'] ?? $taxRate->applies_to;
-                TaxRate::where('hotel_id', $taxRate->hotel_id)
-                    ->where('applies_to', $appliesTo)
+                TaxRate::where('applies_to', $appliesTo)
                     ->where('id', '!=', $taxRate->id)
                     ->update(['is_default' => false]);
             }
@@ -200,4 +186,3 @@ class TaxRateController extends Controller
         }
     }
 }
-
