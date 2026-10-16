@@ -103,48 +103,8 @@ class AuthController extends Controller
         return response()->json([
             'success' => true,
             'user' => new AuthResource($user),
+            'hotel' => $hotelPayload,
             'current_hotel' => $hotelPayload,
-            'hotels' => $hotelPayload ? [$hotelPayload] : [],
-        ]);
-    }
-
-    /**
-     * Return single hotel workspace.
-     */
-    public function switchHotel(Request $request): JsonResponse
-    {
-        $user = $request->user();
-        $hotel = Hotel::first();
-        $hotelPayload = $hotel ? $this->formatHotelSummary($hotel, $user) : null;
-
-        $authService = app(AuthorizationService::class);
-        $activeRoles = $authService->getActiveRoles($user);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Active hotel context',
-            'user' => new AuthResource($user),
-            'current_hotel' => $hotelPayload,
-            'roles' => $activeRoles->map(fn ($r) => [
-                'id' => $r->id,
-                'name' => $r->name,
-                'slug' => $r->slug,
-            ])->values()->toArray(),
-            'permissions' => $authService->getEffectivePermissions($user),
-        ]);
-    }
-
-    /**
-     * Return single hotel for the user.
-     */
-    public function myHotels(Request $request): JsonResponse
-    {
-        $hotel = Hotel::first();
-        $payload = $hotel ? [$this->formatHotelSummary($hotel, $request->user())] : [];
-
-        return response()->json([
-            'success' => true,
-            'hotels' => $payload,
         ]);
     }
 

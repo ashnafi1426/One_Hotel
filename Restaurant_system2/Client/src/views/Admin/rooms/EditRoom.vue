@@ -5,7 +5,6 @@ import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import axios from '@/services/axios'
 import { roomService } from '../../../services/roomService'
 import { useRoomTypeStore } from '../../../stores/roomType'
-import { useHotelStore } from '@/stores/hotelStore'
 import SearchableSelect from '@/components/common/SearchableSelect.vue'
 import {
   ArrowLeft,
@@ -24,7 +23,6 @@ const route = useRoute()
 const roomId = String(route.params.id)
 
 const roomTypeStore = useRoomTypeStore()
-const hotelStore = useHotelStore()
 const roomTypes = ref<any[]>([])
 const floors = ref<any[]>([])
 
@@ -58,11 +56,9 @@ const loadData = async () => {
 
     try {
       let res: any
-      const activeHotelId = hotelStore.hotelId
       const floorParams = {
         is_active: 1,
         per_page: 100,
-        hotel_id: activeHotelId || undefined,
       }
       try {
         res = await axios.get('/floors', { params: floorParams })
@@ -155,13 +151,6 @@ const updateRoom = async () => {
 onMounted(() => {
   loadData()
 })
-
-watch(
-  () => hotelStore.hotelId,
-  () => {
-    loadData()
-  },
-)
 </script>
 
 <template>

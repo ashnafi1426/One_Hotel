@@ -16,12 +16,10 @@ import {
 } from 'lucide-vue-next'
 import api from '@/api/auth'
 import { useTableAssignmentStore } from '@/stores/manager/tableAssignmentStore'
-import { useHotelStore } from '@/stores/hotelStore'
 
 interface Props {
   isOpen?: boolean
   initialTableId?: string
-  hotelId?: string
 }
 
 interface Emits {
@@ -33,13 +31,11 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   isOpen: true,
   initialTableId: '',
-  hotelId: '',
 })
 
 const emit = defineEmits<Emits>()
 
 const tableAssignmentStore = useTableAssignmentStore()
-const hotelStore = useHotelStore()
 
 const tables = ref<any[]>([])
 const waiters = ref<any[]>([])
@@ -120,11 +116,7 @@ const loadTables = async () => {
 
 const loadWaiters = async () => {
   try {
-    const targetHotelId =
-      props.hotelId || hotelStore.hotelId || localStorage.getItem('hotel_id') || ''
-    const response = await api.get('/manager/waiters', {
-      params: targetHotelId ? { hotel_id: targetHotelId } : {},
-    })
+    const response = await api.get('/manager/waiters')
     let list: any[] = []
     if (Array.isArray(response.data?.data)) {
       list = response.data.data

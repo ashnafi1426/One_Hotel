@@ -369,14 +369,7 @@ const handleSubmit = async () => {
   successText.value = ''
 
   try {
-    const hotelTarget =
-      guestHotelStore.hotelId ||
-      guestHotelStore.currentHotel?.slug ||
-      localStorage.getItem('guest_hotel_id') ||
-      'executive-horizon'
-
     const response = await publicAxios.post('/guest/contact-messages', {
-      hotel_id: hotelTarget,
       name: form.value.name,
       email: form.value.email,
       phone: form.value.phone || undefined,

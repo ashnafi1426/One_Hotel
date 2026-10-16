@@ -743,10 +743,6 @@ const placeOrderWithRoomCharge = async () => {
         updated_at: new Date().toISOString(),
       }
 
-      // Store order data for OrderStatusPage
-      if (orderResponse.data.hotel_id) {
-        localStorage.setItem('hotel_id', orderResponse.data.hotel_id)
-      }
       if (qrToken.value) {
         localStorage.setItem('guest_qr_token', qrToken.value)
       }
@@ -771,7 +767,6 @@ const placeOrderWithRoomCharge = async () => {
         name: 'order-status',
         params: { orderId: createdOrderId },
         query: {
-          hotel_id: orderResponse.data.hotel_id,
           qr_token: qrToken.value,
           order_number: orderResponse.data.order_number,
         },

@@ -86,8 +86,8 @@ export interface PaymentStatusEvent {
   updated_at: string
 }
 
-export function useOrderStatus(orderId: string, initialHotelId: string, initialQrToken?: string) {
-  const hotelId = ref<string>(initialHotelId)
+export function useOrderStatus(orderId: string, initialHotelId?: string, initialQrToken?: string) {
+  const hotelId = ref<string>(initialHotelId || localStorage.getItem('hotel_id') || '')
   const currentQrToken = ref<string>(initialQrToken || '')
   const orderData = ref<OrderData | null>(null)
   const status = ref<string>('loading')
@@ -300,14 +300,8 @@ export function useOrderStatus(orderId: string, initialHotelId: string, initialQ
       return
     }
 
-    if (!hotelId.value) {
-      console.error('[useOrderStatus] ❌ Cannot subscribe: hotel_id is empty')
-      error.value = 'Configuration error: hotel ID not available'
-      return
-    }
-
     try {
-      const channelName = `orders.${hotelId.value}.${orderId}`
+      const channelName = `orders.${orderId}`
       console.log(`[useOrderStatus] 📡 Subscribing to channel: ${channelName}`)
 
       channel = window.Echo.private(channelName)

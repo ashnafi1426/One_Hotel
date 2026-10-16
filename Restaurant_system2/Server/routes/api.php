@@ -94,8 +94,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
     Route::get('/auth/me', [AuthController::class, 'me']);
-    Route::post('/auth/switch-hotel', [AuthController::class, 'switchHotel']);
-    Route::get('/auth/my-hotels', [AuthController::class, 'myHotels']);
     Route::post('/auth/update-password', [AuthController::class, 'updatePassword']);
 
     // Admin Booking Management Routes

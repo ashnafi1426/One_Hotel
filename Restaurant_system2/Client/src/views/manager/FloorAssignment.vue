@@ -5,7 +5,6 @@ import AddStaffToFloorModal from '@/components/manager/AddStaffToFloorModal.vue'
 import FloorDeepDetailsModal from '@/components/manager/FloorDeepDetailsModal.vue'
 import AddEditFloorModal from '@/components/manager/AddEditFloorModal.vue'
 import { useFloorAssignmentStore } from '@/stores/manager/floorAssignmentStore'
-import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
 import floorManagementService, { type Floor } from '@/services/manager/floorManagementService'
 import {
@@ -42,7 +41,6 @@ import {
 } from 'lucide-vue-next'
 
 const assignmentStore = useFloorAssignmentStore()
-const hotelStore = useHotelStore()
 const languageStore = useLanguageStore()
 
 const isLoading = ref(false)
@@ -239,7 +237,6 @@ const openAddStaff = (floor: Floor) => {
   selectedFloorForModal.value = {
     id: floor.id,
     name: floor.name || `Floor ${floor.floor_number}`,
-    hotel_id: floor.hotel_id,
   }
   showAddStaffModal.value = true
 }
@@ -341,7 +338,6 @@ const refreshData = async () => {
 }
 
 onMounted(loadData)
-watch(() => hotelStore.hotelId, loadData)
 </script>
 
 <template>
@@ -1151,7 +1147,6 @@ watch(() => hotelStore.hotelId, loadData)
       :is-open="showAddStaffModal"
       :floor-id="selectedFloorForModal.id"
       :floor-name="selectedFloorForModal.name"
-      :hotel-id="selectedFloorForModal.hotel_id"
       :floors="allFloors"
       @close="showAddStaffModal = false"
       @assigned="handleStaffAssigned"

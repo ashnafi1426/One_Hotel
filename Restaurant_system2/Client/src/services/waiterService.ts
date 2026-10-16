@@ -8,8 +8,7 @@ import type {
 } from '@/types/waiter'
 class WaiterService {
   private getTenantParams(extra: Record<string, any> = {}) {
-    const hotelId = typeof localStorage !== 'undefined' ? localStorage.getItem('hotel_id') : null
-    return hotelId ? { hotel_id: hotelId, ...extra } : extra
+    return extra
   }
 
   async getDashboard(customParams?: any): Promise<WaiterDashboard> {

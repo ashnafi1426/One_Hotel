@@ -550,7 +550,6 @@ function trackOrder(): void {
       params: { orderId },
       query: {
         qr_token: qrToken || undefined,
-        hotel_id: hotelId || undefined,
         order_number: orderData.value?.order_number || undefined,
         tx_ref: txRef.value || undefined,
       },
@@ -605,7 +604,6 @@ async function fetchOrderByTxRef(txRefValue: string): Promise<void> {
         params: { orderId },
         query: {
           qr_token: qrToken || undefined,
-          hotel_id: hotelId || undefined,
           order_number: data.order.order_number || undefined,
         },
       })

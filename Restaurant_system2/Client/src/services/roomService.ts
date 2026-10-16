@@ -25,10 +25,9 @@ export const roomService = {
     return publicAxios.get('/rooms', { params, headers: getGuestHotelHeaders() })
   },
 
-  getAllRooms(hotelId?: string) {
+  getAllRooms() {
     const token = localStorage.getItem('token')
     const params: any = { per_page: 1000 }
-    if (hotelId) params.hotel_id = hotelId
     if (token) {
       return api.get('/rooms', { params })
     }

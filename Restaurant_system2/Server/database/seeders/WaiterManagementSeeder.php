@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Waiter;
-use App\Models\HotelFloor;
+use App\Models\Floor;
 use App\Models\HotelShift;
 use App\Models\WaiterFloorAssignment;
 use App\Models\User;
@@ -12,10 +12,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 
-/**
- * WaiterManagementSeeder
- * Seeds shifts, floors, waiters, and floor assignments with proper UUID handling
- */
+
 class WaiterManagementSeeder extends Seeder
 {
     private array $shiftIds = [];
@@ -146,7 +143,7 @@ class WaiterManagementSeeder extends Seeder
         ];
 
         foreach ($floors as $floorData) {
-            $existing = HotelFloor::where('floor_number', $floorData['floor_number'])->first();
+            $existing = Floor::where('floor_number', $floorData['floor_number'])->first();
             
             if ($existing) {
                 $this->floorIds[$floorData['floor_number']] = $existing->id;
@@ -154,7 +151,7 @@ class WaiterManagementSeeder extends Seeder
                 $this->command->line("     UUID: {$existing->id}");
             } else {
                 $uuid = Str::uuid()->toString();
-                HotelFloor::create([
+                Floor::create([
                     'id' => $uuid,
                     ...$floorData,
                 ]);

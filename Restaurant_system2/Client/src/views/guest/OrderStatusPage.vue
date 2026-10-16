@@ -512,13 +512,12 @@ const handlePayNow = () => {
       paymentPayload,
     )
 
-    // Navigate to Pay Your Order page (Screenshot 2)
+    // Navigate to Pay Your Order page
     router.push({
       path: '/order/payment',
       query: {
         order_id: currentOrderId,
         qr_token: currentQrToken || undefined,
-        hotel_id: currentHotelId || undefined,
       },
     })
   } catch (err: any) {

@@ -3,7 +3,6 @@ import { reactive, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import axios from '@/services/axios'
 import { useRoomTypeStore } from '../../stores/roomType'
-import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
 import { roomService } from '../../services/roomService'
 import SearchableSelect from '@/components/common/SearchableSelect.vue'
@@ -28,7 +27,6 @@ const emit = defineEmits(['submit', 'cancel'])
 
 const router = useRouter()
 const roomTypeStore = useRoomTypeStore()
-const hotelStore = useHotelStore()
 const languageStore = useLanguageStore()
 
 const roomTypes = ref<any[]>([])
@@ -73,11 +71,10 @@ const populateInitial = (data: any) => {
   }
 }
 
-const loadRoomTypes = async (activeHotelId?: string) => {
+const loadRoomTypes = async () => {
   loadingRoomTypes.value = true
   try {
     await roomTypeStore.fetchRoomTypes({
-      hotel_id: activeHotelId || undefined,
       per_page: 100,
       is_active: 1,
     })
@@ -89,13 +86,12 @@ const loadRoomTypes = async (activeHotelId?: string) => {
   }
 }
 
-const loadFloors = async (activeHotelId?: string) => {
+const loadFloors = async () => {
   loadingFloors.value = true
   try {
     const floorParams = {
       is_active: 1,
       per_page: 100,
-      hotel_id: activeHotelId || undefined,
     }
     let res: any
     try {
@@ -122,11 +118,10 @@ const loadFloors = async (activeHotelId?: string) => {
   }
 }
 
-const loadExistingRoomNumbers = async (activeHotelId?: string) => {
+const loadExistingRoomNumbers = async () => {
   loadingRoomNumbers.value = true
   try {
     const response = await roomService.getRooms({
-      hotel_id: activeHotelId || undefined,
       per_page: 100,
     })
     const rooms = response.data?.data || response.data || []
@@ -140,13 +135,11 @@ const loadExistingRoomNumbers = async (activeHotelId?: string) => {
   }
 }
 
-const loadHotelData = () => {
-  const activeHotelId = hotelStore.hotelId
-
+const loadFormData = () => {
   Promise.allSettled([
-    loadRoomTypes(activeHotelId),
-    loadFloors(activeHotelId),
-    loadExistingRoomNumbers(activeHotelId),
+    loadRoomTypes(),
+    loadFloors(),
+    loadExistingRoomNumbers(),
   ]).then(() => {
     if (props.initialData) {
       populateInitial(props.initialData)
@@ -159,11 +152,9 @@ const quickCreateFloor = async () => {
   isCreatingFloor.value = true
   floorCreateError.value = null
   try {
-    const activeHotelId = hotelStore.hotelId
     const payload = {
       floor_number: Number(newFloorNumber.value),
       name: newFloorName.value?.trim() || `Floor ${newFloorNumber.value}`,
-      hotel_id: activeHotelId || undefined,
     }
     let res: any
     try {
@@ -190,15 +181,8 @@ const quickCreateFloor = async () => {
 }
 
 onMounted(() => {
-  loadHotelData()
+  loadFormData()
 })
-
-watch(
-  () => hotelStore.hotelId,
-  () => {
-    loadHotelData()
-  },
-)
 
 watch(
   () => props.initialData,

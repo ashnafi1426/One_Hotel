@@ -74,9 +74,6 @@ export function useQRMenuOrder() {
           updated_at: new Date().toISOString(),
         }
 
-        if (orderResponse.data.hotel_id) {
-          localStorage.setItem('hotel_id', orderResponse.data.hotel_id)
-        }
         if (qrToken) {
           localStorage.setItem('guest_qr_token', qrToken)
         }
@@ -96,7 +93,6 @@ export function useQRMenuOrder() {
           name: 'order-status',
           params: { orderId: createdOrderId },
           query: {
-            hotel_id: orderResponse.data.hotel_id,
             qr_token: qrToken,
             order_number: orderResponse.data.order_number,
           },

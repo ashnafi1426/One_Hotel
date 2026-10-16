@@ -14,13 +14,11 @@ import {
   UserCheck,
 } from 'lucide-vue-next'
 import api from '@/api/auth'
-import { useHotelStore } from '@/stores/hotelStore'
 
 interface Props {
   isOpen?: boolean
   floorId: string
   floorName?: string
-  hotelId?: string
   floors?: any[]
 }
 
@@ -33,12 +31,10 @@ interface Emits {
 const props = withDefaults(defineProps<Props>(), {
   isOpen: true,
   floorName: '',
-  hotelId: '',
   floors: () => [],
 })
 
 const emit = defineEmits<Emits>()
-const hotelStore = useHotelStore()
 
 const availableFloors = ref<any[]>([])
 const selectedFloorId = ref<string>(props.floorId || '')
@@ -122,11 +118,7 @@ const loadFloors = async () => {
 
 const loadWaiters = async () => {
   try {
-    const targetHotelId =
-      props.hotelId || hotelStore.hotelId || localStorage.getItem('hotel_id') || ''
-    const response = await api.get('/manager/waiters', {
-      params: targetHotelId ? { hotel_id: targetHotelId } : {},
-    })
+    const response = await api.get('/manager/waiters')
     const data = response.data?.data || response.data
     const all = Array.isArray(data) ? data : []
     waiters.value = all

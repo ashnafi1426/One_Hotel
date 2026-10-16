@@ -620,13 +620,9 @@ const saveToClientCache = () => {
 const loadCategories = async (forceRefresh = false) => {
   loadingCategories.value = true
   try {
-    const resolvedHotelId = props.hotelId || guestHotelStore.hotelId
     const params: Record<string, any> = {}
     if (props.qrToken) {
       params.qr_token = props.qrToken
-    }
-    if (resolvedHotelId) {
-      params.hotel_id = resolvedHotelId
     }
     if (forceRefresh) {
       params.refresh = 1
@@ -706,7 +702,6 @@ const loadMenuItems = async (forceRefresh = false) => {
   }
   errorMessage.value = ''
   try {
-    const resolvedHotelId = props.hotelId || guestHotelStore.hotelId
     let url = '/guest/menu/items'
 
     if (props.qrToken) {
@@ -715,7 +710,6 @@ const loadMenuItems = async (forceRefresh = false) => {
 
     const params: Record<string, any> = {}
     if (forceRefresh) params.refresh = 1
-    if (resolvedHotelId) params.hotel_id = resolvedHotelId
     if (props.qrToken) params.qr_token = props.qrToken
 
     const reqHeaders: Record<string, string> = {}

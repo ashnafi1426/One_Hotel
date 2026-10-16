@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { reactive, ref, watch, onMounted, computed } from 'vue'
 import { Save, X, Plus, Loader2, AlertCircle, CheckCircle2 } from 'lucide-vue-next'
-import { useHotelStore } from '@/stores/hotelStore'
 import { roomTypeService } from '@/services/roomTypeService'
 import type { RoomType } from '../../types/roomType'
 
@@ -13,7 +12,6 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue', 'submit', 'cancel'])
 
-const hotelStore = useHotelStore()
 const form = reactive<RoomType>({ ...props.modelValue })
 const existingNames = ref<string[]>([])
 const loadingExisting = ref(false)
@@ -22,7 +20,6 @@ const loadExistingTypes = async () => {
   try {
     loadingExisting.value = true
     const res = await roomTypeService.getRoomTypes({
-      hotel_id: hotelStore.hotelId,
       per_page: 100,
     })
     const list = res.data?.data || []
@@ -39,13 +36,6 @@ const loadExistingTypes = async () => {
 onMounted(() => {
   loadExistingTypes()
 })
-
-watch(
-  () => hotelStore.hotelId,
-  () => {
-    loadExistingTypes()
-  },
-)
 
 watch(
   () => props.modelValue,
