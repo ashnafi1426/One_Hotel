@@ -44,7 +44,7 @@ class PaymentStatusUpdated implements ShouldBroadcast, ShouldQueue
         ?float $tip = null
     ) {
         $this->orderId = $order->id;
-        $this->hotelId = $order->hotel_id;
+        $this->hotelId = $order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544';
         $this->orderNumber = $order->order_number;
         $this->paymentStatus = $this->normalizePaymentStatus($order);
         $this->paymentMethod = $paymentMethod ?? 'chapa';
@@ -62,10 +62,11 @@ class PaymentStatusUpdated implements ShouldBroadcast, ShouldQueue
     public function broadcastOn(): array
     {
         return [
-
+            new PrivateChannel("orders.{$this->orderId}"),
             new PrivateChannel("orders.{$this->hotelId}.{$this->orderId}"),
-
+            new PrivateChannel("hotel.orders"),
             new PrivateChannel("hotel.{$this->hotelId}.orders"),
+            new PrivateChannel("payments"),
             new PrivateChannel("payments.{$this->hotelId}"),
         ];
     }

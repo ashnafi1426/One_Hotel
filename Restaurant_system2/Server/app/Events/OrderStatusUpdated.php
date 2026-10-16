@@ -43,7 +43,7 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
     public function __construct(Order $order, ?string $previousStatus = null)
     {
         $this->orderId = $order->id;
-        $this->hotelId = $order->hotel_id;
+        $this->hotelId = $order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544';
         $this->status = $order->status;
         $this->previousStatus = $previousStatus;
         $this->orderNumber = $order->order_number;
@@ -62,11 +62,11 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
     public function broadcastOn(): array
     {
         return [
-
+            new PrivateChannel("orders.{$this->orderId}"),
             new PrivateChannel("orders.{$this->hotelId}.{$this->orderId}"),
-
+            new PrivateChannel("hotel.kitchen"),
             new PrivateChannel("hotel.{$this->hotelId}.kitchen"),
-
+            new PrivateChannel("hotel.orders"),
             new PrivateChannel("hotel.{$this->hotelId}.orders"),
         ];
     }

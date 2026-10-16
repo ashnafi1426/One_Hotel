@@ -43,7 +43,7 @@ class OrderCreated implements ShouldBroadcast, ShouldQueue
         $order->load(['orderItems', 'room', 'table', 'guest']);
 
         $this->orderId = $order->id;
-        $this->hotelId = $order->hotel_id;
+        $this->hotelId = $order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544';
         $this->orderNumber = $order->order_number;
         $this->orderType = $order->order_type ?? 'room_service';
         $this->status = $order->status ?? 'pending';
@@ -63,9 +63,9 @@ class OrderCreated implements ShouldBroadcast, ShouldQueue
     public function broadcastOn(): array
     {
         return [
-
+            new PrivateChannel("hotel.kitchen"),
             new PrivateChannel("hotel.{$this->hotelId}.kitchen"),
-
+            new PrivateChannel("hotel.orders"),
             new PrivateChannel("hotel.{$this->hotelId}.orders"),
         ];
     }
