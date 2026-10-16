@@ -13,7 +13,7 @@ trait BelongsToTenant
 
     public function hotel()
     {
-        return $this->belongsTo(Hotel::class, 'hotel_id')->withDefault(function () {
+        return $this->belongsTo(Hotel::class, 'id', 'id')->withDefault(function () {
             return Hotel::first();
         });
     }

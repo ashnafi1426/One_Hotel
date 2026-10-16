@@ -16,7 +16,6 @@ class MenuItem extends Model
     protected $keyType = 'string';
     protected $table = 'menu_items';
     protected $fillable = [
-        'hotel_id',
         'name',
         'description',
         'category',

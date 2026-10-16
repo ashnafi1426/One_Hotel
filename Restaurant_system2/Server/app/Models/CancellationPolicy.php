@@ -23,7 +23,6 @@ class CancellationPolicy extends Model
     public const TYPE_NON_REFUNDABLE = 'non_refundable';
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'type',
         'description',
@@ -151,15 +150,14 @@ class CancellationPolicy extends Model
         ];
     }
 
-    public static function getDefaultPolicy(string $hotelId): ?self
+    public static function getDefaultPolicy(?string $hotelId = null): ?self
     {
-        return self::where('hotel_id', $hotelId)
-            ->where('type', self::TYPE_MODERATE)
+        return self::where('type', self::TYPE_MODERATE)
             ->active()
             ->first();
     }
 
-    public static function createStandardPolicies(string $hotelId, string $createdBy): void
+    public static function createStandardPolicies(?string $hotelId = null, string $createdBy = 'system'): void
     {
         $policies = [
             [
@@ -194,7 +192,6 @@ class CancellationPolicy extends Model
 
         foreach ($policies as $policy) {
             self::create([
-                'hotel_id' => $hotelId,
                 'name' => $policy['name'],
                 'type' => $policy['type'],
                 'description' => $policy['description'],

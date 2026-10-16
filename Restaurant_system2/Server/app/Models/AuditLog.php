@@ -17,7 +17,6 @@ class AuditLog extends Model
 
     protected $fillable = [
         'id',
-        'hotel_id',
         'user_id',
         'action',
         'target_table',
@@ -40,7 +39,7 @@ class AuditLog extends Model
 
     public function hotel(): BelongsTo
     {
-        return $this->belongsTo(Hotel::class, 'hotel_id');
+        return $this->belongsTo(Hotel::class, 'id', 'id')->withDefault(fn() => Hotel::first());
     }
 
     public static function record(
@@ -55,7 +54,6 @@ class AuditLog extends Model
     ): self {
         return self::create([
             'id' => (string) \Illuminate\Support\Str::uuid(),
-            'hotel_id' => $hotelId,
             'user_id' => $userId ?: \Illuminate\Support\Facades\Auth::id(),
             'action' => $action,
             'target_table' => $targetTable,

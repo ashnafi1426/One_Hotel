@@ -14,7 +14,6 @@ class DeliveryLog extends Model
     protected $table = 'delivery_logs';
 
     protected $fillable = [
-        'hotel_id',
         'waiter_id',
         'order_id',
         'room_id',

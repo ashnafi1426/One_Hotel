@@ -13,7 +13,6 @@ class CheckIn extends Model
     protected $table = 'check_ins';
 
     protected $fillable = [
-        'hotel_id',
         'reservation_id',
         'guest_id',
         'room_id',

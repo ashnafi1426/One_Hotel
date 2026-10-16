@@ -15,7 +15,6 @@ class Reservation extends Model
     public $incrementing = false;
 
     protected $fillable = [
-        'hotel_id',
         'booking_reference',
         'guest_id',
         'room_id',

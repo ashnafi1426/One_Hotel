@@ -14,7 +14,6 @@ class RestaurantTable extends Model
     use HasUuids, SoftDeletes, BelongsToTenant;
 
     protected $fillable = [
-        'hotel_id',
         'table_number',
         'table_name',
         'capacity',
@@ -279,23 +278,20 @@ class RestaurantTable extends Model
             ['table_number' => 'B03', 'table_name' => 'Bar High Table', 'capacity' => 4, 'location' => 'Bar'],
         ];
 
-        foreach ($hotelIds as $hId) {
-            $hasTables = self::withoutTenant()->where('hotel_id', $hId)->exists();
-            if (!$hasTables) {
-                foreach ($defaultTables as $tableData) {
-                    try {
-                        self::withoutTenant()->create([
-                            'hotel_id' => $hId,
-                            'table_number' => $tableData['table_number'],
-                            'table_name' => $tableData['table_name'],
-                            'capacity' => $tableData['capacity'],
-                            'location' => $tableData['location'],
-                            'status' => self::STATUS_AVAILABLE,
-                            'is_active' => true,
-                        ]);
-                    } catch (\Throwable $e) {
-                        \Log::warning("seedDefaultTablesForHotel error for table {$tableData['table_number']}: " . $e->getMessage());
-                    }
+        $hasTables = self::exists();
+        if (!$hasTables) {
+            foreach ($defaultTables as $tableData) {
+                try {
+                    self::create([
+                        'table_number' => $tableData['table_number'],
+                        'table_name' => $tableData['table_name'],
+                        'capacity' => $tableData['capacity'],
+                        'location' => $tableData['location'],
+                        'status' => self::STATUS_AVAILABLE,
+                        'is_active' => true,
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::warning("seedDefaultTables error for table {$tableData['table_number']}: " . $e->getMessage());
                 }
             }
         }

@@ -12,7 +12,6 @@ class WaiterPerformance extends Model
     use HasFactory, BelongsToTenant;
     protected $table = 'waiter_performance';
     protected $fillable = [
-        'hotel_id',
         'waiter_id',
         'metric_date',
         'deliveries_assigned',

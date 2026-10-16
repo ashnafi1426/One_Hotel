@@ -14,7 +14,6 @@ class RestaurantSection extends Model
     protected $table = 'restaurant_sections';
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'description',
         'is_active',

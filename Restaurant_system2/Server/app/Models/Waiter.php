@@ -18,7 +18,6 @@ class Waiter extends Model
     protected $with = ['user'];
 
     protected $fillable = [
-        'hotel_id',
         'user_id',
         'employee_number',
         'phone',

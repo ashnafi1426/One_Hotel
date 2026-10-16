@@ -16,7 +16,6 @@ class HotelShift extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $fillable = [
-        'hotel_id',
         'name',
         'start_time',
         'end_time',
@@ -119,23 +118,20 @@ class HotelShift extends Model
             ],
         ];
 
-        foreach ($hotelIds as $hId) {
-            $hasShifts = self::withoutTenant()->where('hotel_id', $hId)->exists();
-            if (!$hasShifts) {
-                foreach ($defaultShifts as $shiftData) {
-                    try {
-                        self::withoutTenant()->create([
-                            'id' => \Illuminate\Support\Str::uuid(),
-                            'hotel_id' => $hId,
-                            'name' => $shiftData['name'],
-                            'start_time' => $shiftData['start_time'],
-                            'end_time' => $shiftData['end_time'],
-                            'status' => $shiftData['status'],
-                            'description' => $shiftData['description'],
-                        ]);
-                    } catch (\Throwable $e) {
-                        \Log::warning("seedDefaultShiftsForHotel error: " . $e->getMessage());
-                    }
+        $hasShifts = self::exists();
+        if (!$hasShifts) {
+            foreach ($defaultShifts as $shiftData) {
+                try {
+                    self::create([
+                        'id' => \Illuminate\Support\Str::uuid(),
+                        'name' => $shiftData['name'],
+                        'start_time' => $shiftData['start_time'],
+                        'end_time' => $shiftData['end_time'],
+                        'status' => $shiftData['status'],
+                        'description' => $shiftData['description'],
+                    ]);
+                } catch (\Throwable $e) {
+                    \Log::warning("seedDefaultShifts error: " . $e->getMessage());
                 }
             }
         }

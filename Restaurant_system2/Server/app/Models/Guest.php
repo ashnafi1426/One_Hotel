@@ -17,7 +17,6 @@ class Guest extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'first_name',
         'last_name',
         'email',

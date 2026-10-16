@@ -16,7 +16,6 @@ class TaxRate extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'code',
         'type',

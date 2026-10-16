@@ -13,7 +13,6 @@ class WaiterAssignment extends Model
 
     protected $table = 'waiter_assignments';
     protected $fillable = [
-        'hotel_id',
         'waiter_id',
         'order_id',
         'assigned_by',

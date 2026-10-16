@@ -13,7 +13,6 @@ class Role extends Model
     use HasFactory, BelongsToTenant;
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'slug',
         'description',

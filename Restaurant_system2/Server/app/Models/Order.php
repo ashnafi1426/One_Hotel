@@ -14,7 +14,6 @@ class Order extends Model
     public $incrementing = false;
     protected $keyType = 'string';
     protected $fillable = [
-        'hotel_id',
         'order_number',
         'reservation_id',
         'guest_id',

@@ -21,7 +21,6 @@ class Floor extends Model
 
     protected $fillable = [
         'id',
-        'hotel_id',
         'name',
         'floor_number',
         'description',
@@ -52,7 +51,7 @@ class Floor extends Model
 
     public function hotel(): BelongsTo
     {
-        return $this->belongsTo(Hotel::class, 'hotel_id');
+        return $this->belongsTo(Hotel::class, 'id', 'id')->withDefault(fn() => Hotel::first());
     }
 
     public function rooms(): HasMany

@@ -18,7 +18,6 @@ class Payment extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'tx_ref',
         'transaction_reference',
         'invoice_id',
@@ -61,17 +60,10 @@ class Payment extends Model
             }
             if (empty($payment->guest_id) && !empty($payment->email)) {
                 try {
-                    $hotelId = $payment->hotel_id ?? app(\App\Services\TenantContext::class)->getHotelId();
-                    $guest = \App\Models\Guest::withoutGlobalScopes()
-                        ->where('email', $payment->email)
-                        ->when($hotelId, fn($q) => $q->where(function ($sub) use ($hotelId) {
-                            $sub->where('hotel_id', $hotelId)->orWhereNull('hotel_id');
-                        }))
-                        ->first();
+                    $guest = \App\Models\Guest::where('email', $payment->email)->first();
                     if (!$guest) {
                         $guest = new \App\Models\Guest();
                         $guest->id = (string) \Illuminate\Support\Str::uuid();
-                        $guest->hotel_id = $hotelId;
                         $guest->first_name = $payment->first_name ?: 'Walk-in';
                         $guest->last_name = $payment->last_name ?: 'Guest';
                         $guest->email = $payment->email;

@@ -18,7 +18,6 @@ class Room extends Model
     use HasUuids, BelongsToTenant;
 
     protected $fillable = [
-        'hotel_id',
         'room_number',
         'room_type_id',
         'capacity',
@@ -81,7 +80,7 @@ class Room extends Model
 
     public function hotel(): BelongsTo
     {
-        return $this->belongsTo(Hotel::class, 'hotel_id');
+        return $this->belongsTo(Hotel::class, 'id', 'id')->withDefault(fn() => Hotel::first());
     }
 
     public function roomType(): BelongsTo

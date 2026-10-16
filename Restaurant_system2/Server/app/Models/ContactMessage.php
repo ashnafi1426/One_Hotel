@@ -15,7 +15,6 @@ class ContactMessage extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'email',
         'phone',
@@ -26,6 +25,6 @@ class ContactMessage extends Model
 
     public function hotel()
     {
-        return $this->belongsTo(Hotel::class, 'hotel_id');
+        return $this->belongsTo(Hotel::class, 'id', 'id')->withDefault(fn() => Hotel::first());
     }
 }

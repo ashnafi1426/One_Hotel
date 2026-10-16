@@ -17,7 +17,6 @@ class MenuItemReview extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'guest_id',
         'order_id',
         'menu_item_id',

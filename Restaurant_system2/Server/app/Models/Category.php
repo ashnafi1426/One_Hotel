@@ -15,7 +15,6 @@ class Category extends Model
     protected $keyType = 'string';
 
     protected $fillable = [
-        'hotel_id',
         'name',
         'slug',
         'description',

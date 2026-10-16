@@ -16,7 +16,6 @@ class RoomType extends Model
     protected $keyType = 'string';
     public $incrementing = false;
     protected $fillable = [
-        'hotel_id',
         'name',
         'description',
         'base_price_per_night',
