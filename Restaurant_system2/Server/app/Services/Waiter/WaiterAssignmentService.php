@@ -347,7 +347,7 @@ class WaiterAssignmentService
             throw new \Illuminate\Database\Eloquent\ModelNotFoundException("Task {$id} not found");
         }
 
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
 
         if ($task->waiter_id && (int) $task->waiter_id !== (int) $waiterId && !$isAdminOrManager) {
             throw new \Exception("This delivery task is assigned to another waiter");
@@ -399,15 +399,14 @@ class WaiterAssignmentService
             'waiter_id' => $waiterId,
         ]);
 
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
 
-        $task = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)->where('id', $id)->first()
-            ?? DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)->where('order_id', $id)->first();
+        $task = DeliveryTask::where('id', $id)->first()
+            ?? DeliveryTask::where('order_id', $id)->first();
 
         if (!$task) {
-            $order = \App\Models\Order::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)->find($id);
+            $order = \App\Models\Order::find($id);
             if ($order) {
-                $hotelId = app(\App\Services\TenantContext::class)->getHotelId() ?? $order->hotel_id;
                 $floorId = $order->room?->getFloorId();
 
                 if ($floorId && !$isAdminOrManager) {
@@ -424,7 +423,6 @@ class WaiterAssignmentService
                 }
 
                 $task = DeliveryTask::create([
-                    'hotel_id' => $hotelId,
                     'order_id' => $order->id,
                     'room_id' => $order->room_id,
                     'floor_id' => $floorId,

@@ -21,16 +21,13 @@ class WaiterDashboardService
             return [];
         }
 
-        $hotelId = app(TenantContext::class)->getHotelId();
-        $cacheKey = $hotelId ? "waiter_floor_ids:{$hotelId}:{$waiterId}" : "waiter_floor_ids:{$waiterId}";
+        $cacheKey = "waiter_floor_ids:{$waiterId}";
 
         return Cache::remember($cacheKey, 60, function () use ($waiterId, $hotelId) {
             try {
                 $query = WaiterFloorAssignment::where('waiter_id', $waiterId);
 
-                if ($hotelId) {
-                    $query->where('hotel_id', $hotelId);
-                }
+                // Scoped to single hotel installation
                 return $query->where(function ($q) {
                         $q->where('is_active', true)
                           ->orWhere('status', 'active');
@@ -49,8 +46,7 @@ class WaiterDashboardService
 
     public function clearWaiterFloorCache($waiterId): void
     {
-        $hotelId = app(TenantContext::class)->getHotelId();
-        $cacheKey = $hotelId ? "waiter_floor_ids:{$hotelId}:{$waiterId}" : "waiter_floor_ids:{$waiterId}";
+        $cacheKey = "waiter_floor_ids:{$waiterId}";
         Cache::forget($cacheKey);
     }
 
@@ -60,8 +56,7 @@ class WaiterDashboardService
             return [];
         }
 
-        $hotelId = app(TenantContext::class)->getHotelId();
-        $cacheKey = $hotelId ? "waiter_table_ids:{$hotelId}:{$waiterId}" : "waiter_table_ids:{$waiterId}";
+        $cacheKey = "waiter_table_ids:{$waiterId}";
 
         return Cache::remember($cacheKey, 60, function () use ($waiterId, $hotelId) {
             try {
@@ -69,12 +64,7 @@ class WaiterDashboardService
                     ->where('waiter_id', $waiterId)
                     ->where('status', 'active');
 
-                if ($hotelId) {
-                    $query->where(function ($q) use ($hotelId) {
-                        $q->where('hotel_id', $hotelId)
-                          ->orWhereNull('hotel_id');
-                    });
-                }
+                // Scoped to single hotel installation
 
                 return $query->pluck('table_id')
                     ->filter()
@@ -90,16 +80,14 @@ class WaiterDashboardService
 
     public function clearWaiterTableCache($waiterId): void
     {
-        $hotelId = app(TenantContext::class)->getHotelId();
-        $cacheKey = $hotelId ? "waiter_table_ids:{$hotelId}:{$waiterId}" : "waiter_table_ids:{$waiterId}";
+        $cacheKey = "waiter_table_ids:{$waiterId}";
         Cache::forget($cacheKey);
     }
 
     public function getDashboardStats($waiterId = null): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $cacheKey = "waiter_dashboard_stats:" . ($hotelId ?? 'all') . ":" . ($waiterId ?? auth()->id() ?? 'all');
+            $cacheKey = "waiter_dashboard_stats:" . ($waiterId ?? auth()->id() ?? 'all');
 
             if (request()->query('refresh') !== 'true') {
                 $cached = Cache::get($cacheKey);
@@ -166,17 +154,14 @@ class WaiterDashboardService
     {
         try {
             $today = Carbon::today();
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
 
             $taskQuery = DeliveryTask::withoutGlobalScope(TenantScope::class);
 
-            if ($hotelId) {
-                $taskQuery->where('delivery_tasks.hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $taskQuery->where(function($q) use ($waiterId) {
@@ -253,8 +238,6 @@ class WaiterDashboardService
         try {
             $now = Carbon::now();
             $today = Carbon::today();
-            $hotelId = app(TenantContext::class)->getHotelId();
-
             $userIds = [$waiterId];
             if (auth()->check()) {
                 $userIds[] = auth()->id();
@@ -271,9 +254,7 @@ class WaiterDashboardService
             $userIds = array_values(array_unique(array_filter($userIds)));
 
             $performanceQuery = WaiterPerformance::whereIn('waiter_id', $userIds);
-            if ($hotelId) {
-                $performanceQuery->where('hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             $todayPerformance = (clone $performanceQuery)
                 ->where('metric_date', $today)
@@ -288,9 +269,7 @@ class WaiterDashboardService
 
             $taskMetricsQuery = DeliveryTask::whereIn('waiter_id', $userIds);
 
-            if ($hotelId) {
-                $taskMetricsQuery->where('delivery_tasks.hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             $taskMetrics = $taskMetricsQuery->selectRaw('
                     SUM(CASE WHEN status = "delivered" AND DATE(delivered_at) = CURDATE() THEN 1 ELSE 0 END) as today_completed,
@@ -388,17 +367,14 @@ class WaiterDashboardService
     public function getRecentAssignments($waiterId = null, $limit = 10): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
 
             $baseQuery = DeliveryTask::withoutGlobalScope(TenantScope::class);
 
-            if ($hotelId) {
-                $baseQuery->where('delivery_tasks.hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $baseQuery->where(function ($q) use ($waiterId, $assignedFloorIds, $assignedTableIds, $hasAssignments) {
@@ -581,8 +557,7 @@ class WaiterDashboardService
     public function getPendingCount($waiterId = null): int
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
@@ -590,9 +565,7 @@ class WaiterDashboardService
             $query = DeliveryTask::withoutGlobalScope(TenantScope::class)
                 ->whereIn('status', ['assigned', 'waiting_assignment']);
 
-            if ($hotelId) {
-                $query->where('delivery_tasks.hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $query->where(function($q) use ($waiterId, $assignedFloorIds, $assignedTableIds, $hasAssignments) {
@@ -637,15 +610,12 @@ class WaiterDashboardService
     public function getActiveCount($waiterId = null): int
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
 
             $query = DeliveryTask::withoutGlobalScope(TenantScope::class)
                 ->whereIn('status', ['accepted', 'picked_up', 'on_delivery']);
 
-            if ($hotelId) {
-                $query->where('delivery_tasks.hotel_id', $hotelId);
-            }
+            // Single hotel installation
 
             if (!$isAdminOrManager && $waiterId) {
                 $query->where('delivery_tasks.waiter_id', $waiterId);
@@ -660,17 +630,14 @@ class WaiterDashboardService
     public function getAllKitchenReadyOrders($waiterId = null, int $limit = 20): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
 
             $query = Order::withoutGlobalScope(TenantScope::class)
                 ->where('status', 'ready');
-            if ($hotelId) {
-                $query->where('hotel_id', $hotelId);
-            }
+            // Scoped to single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $query->where(function ($q) use ($waiterId, $assignedFloorIds, $assignedTableIds, $hasAssignments) {
@@ -738,8 +705,7 @@ class WaiterDashboardService
     public function getReadyForPickup($waiterId = null, int $limit = 20): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
@@ -747,12 +713,7 @@ class WaiterDashboardService
             $tasksQuery = DeliveryTask::withoutGlobalScope(TenantScope::class)
                 ->whereIn('status', ['assigned', 'waiting_assignment', 'accepted']);
 
-            if ($hotelId) {
-                $tasksQuery->where(function ($q) use ($hotelId) {
-                    $q->where('delivery_tasks.hotel_id', $hotelId)
-                      ->orWhereNull('delivery_tasks.hotel_id');
-                });
-            }
+            // Single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $tasksQuery->where(function ($q) use ($waiterId, $assignedFloorIds, $assignedTableIds, $hasAssignments) {
@@ -870,8 +831,7 @@ class WaiterDashboardService
     public function getPendingPickupOrders($waiterId, int $limit = 20): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
             $assignedFloorIds = $waiterId ? $this->getWaiterAssignedFloorIds($waiterId) : [];
             $assignedTableIds = $waiterId ? $this->getWaiterAssignedTableIds($waiterId) : [];
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
@@ -879,12 +839,7 @@ class WaiterDashboardService
             $query = DeliveryTask::withoutGlobalScope(TenantScope::class)
                 ->whereIn('status', ['assigned', 'waiting_assignment']);
 
-            if ($hotelId) {
-                $query->where(function ($q) use ($hotelId) {
-                    $q->where('delivery_tasks.hotel_id', $hotelId)
-                      ->orWhereNull('delivery_tasks.hotel_id');
-                });
-            }
+            // Single hotel installation
 
             if ($waiterId && (!$isAdminOrManager || $hasAssignments)) {
                 $query->where(function ($q) use ($waiterId, $assignedFloorIds, $assignedTableIds, $hasAssignments) {
@@ -978,18 +933,12 @@ class WaiterDashboardService
     public function getOnDelivery($waiterId = null, int $limit = 50): array
     {
         try {
-            $hotelId = app(TenantContext::class)->getHotelId();
-            $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+            $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
 
             $baseQuery = DeliveryTask::withoutGlobalScope(TenantScope::class)
                 ->whereIn('status', ['on_delivery', 'picked_up']);
 
-            if ($hotelId) {
-                $baseQuery->where(function($q) use ($hotelId) {
-                    $q->where('delivery_tasks.hotel_id', $hotelId)
-                      ->orWhereNull('delivery_tasks.hotel_id');
-                });
-            }
+            // Single hotel installation
 
             if (!$isAdminOrManager && $waiterId) {
                 $baseQuery->where(function($q) use ($waiterId) {
