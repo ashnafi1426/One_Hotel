@@ -16,21 +16,15 @@ use Illuminate\Validation\ValidationException;
 class CheckInService
 {
     /**
-     * Get paginated check-ins scoped to current hotel tenant.
+     * Get paginated check-ins.
      */
     public function getCheckIns(array $filters = [], int $perPage = 10, ?string $hotelId = null): LengthAwarePaginator
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $query = CheckIn::with([
             'guest',
             'room.roomType',
             'reservation',
         ]);
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
@@ -75,11 +69,9 @@ class CheckInService
      */
     public function checkIn(Reservation|string $reservationOrId, ?string $hotelId = null): CheckIn
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $reservation = $reservationOrId instanceof Reservation
             ? $reservationOrId
-            : Reservation::where('hotel_id', $hotelId)->with(['room', 'guest'])->findOrFail($reservationOrId);
+            : Reservation::with(['room', 'guest'])->findOrFail($reservationOrId);
 
         if (!$reservation->canCheckIn()) {
             throw ValidationException::withMessages([
@@ -93,7 +85,7 @@ class CheckInService
             ]);
         }
 
-        return DB::transaction(function () use ($reservation, $hotelId) {
+        return DB::transaction(function () use ($reservation) {
 
             $reservation->update(['status' => 'checked_in']);
 
@@ -104,7 +96,6 @@ class CheckInService
             $checkIn = CheckIn::firstOrCreate(
                 ['reservation_id' => $reservation->id],
                 [
-                    'hotel_id'              => $reservation->hotel_id ?: $hotelId,
                     'guest_id'              => $reservation->guest_id,
                     'room_id'               => $reservation->room_id,
                     'checked_in_at'         => now(),
@@ -123,8 +114,6 @@ class CheckInService
      */
     public function checkOut(CheckIn|Reservation|string $target, ?string $hotelId = null): CheckIn
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         if ($target instanceof CheckIn) {
             $checkIn = $target;
             $reservation = $checkIn->reservation;
@@ -132,7 +121,6 @@ class CheckInService
             $reservation = $target;
             $checkIn = $reservation->checkIn;
         } else {
-
             $checkIn = CheckIn::where('id', $target)
                 ->orWhere('reservation_id', $target)
                 ->with(['reservation', 'room', 'guest'])
@@ -161,7 +149,7 @@ class CheckInService
             ]);
         }
 
-        return DB::transaction(function () use ($reservation, $checkIn, $hotelId) {
+        return DB::transaction(function () use ($reservation, $checkIn) {
             $now = now();
 
             $reservation->update(['status' => 'checked_out']);
@@ -174,7 +162,6 @@ class CheckInService
                 $checkIn->update(['checked_out_at' => $now]);
             } else {
                 $checkIn = CheckIn::create([
-                    'hotel_id'              => $reservation->hotel_id ?: $hotelId,
                     'reservation_id'        => $reservation->id,
                     'guest_id'              => $reservation->guest_id,
                     'room_id'               => $reservation->room_id,
@@ -191,17 +178,11 @@ class CheckInService
     }
 
     /**
-     * Get check-in statistics scoped strictly to the current hotel.
+     * Get check-in statistics.
      */
     public function getStatistics(?string $hotelId = null): array
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $query = CheckIn::query();
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
-
         $today = today();
 
         $stats = (clone $query)->selectRaw("
@@ -229,17 +210,10 @@ class CheckInService
                 $checkIn->room->update(['status' => 'available']);
             }
 
-            if ($checkIn->reservation && $checkIn->reservation->status === 'checked_in') {
-                $checkIn->reservation->update(['status' => 'confirmed']);
-            }
-
             $checkIn->delete();
         });
     }
 
-    /**
-     * Send check-in confirmation email to guest.
-     */
     protected function sendCheckInEmail(Reservation $reservation): void
     {
         try {
@@ -248,13 +222,10 @@ class CheckInService
                 Mail::to($email)->send(new CheckInConfirmed($reservation));
             }
         } catch (\Throwable $e) {
-            Log::warning("Failed to send check-in email for reservation #{$reservation->id}: {$e->getMessage()}");
+            Log::warning("Failed to send check-in confirmation email for reservation #{$reservation->id}: {$e->getMessage()}");
         }
     }
 
-    /**
-     * Send check-out notification email to guest.
-     */
     protected function sendCheckOutEmail(Reservation $reservation): void
     {
         try {
@@ -263,8 +234,7 @@ class CheckInService
                 Mail::to($email)->send(new CheckOutNotification($reservation));
             }
         } catch (\Throwable $e) {
-            Log::warning("Failed to send checkout email for reservation #{$reservation->id}: {$e->getMessage()}");
+            Log::warning("Failed to send check-out notification email for reservation #{$reservation->id}: {$e->getMessage()}");
         }
     }
 }
-

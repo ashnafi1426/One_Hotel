@@ -87,16 +87,10 @@ class GuestOrderService
         }
 
         return DB::transaction(function () use ($data, $room, $reservation) {
-            $hotelId = $room->hotel_id
-                ?? TenantContext::id()
-                ?? app(TenantContext::class)->getHotelId()
-                ?? \App\Models\Hotel::value('id');
-
-            list($total, $subtotal, $tax, $orderItems) = $this->calculateOrderTotal($data['items'], $hotelId);
+            list($total, $subtotal, $tax, $orderItems) = $this->calculateOrderTotal($data['items']);
 
             $order = Order::create([
-                'hotel_id' => $hotelId,
-                'order_number' => Order::generateOrderNumber($hotelId),
+                'order_number' => Order::generateOrderNumber(),
                 'room_id' => $room->id,
                 'table_id' => null,
                 'guest_id' => $reservation->guest_id,
@@ -150,20 +144,11 @@ class GuestOrderService
     {
         return DB::transaction(function () use ($data, $tableData) {
             $table = RestaurantTable::withoutGlobalScopes()->findOrFail($tableData['table_id']);
-            $hotelId = $table->hotel_id
-                ?? TenantContext::id()
-                ?? app(TenantContext::class)->getHotelId()
-                ?? \App\Models\Hotel::value('id');
 
-            if ($table && empty($table->hotel_id) && $hotelId) {
-                $table->update(['hotel_id' => $hotelId]);
-            }
-
-            list($total, $subtotal, $tax, $orderItems) = $this->calculateOrderTotal($data['items'], $hotelId);
+            list($total, $subtotal, $tax, $orderItems) = $this->calculateOrderTotal($data['items']);
 
             $order = Order::create([
-                'hotel_id' => $hotelId,
-                'order_number' => Order::generateOrderNumber($hotelId),
+                'order_number' => Order::generateOrderNumber(),
                 'room_id' => null,
                 'table_id' => $table->id,
                 'guest_id' => null,
@@ -215,7 +200,7 @@ class GuestOrderService
     /**
      * Compute line totals, tax calculations, and validate menu items.
      */
-    public function calculateOrderTotal(array $items, ?string $hotelId): array
+    public function calculateOrderTotal(array $items, ?string $hotelId = null): array
     {
         $grandTotal = 0;
         $totalSubtotal = 0;
@@ -224,10 +209,6 @@ class GuestOrderService
 
         foreach ($items as $item) {
             $menuItem = MenuItem::withoutGlobalScopes()->with('taxRate')->findOrFail($item['menu_item_id']);
-
-            if ($hotelId && $menuItem->hotel_id && $menuItem->hotel_id !== $hotelId) {
-                throw new \InvalidArgumentException("Menu item '{$menuItem->name}' does not belong to hotel {$hotelId}");
-            }
 
             if (!$menuItem->is_available) {
                 throw new \InvalidArgumentException("Menu item '{$menuItem->name}' is currently unavailable.");
@@ -312,15 +293,7 @@ class GuestOrderService
     protected function notifyChefs(Order $order, string $message): void
     {
         try {
-            $hotelId = $order->hotel_id;
-            $chefs = User::where('role', 'chef')
-                ->when($hotelId, function ($q) use ($hotelId) {
-                    $q->where(function ($sub) use ($hotelId) {
-                        $sub->where('hotel_id', $hotelId)
-                            ->orWhereHas('hotelMemberships', fn($hq) => $hq->where('hotel_id', $hotelId));
-                    });
-                })
-                ->get();
+            $chefs = User::where('role', 'chef')->get();
 
             foreach ($chefs as $chef) {
                 Notification::create([

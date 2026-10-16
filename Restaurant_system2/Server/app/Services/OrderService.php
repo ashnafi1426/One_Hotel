@@ -302,8 +302,6 @@ class OrderService{
                 }
             }
 
-            $hotelId = $data['hotel_id'] ?? TenantContext::id() ?? app(TenantContext::class)->getHotelId();
-
             $reservation = null;
             $guest = null;
             $room = null;
@@ -337,35 +335,26 @@ class OrderService{
                 } else {
                     throw new Exception("Room service orders require a valid room.");
                 }
-
-                $hotelId = $hotelId ?? $reservation->hotel_id ?? $room?->hotel_id;
             } elseif ($orderType === Order::TYPE_DINE_IN) {
 
                 if (empty($data['table_id'])) {
                     throw new Exception("Dine-in orders require a restaurant table.");
                 }
                 $table = \App\Models\RestaurantTable::findOrFail($data['table_id']);
-                $hotelId = $hotelId ?? $table->hotel_id;
                 $table->update(['status' => \App\Models\RestaurantTable::STATUS_OCCUPIED]);
             } elseif ($orderType === Order::TYPE_WALK_IN) {
 
                 if (!empty($data['table_id'])) {
                     $table = \App\Models\RestaurantTable::findOrFail($data['table_id']);
-                    $hotelId = $hotelId ?? $table->hotel_id;
                     $table->update(['status' => \App\Models\RestaurantTable::STATUS_OCCUPIED]);
                 }
-            }
-
-            if ($hotelId) {
-                app(\App\Services\TenantContext::class)->setHotelId($hotelId);
             }
 
             $discount = isset($data['discount']) ? max(0, (float) $data['discount']) : 0.0;
             $serviceChargeRate = isset($data['service_charge_rate']) ? max(0, (float) $data['service_charge_rate']) : 0.0;
 
             $order = Order::create([
-                'hotel_id' => $hotelId,
-                'order_number' => Order::generateOrderNumber($hotelId),
+                'order_number' => Order::generateOrderNumber(),
                 'reservation_id' => $reservation?->id,
                 'guest_id' => $guest?->id ?? ($data['guest_id'] ?? null),
                 'room_id' => $room?->id,
@@ -382,7 +371,7 @@ class OrderService{
                 'discount' => $discount,
                 'total' => 0,
                 'notes' => $data['notes'] ?? null,
-                'chef_id' => $this->assignChefToOrder($hotelId),
+                'chef_id' => $this->assignChefToOrder(),
             ]);
 
             $orderSubtotal = 0;
@@ -390,9 +379,6 @@ class OrderService{
 
             foreach ($data['items'] as $item) {
                 $menuItem = $this->getMenuItem($item['menu_item_id']);
-                if ($hotelId && $menuItem->hotel_id && $menuItem->hotel_id !== $hotelId) {
-                    throw new Exception("Menu item '{$menuItem->name}' does not belong to this hotel.");
-                }
                 if (!$menuItem->is_available) {
                     throw new Exception("Menu item '{$menuItem->name}' is currently unavailable.");
                 }
@@ -564,16 +550,7 @@ class OrderService{
     private function notifyChefs(Order $order): void
     {
         try {
-            $hotelId = $order->hotel_id;
-            $chefQuery = User::where('role', 'chef');
-            if ($hotelId) {
-                $chefQuery->where(function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId)
-                      ->orWhereHas('hotelMemberships', fn($m) => $m->where('hotel_id', $hotelId));
-                });
-            }
-
-            $chefs = $chefQuery->get();
+            $chefs = User::where('role', 'chef')->get();
 
             foreach ($chefs as $chef) {
                 Notification::create([

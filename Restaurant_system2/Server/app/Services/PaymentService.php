@@ -28,12 +28,9 @@ class PaymentService
                 'guest_id' => $data['guest_id'] ?? null,
             ]);
 
-            $hotelId = $data['hotel_id'] ?? ($metadata['hotel_id'] ?? null);
-
             $txRef = (new ChapaService())->generateTransactionReference();
 
             $payment = Payment::create([
-                'hotel_id'              => $hotelId,
                 'tx_ref'                => $txRef,
                 'transaction_reference' => $txRef,
                 'amount'                => $amount,
@@ -82,17 +79,7 @@ class PaymentService
                 'metadata_keys' => array_keys($metadata),
             ]);
 
-            $hotelId = $data['hotel_id']
-                ?? ($metadata['hotel_id'] ?? null)
-                ?? (!empty($data['room_id']) ? \App\Models\Room::withoutGlobalScopes()->where('id', $data['room_id'])->value('hotel_id') : null)
-                ?? app(\App\Services\TenantContext::class)->getHotelId();
-
-            if ($hotelId) {
-                $metadata['hotel_id'] = $hotelId;
-            }
-
             $payment = Payment::create([
-                'hotel_id'         => $hotelId,
                 'tx_ref'           => (new ChapaService())->generateTransactionReference(),
                 'amount'           => $data['amount'],
                 'currency'         => 'ETB',
@@ -148,9 +135,7 @@ class PaymentService
                 }
             }
 
-            $hotelId = $payment->hotel_id ?? ($payment->metadata['hotel_id'] ?? null) ?? ($reservationData['hotel_id'] ?? null);
             $duplicateCheck = Reservation::withoutGlobalScopes()
-                ->where('hotel_id', $hotelId)
                 ->where('guest_id', $reservationData['guest_id'])
                 ->where('room_id', $reservationData['room_id'])
                 ->where('check_in_date', $reservationData['check_in_date'])
@@ -173,9 +158,8 @@ class PaymentService
                 ];
             }
 
-            $reservation = DB::transaction(function () use ($payment, $reservationData, $hotelId) {
+            $reservation = DB::transaction(function () use ($payment, $reservationData) {
                 $reservation = Reservation::create([
-                    'hotel_id'          => $hotelId,
                     'booking_reference' => Reservation::generateBookingReference(),
                     'guest_id'          => $reservationData['guest_id'],
                     'room_id'           => $reservationData['room_id'],
@@ -239,21 +223,8 @@ class PaymentService
     {
         try {
             $order = DB::transaction(function () use ($payment, $orderData, $orderItems) {
-                $roomId = $orderData['room_id'] ?? null;
-                $room = $roomId ? \App\Models\Room::withoutGlobalScopes()->find($roomId) : null;
-                $hotelId = $payment->hotel_id
-                    ?? ($room ? $room->hotel_id : null)
-                    ?? ($payment->metadata['hotel_id'] ?? null)
-                    ?? ($orderData['hotel_id'] ?? null)
-                    ?? app(\App\Services\TenantContext::class)->getHotelId();
-
-                if ($hotelId) {
-                    app(\App\Services\TenantContext::class)->setHotelId($hotelId);
-                }
-
                 $createdOrder = Order::create([
-                    'hotel_id'         => $hotelId,
-                    'order_number'     => Order::generateOrderNumber($hotelId),
+                    'order_number'     => Order::generateOrderNumber(),
                     'guest_id'         => $orderData['guest_id'],
                     'room_id'          => $orderData['room_id'] ?? null,
                     'order_type'       => Order::TYPE_ROOM_SERVICE,
@@ -298,15 +269,7 @@ class PaymentService
             });
 
             try {
-                $targetHotelId = $order->hotel_id;
-                $chefs = \App\Models\User::where('role', 'chef')
-                    ->when($targetHotelId, function ($q) use ($targetHotelId) {
-                        $q->where(function ($sub) use ($targetHotelId) {
-                            $sub->whereHas('hotelMemberships', fn ($hq) => $hq->where('hotel_id', $targetHotelId))
-                                ->orDoesntHave('hotelMemberships');
-                        });
-                    })
-                    ->get();
+                $chefs = \App\Models\User::where('role', 'chef')->get();
 
                 $roomNumber = $order->room?->room_number ?? 'Room Service';
                 foreach ($chefs as $chef) {

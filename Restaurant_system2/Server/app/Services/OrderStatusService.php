@@ -293,7 +293,6 @@ class OrderStatusService
                     }
 
                     WaiterNotification::create([
-                        'hotel_id' => $order->hotel_id,
                         'user_id' => $waiter->user_id ?? $waiterUser?->id,
                         'waiter_id' => $waiter->id,
                         'delivery_task_id' => $deliveryTask->id,
@@ -329,23 +328,15 @@ class OrderStatusService
     }
 
     /**
-     * Notify chefs belonging to the order's hotel.
+     * Notify chefs.
      */
     protected function notifyChefs(string $type, string $title, string $message, ?Order $order = null): void
     {
         try {
-            $hotelId = $order?->hotel_id ?? app(TenantContext::class)->getHotelId();
-
-            $chefQuery = User::where(function ($q) {
+            $chefs = User::where(function ($q) {
                 $q->where('role', 'chef')
                   ->orWhereHas('roles', fn($rq) => $rq->where('slug', 'chef'));
-            });
-
-            if ($hotelId) {
-                $chefQuery->whereHas('hotelMemberships', fn($m) => $m->where('hotel_id', $hotelId)->where('is_active', true));
-            }
-
-            $chefs = $chefQuery->get();
+            })->get();
 
             foreach ($chefs as $chef) {
                 Notification::create([
