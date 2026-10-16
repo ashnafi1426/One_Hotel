@@ -196,7 +196,6 @@ export function useOrderStatus(orderId: string, initialHotelId: string, initialQ
 
       const response = await axios.get(url, {
         headers: {
-          'X-Hotel-ID': hotelId.value || '',
           Accept: 'application/json',
         },
       })
@@ -261,7 +260,6 @@ export function useOrderStatus(orderId: string, initialHotelId: string, initialQ
             const retryUrl = `${apiBaseUrl}/api/guest/orders/${orderId}/realtime-status?qr_token=${fallbackToken}`
             const retryResponse = await axios.get(retryUrl, {
               headers: {
-                'X-Hotel-ID': hotelId.value || '',
                 Accept: 'application/json',
               },
             })

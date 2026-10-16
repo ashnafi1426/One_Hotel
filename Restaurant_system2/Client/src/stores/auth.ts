@@ -48,10 +48,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isPlatformAdmin = computed<boolean>(() => {
     if (!user.value) return false
-    return Boolean(
-      user.value.is_platform_admin === true ||
-      user.value.is_platform_admin === 1 ||
-      user.value.email?.toLowerCase() === 'admin@hotel.com',
+    return (
+      userRoles.value.includes('admin') ||
+      user.value?.role === 'admin' ||
+      user.value?.is_platform_admin === true ||
+      user.value?.is_platform_admin === 1
     )
   })
 

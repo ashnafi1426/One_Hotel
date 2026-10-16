@@ -93,7 +93,6 @@ const echo = new Echo({
             'Content-Type': 'application/json',
             Accept: 'application/json',
             Authorization: token ? `Bearer ${token}` : '',
-            'X-Hotel-ID': hotelId || '',
             'X-QR-Token': qrToken || '',
           },
           body: JSON.stringify(requestBody),

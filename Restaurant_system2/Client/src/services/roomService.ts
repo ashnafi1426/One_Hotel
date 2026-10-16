@@ -3,23 +3,6 @@ import { publicAxios } from './axios'
 import type { Room } from '../types/room'
 
 function getGuestHotelHeaders() {
-  for (const key of ['guest_current_hotel', 'current_hotel']) {
-    try {
-      const hotelData = localStorage.getItem(key)
-      if (hotelData) {
-        const hotel = JSON.parse(hotelData)
-        if (hotel && hotel.id) {
-          return { 'X-Hotel-ID': String(hotel.id) }
-        }
-      }
-    } catch (err: any) {
-      console.error(`[RoomService] Error parsing ${key}:`, err)
-    }
-  }
-  const fallbackId = localStorage.getItem('guest_hotel_id') || localStorage.getItem('hotel_id')
-  if (fallbackId && fallbackId !== 'undefined' && fallbackId !== 'null') {
-    return { 'X-Hotel-ID': String(fallbackId) }
-  }
   return {}
 }
 

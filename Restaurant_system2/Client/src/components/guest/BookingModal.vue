@@ -230,11 +230,7 @@ async function fetchRoomStatusFromBackend() {
   statusFetchError.value = null
 
   try {
-    const hotelId = guestHotelStore.hotelId || props.room.hotel_id || props.room.hotel?.id
     const headers: Record<string, string> = {}
-    if (hotelId) {
-      headers['X-Hotel-ID'] = String(hotelId)
-    }
 
     if (
       bookingForm.value.checkInDate &&

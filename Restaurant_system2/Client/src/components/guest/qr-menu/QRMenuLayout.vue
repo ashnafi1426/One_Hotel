@@ -634,7 +634,6 @@ const loadCategories = async (forceRefresh = false) => {
 
     const reqHeaders: Record<string, string> = {}
     if (forceRefresh) reqHeaders['X-Refresh'] = 'true'
-    if (resolvedHotelId) reqHeaders['X-Hotel-ID'] = resolvedHotelId
 
     let rawCategories: any[] = []
     try {
@@ -721,7 +720,6 @@ const loadMenuItems = async (forceRefresh = false) => {
 
     const reqHeaders: Record<string, string> = {}
     if (forceRefresh) reqHeaders['X-Refresh'] = 'true'
-    if (resolvedHotelId) reqHeaders['X-Hotel-ID'] = resolvedHotelId
 
     const response = await api.get(url, {
       params,

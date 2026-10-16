@@ -488,7 +488,6 @@ const proceedToPayment = async () => {
       headers: {
         'Content-Type': 'application/json',
         Accept: 'application/json',
-        'X-Hotel-ID': hotelId.value,
       },
       body: JSON.stringify(bodyPayload),
     })

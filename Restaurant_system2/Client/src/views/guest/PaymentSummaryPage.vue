@@ -282,7 +282,6 @@ const proceedToPayment = async () => {
         headers: {
           'Content-Type': 'application/json',
           Accept: 'application/json',
-          'X-Hotel-ID': hotelId.value,
         },
         body: JSON.stringify(paymentPayload),
       },
@@ -326,7 +325,6 @@ onMounted(async () => {
         `${import.meta.env.VITE_API_BASE_URL}/api/guest/orders/${orderId}/realtime-status?qr_token=${qrToken}`,
         {
           headers: {
-            'X-Hotel-ID': hotelId.value,
             Accept: 'application/json',
           },
         },
