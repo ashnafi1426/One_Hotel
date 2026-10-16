@@ -16,8 +16,38 @@ export default {
     extend: {
       fontFamily: {
         sans: ['"Plus Jakarta Sans"', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+        serif: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+        display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       colors: {
+        gold: {
+          50: '#FDFBF7',
+          100: '#FAF3E7',
+          200: '#F5E6CC',
+          300: '#EBD2A3',
+          400: '#E0BD74',
+          500: '#D6A94F',
+          600: '#C59B3F',
+          700: '#A37D2B',
+          800: '#80611E',
+          900: '#5C4515',
+          DEFAULT: '#D6A94F',
+          hover: '#C59B3F',
+          light: '#F7E7C4',
+        },
+        navy: {
+          950: '#0B111D',
+          900: '#101827',
+          850: '#141E30',
+          800: '#182235',
+          750: '#1E2A40',
+          700: '#26354D',
+          600: '#334460',
+          500: '#475C7E',
+          DEFAULT: '#101827',
+          surface: '#182235',
+          border: '#26354D',
+        },
         // Abstract Semantic Brand Tokens (Dynamic Multi-Property System)
         brand: {
           canvas: withOpacity('--brand-canvas-rgb'),

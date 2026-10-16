@@ -49,72 +49,65 @@ const categories = computed(() => [
 
 <template>
   <section
-    class="relative py-20 bg-white dark:bg-slate-900 overflow-hidden transition-colors duration-300"
+    class="relative py-16 bg-[#F7F7F5] dark:bg-[#0B111D] overflow-hidden transition-colors duration-300 border-b border-slate-200/80 dark:border-[#26354D]/70"
   >
-    <div class="mx-auto max-w-7xl px-6">
-      <div class="text-center mb-16">
-        <h2 class="text-4xl font-bold text-slate-900 dark:text-white">
-          {{ languageStore.t('browse_by_category', 'Browse by Category') }}
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="text-center mb-12">
+        <h2 class="font-serif text-3xl sm:text-4xl font-bold text-[#101827] dark:text-white">
+          {{ languageStore.t('browse_by_category', 'Browse by Gallery Collection') }}
         </h2>
-        <p class="mt-4 text-lg text-slate-500 dark:text-slate-400">
+        <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 font-light">
           {{
-            languageStore.t('browse_by_category_desc', 'Discover every part of our luxury hotel.')
+            languageStore.t('browse_by_category_desc', 'Discover every corner of our luxury property.')
           }}
         </p>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5 sm:gap-5">
         <button
           v-for="category in categories"
           :key="category.key"
           @click="emit('update:modelValue', category.key)"
-          class="group relative h-40 rounded-2xl overflow-hidden transition-all duration-300 transform hover:scale-105 bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 cursor-pointer"
+          class="group relative h-36 rounded-2xl overflow-hidden transition-all duration-300 bg-white dark:bg-[#182235] border border-slate-200/90 dark:border-[#26354D] cursor-pointer"
           :class="
             modelValue === category.key
-              ? 'ring-4 ring-amber-500 border-amber-500 shadow-xl bg-amber-50 dark:bg-amber-950/30'
-              : 'shadow-lg hover:shadow-xl hover:border-amber-300'
+              ? 'ring-2 ring-[#D6A94F] border-[#D6A94F] shadow-lg bg-[#FAF3E7] dark:bg-[#182235]'
+              : 'shadow-sm hover:shadow-md hover:border-[#D6A94F]/40'
           "
         >
-          <div class="absolute inset-0 flex flex-col items-center justify-center p-4 space-y-4">
+          <div class="absolute inset-0 flex flex-col items-center justify-center p-3 space-y-2">
             <div
               class="transition-all duration-300"
               :class="
                 modelValue === category.key
-                  ? 'text-amber-500 w-12 h-12'
-                  : 'text-slate-600 dark:text-slate-300 w-10 h-10 group-hover:text-amber-500 group-hover:w-12 group-hover:h-12'
+                  ? 'text-[#D6A94F] w-10 h-10'
+                  : 'text-slate-500 dark:text-slate-400 w-9 h-9 group-hover:text-[#D6A94F]'
               "
             >
               <component :is="category.icon" class="w-full h-full" stroke-width="1.5" />
             </div>
 
             <h3
-              class="text-lg font-bold transition-colors duration-300"
+              class="font-serif text-base font-bold transition-colors duration-300"
               :class="
                 modelValue === category.key
-                  ? 'text-amber-600 dark:text-amber-400'
-                  : 'text-slate-700 dark:text-slate-200 group-hover:text-amber-600 dark:group-hover:text-amber-400'
+                  ? 'text-[#8A641A] dark:text-[#D6A94F]'
+                  : 'text-[#101827] dark:text-slate-200 group-hover:text-[#D6A94F]'
               "
             >
               {{ category.name }}
             </h3>
 
             <p
-              class="text-xs transition-colors duration-300"
+              class="text-[11px] font-light transition-colors duration-300"
               :class="
                 modelValue === category.key
-                  ? 'text-amber-500 dark:text-amber-400/80'
-                  : 'text-slate-500 dark:text-slate-400 group-hover:text-amber-500'
+                  ? 'text-[#8A641A]/80 dark:text-[#D6A94F]/80'
+                  : 'text-slate-400 group-hover:text-[#D6A94F]'
               "
             >
               {{ category.description }}
             </p>
-
-            <div
-              v-if="modelValue === category.key"
-              class="mt-2 flex items-center justify-center w-6 h-6 rounded-full bg-amber-500 text-white text-xs font-bold animate-pulse"
-            >
-              ✓
-            </div>
           </div>
         </button>
       </div>

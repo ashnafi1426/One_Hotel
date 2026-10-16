@@ -4,7 +4,7 @@ import { ref, onMounted, watch } from 'vue'
 import menuService from '@/services/menuService'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
-import { Utensils, Calendar, ArrowRight } from 'lucide-vue-next'
+import { Utensils, ArrowRight, Sparkles, Clock, MapPin } from 'lucide-vue-next'
 
 const router = useRouter()
 const languageStore = useLanguageStore()
@@ -21,8 +21,31 @@ interface MenuItem {
 const featuredMenu = ref<MenuItem[]>([])
 const loading = ref(false)
 
-const defaultDishPlaceholder =
-  'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&h=600&fit=crop'
+const defaultDishPlaceholder = '/images/gallery/fine-dining.jpg'
+
+const fallbackMenu: MenuItem[] = [
+  {
+    id: 'm1',
+    name: 'Prime Aged Ribeye Steak',
+    image: '/images/gallery/fine-dining.jpg',
+    description: 'Tender grain-fed beef seared with aromatic rosemary butter and roasted truffle roots.',
+    price: 1250,
+  },
+  {
+    id: 'm2',
+    name: 'Authentic Special Tibs & Injera',
+    image: '/images/gallery/chef-special.jpg',
+    description: 'Traditional sauteed beef with rosemary, onions, and jalapenos served on fresh teff injera.',
+    price: 850,
+  },
+  {
+    id: 'm3',
+    name: 'Mediterranean Sea Bass',
+    image: '/images/gallery/restaurant-interior.jpg',
+    description: 'Pan-roasted wild sea bass with lemon herb veloute, asparagus, and saffron potato puree.',
+    price: 1100,
+  },
+]
 
 function reserveTable() {
   router.push('/contact')
@@ -51,11 +74,11 @@ async function loadFeaturedMenu() {
         price: item.total_price != null ? item.total_price : item.price || 0,
       }))
     } else {
-      featuredMenu.value = []
+      featuredMenu.value = fallbackMenu
     }
   } catch (err) {
     console.error('[RestaurantSection] Failed to load featured menu:', err)
-    featuredMenu.value = []
+    featuredMenu.value = fallbackMenu
   } finally {
     loading.value = false
   }
@@ -75,88 +98,120 @@ watch(
 
 <template>
   <section
-    class="bg-slate-50 dark:bg-slate-950 py-12 sm:py-16 lg:py-24 transition-colors duration-300 font-sans border-b border-slate-200 dark:border-slate-800"
+    id="dining"
+    class="py-16 sm:py-20 lg:py-28 transition-colors duration-300 font-sans border-b border-slate-200/80 dark:border-[#26354D]/70 bg-[#F7F7F5] dark:bg-[#0B111D]"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
+      <!-- Section Header -->
       <div class="mx-auto max-w-3xl text-center space-y-3">
-        <span
-          class="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-        >
-          {{ languageStore.t('signature_dining', 'Signature Dining') }}
-        </span>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+          <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
+          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('signature_dining', 'Gastronomy & Lounge') }}</span>
+        </div>
+
         <h2
-          class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight"
+          class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#101827] dark:text-white tracking-tight"
         >
-          {{ languageStore.t('culinary_experience', 'A Culinary Experience') }}
+          {{ languageStore.t('culinary_experience', 'An Exceptional Culinary Journey') }}
         </h2>
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">
+
+        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
           {{
             languageStore.t(
               'culinary_experience_desc',
-              'Indulge in authentic Ethiopian culinary traditions and international fine dining crafted by award-winning chefs.',
+              'Indulge in rich culinary traditions and modern international gastronomy crafted by master chefs using the finest regional produce.',
             )
           }}
         </p>
+
+        <!-- Hours & Dining Location info -->
+        <div class="flex items-center justify-center gap-6 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+          <span class="flex items-center gap-1.5">
+            <Clock class="w-3.5 h-3.5 text-[#D6A94F]" />
+            {{ guestHotelStore.diningHours }}
+          </span>
+          <span>•</span>
+          <span class="flex items-center gap-1.5">
+            <MapPin class="w-3.5 h-3.5 text-[#D6A94F]" />
+            {{ guestHotelStore.hotelName }} Ground Level
+          </span>
+        </div>
       </div>
 
-      <div class="flex items-center justify-center gap-3">
-        <button
-          @click="viewRestaurantMenu"
-          class="px-6 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider shadow-md shadow-amber-500/20 transition cursor-pointer flex items-center gap-2"
-        >
-          <Utensils class="w-4 h-4" />
-          <span>{{ languageStore.t('explore_full_menu', 'Explore Full Menu') }}</span>
-        </button>
-
-        <button
-          @click="reserveTable"
-          class="px-6 py-3 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-900 dark:text-white font-extrabold text-xs transition border border-slate-200 dark:border-slate-800 cursor-pointer flex items-center gap-2"
-        >
-          <Calendar class="w-4 h-4 text-amber-500" />
-          <span>{{ languageStore.t('reserve_table', 'Reserve a Table') }}</span>
-        </button>
-      </div>
-
-      <div v-if="featuredMenu.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Featured Menu Items Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div
-          v-for="item in featuredMenu"
-          :key="item.id"
-          class="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xs hover:border-amber-500/40 transition duration-300 flex flex-col justify-between"
+          v-for="dish in featuredMenu"
+          :key="dish.id"
+          class="group bg-white dark:bg-[#182235] border border-slate-200/90 dark:border-[#26354D] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:border-[#D6A94F]/50 transition-all duration-500 flex flex-col justify-between"
         >
-          <div class="relative h-60 overflow-hidden bg-slate-900">
+          <!-- Dish Visual with price tag -->
+          <div class="relative aspect-[16/10] overflow-hidden bg-slate-900">
             <img
-              :src="item.image"
-              :alt="item.name"
-              class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              :src="dish.image"
+              :alt="dish.name"
+              class="h-full w-full object-cover group-hover:scale-105 transition-transform duration-700"
+              loading="lazy"
+              @error="(e: any) => (e.target.src = '/images/gallery/fine-dining.jpg')"
             />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
             <div
-              class="absolute top-4 right-4 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-amber-400 font-black text-xs rounded-full border border-amber-500/30"
+              class="absolute bottom-3 right-3 px-3.5 py-1.5 bg-[#101827]/90 backdrop-blur-md text-[#D6A94F] font-bold text-xs rounded-xl border border-[#D6A94F]/40 shadow-lg"
             >
-              {{ formatPrice(item.price) }}
+              {{ formatPrice(dish.price) }}
             </div>
           </div>
 
+          <!-- Dish Info -->
           <div class="p-6 space-y-3 flex-1 flex flex-col justify-between">
             <div class="space-y-2">
               <h3
-                class="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition"
+                class="font-serif text-lg font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug"
               >
-                {{ item.name }}
+                {{ dish.name }}
               </h3>
-              <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                {{ item.description }}
+
+              <p class="text-xs text-slate-600 dark:text-slate-400 font-light leading-relaxed line-clamp-2">
+                {{ dish.description }}
               </p>
             </div>
 
-            <button
-              @click="viewRestaurantMenu"
-              class="w-full mt-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-extrabold text-xs transition cursor-pointer flex items-center justify-center gap-1.5"
-            >
-              <span>{{ languageStore.t('order_food_online', 'Order Food Online') }}</span>
-              <ArrowRight class="w-3.5 h-3.5" />
-            </button>
+            <div class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex items-center justify-between">
+              <span class="text-[11px] font-bold text-[#D6A94F] uppercase tracking-wider flex items-center gap-1">
+                <Utensils class="w-3 h-3" />
+                Chef Selection
+              </span>
+
+              <button
+                @click="reserveTable"
+                class="text-xs font-bold text-[#101827] dark:text-slate-200 hover:text-[#D6A94F] flex items-center gap-1 transition cursor-pointer"
+              >
+                <span>Reserve Table</span>
+                <ArrowRight class="w-3.5 h-3.5 text-[#D6A94F]" />
+              </button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <!-- Dining Actions Row -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+        <button
+          @click="reserveTable"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black text-xs uppercase tracking-widest shadow-lg shadow-[#D6A94F]/20 hover:shadow-xl transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <Utensils class="w-4 h-4 text-[#101827]" />
+          <span>{{ languageStore.t('reserve_a_table', 'Reserve a Table') }}</span>
+        </button>
+
+        <button
+          @click="viewRestaurantMenu"
+          class="w-full sm:w-auto px-8 py-3.5 rounded-full bg-[#182235] hover:bg-[#101827] text-white font-bold text-xs uppercase tracking-widest border border-[#26354D] hover:border-[#D6A94F]/50 transition-all cursor-pointer flex items-center justify-center gap-2"
+        >
+          <span>{{ languageStore.t('explore_menu', 'View Full Menu') }}</span>
+          <ArrowRight class="w-4 h-4 text-[#D6A94F]" />
+        </button>
       </div>
     </div>
   </section>

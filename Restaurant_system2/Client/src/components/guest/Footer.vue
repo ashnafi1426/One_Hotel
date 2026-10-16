@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { RouterLink } from 'vue-router'
-import { ShieldCheck, Mail, Phone, MapPin, ExternalLink, LogIn } from 'lucide-vue-next'
+import { MapPin, Phone, Mail, LogIn, Sparkles } from 'lucide-vue-next'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 
@@ -55,169 +55,183 @@ const hotelLogoUrl = computed(() => {
 
 <template>
   <footer
-    class="bg-slate-900 border-t border-slate-800 text-slate-300 font-sans transition-colors duration-300"
+    class="bg-[#101827] border-t border-[#26354D] text-slate-300 font-sans transition-colors duration-300 relative overflow-hidden"
   >
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 space-y-12">
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <!-- Top hairline gold accent -->
+    <div class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 space-y-12">
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+        <!-- Brand & Summary -->
         <div class="space-y-4">
-          <div class="flex items-center gap-2.5">
+          <div class="flex items-center gap-3">
             <div
-              class="w-11 h-11 rounded-2xl bg-white dark:bg-slate-950 border border-slate-700/80 text-amber-400 flex items-center justify-center font-black text-lg shadow-md overflow-hidden p-1"
+              class="w-11 h-11 rounded-2xl bg-[#182235] border border-[#D6A94F]/30 text-[#D6A94F] flex items-center justify-center font-bold text-lg shadow-md overflow-hidden p-1.5"
             >
               <img
                 v-if="hotelLogoUrl && !imageLoadFailed"
                 :src="hotelLogoUrl"
                 :alt="guestHotelStore.hotelName"
-                class="w-full h-full object-contain"
+                class="w-full h-full object-contain brightness-110"
                 @error="imageLoadFailed = true"
               />
               <span v-else>{{ (guestHotelStore.hotelName || 'H').charAt(0).toUpperCase() }}</span>
             </div>
             <div>
-              <span class="text-base font-black text-white tracking-wider uppercase block">{{
-                guestHotelStore.hotelName
-              }}</span>
+              <span class="font-serif text-lg font-bold text-white tracking-wider uppercase block leading-tight">
+                {{ guestHotelStore.hotelName }}
+              </span>
               <span
-                class="text-[9px] font-extrabold text-amber-400 uppercase tracking-widest block"
-                >{{ guestHotelStore.currentHotel?.city || 'Luxury Hotel & Resort' }}</span
+                class="text-[9px] font-bold text-[#D6A94F] uppercase tracking-[0.2em] block"
               >
+                {{ (guestHotelStore.currentHotel?.city || 'Addis Ababa').toUpperCase() }} • LUXURY HOTEL
+              </span>
             </div>
           </div>
 
-          <p class="text-xs text-slate-400 leading-relaxed font-medium">
-            Experience world-class luxury, authentic Ethiopian hospitality, and unforgettable stays
-            in our fine suites and dining venues.
+          <p class="text-xs text-slate-400 leading-relaxed font-light">
+            A sanctuary of timeless elegance, authentic Ethiopian hospitality, signature fine dining, and master suites.
           </p>
 
-          <div class="space-y-2 text-xs font-medium text-slate-400">
-            <div class="flex items-center gap-2">
-              <MapPin class="w-4 h-4 text-amber-400 flex-shrink-0" />
+          <div class="space-y-2 text-xs font-light text-slate-300">
+            <div class="flex items-start gap-2">
+              <MapPin class="w-4 h-4 text-[#D6A94F] flex-shrink-0 mt-0.5" />
               <span>{{ guestHotelStore.hotelAddress }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <Phone class="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <Phone class="w-4 h-4 text-[#D6A94F] flex-shrink-0" />
               <span>{{ guestHotelStore.hotelPhone }}</span>
             </div>
             <div class="flex items-center gap-2">
-              <Mail class="w-4 h-4 text-amber-400 flex-shrink-0" />
+              <Mail class="w-4 h-4 text-[#D6A94F] flex-shrink-0" />
               <span>{{ guestHotelStore.hotelEmail }}</span>
             </div>
           </div>
         </div>
 
+        <!-- Quick Navigation -->
         <div class="space-y-4">
           <h3
-            class="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2"
+            class="text-[11px] font-extrabold text-[#D6A94F] uppercase tracking-[0.2em] border-b border-[#26354D] pb-2"
           >
-            Navigation
+            Hotel Exploration
           </h3>
-          <ul class="space-y-2.5 text-xs font-bold text-slate-400">
+          <ul class="space-y-2.5 text-xs font-medium text-slate-300">
             <li>
-              <RouterLink to="/" class="hover:text-amber-400 transition flex items-center gap-1.5">
-                <span>{{ languageStore.t('home', 'Home') }}</span>
+              <RouterLink to="/" class="hover:text-[#D6A94F] transition flex items-center gap-1.5">
+                <span>{{ languageStore.t('home', 'Home Sanctuary') }}</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/rooms"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>{{ languageStore.t('rooms_and_suites', 'Luxury Rooms & Suites') }}</span>
+                <span>{{ languageStore.t('rooms_and_suites', 'Rooms & Suites') }}</span>
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink
+                to="/#facilities"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
+              >
+                <span>{{ languageStore.t('facilities', 'Hotel Facilities') }}</span>
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink
+                to="/#dining"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
+              >
+                <span>{{ languageStore.t('dining', 'Signature Dining') }}</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/gallery"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>{{ languageStore.t('gallery', 'Photo Gallery') }}</span>
+                <span>{{ languageStore.t('gallery', 'Property Gallery') }}</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/about"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>{{ languageStore.t('about', 'About Our Resort') }}</span>
-              </RouterLink>
-            </li>
-            <li>
-              <RouterLink
-                to="/contact"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
-              >
-                <span>{{ languageStore.t('contact', 'Contact & Location') }}</span>
+                <span>{{ languageStore.t('about', 'About Our Hotel') }}</span>
               </RouterLink>
             </li>
           </ul>
         </div>
 
+        <!-- Guest Services -->
         <div class="space-y-4">
           <h3
-            class="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2"
+            class="text-[11px] font-extrabold text-[#D6A94F] uppercase tracking-[0.2em] border-b border-[#26354D] pb-2"
           >
-            Services & Amenities
+            Guest Services
           </h3>
-          <ul class="space-y-2.5 text-xs font-bold text-slate-400">
+          <ul class="space-y-2.5 text-xs font-medium text-slate-300">
             <li>
               <RouterLink
                 to="/rooms"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>{{ languageStore.t('book_now', 'Online Room Reservation') }}</span>
+                <span>{{ languageStore.t('book_now', 'Direct Online Reservation') }}</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/contact"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>{{ languageStore.t('reserve_table', 'Fine Dining Reservations') }}</span>
+                <span>Private Table Booking</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/contact"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>Conferences & Wedding Events</span>
+                <span>Bespoke Event Hosting</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/contact"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>Spa & Wellness Packages</span>
+                <span>Chauffeur & Airport Shuttle</span>
               </RouterLink>
             </li>
             <li>
               <RouterLink
                 to="/contact"
-                class="hover:text-amber-400 transition flex items-center gap-1.5"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >
-                <span>Airport Shuttle Transfers</span>
+                <span>Concierge & Guest Support</span>
               </RouterLink>
             </li>
           </ul>
         </div>
 
+        <!-- Property Portal Access -->
         <div class="space-y-4">
           <h3
-            class="text-xs font-black text-white uppercase tracking-wider border-b border-slate-800 pb-2"
+            class="text-[11px] font-extrabold text-[#D6A94F] uppercase tracking-[0.2em] border-b border-[#26354D] pb-2"
           >
-            Staff & System Portal
+            Property Management
           </h3>
-          <p class="text-xs text-slate-400 leading-relaxed font-medium">
-            Authorized staff, receptionists, managers, and administrators can log in to access
-            property management tools.
+          <p class="text-xs text-slate-400 leading-relaxed font-light">
+            Authorized hospitality staff, front-desk hosts, and management can access the property portal below.
           </p>
 
           <RouterLink
             to="/login"
-            class="inline-flex items-center justify-center gap-2 w-full px-4 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs shadow-md shadow-amber-500/20 transition cursor-pointer"
+            class="inline-flex items-center justify-center gap-2 w-full px-5 py-3 rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black text-xs uppercase tracking-wider shadow-lg shadow-[#D6A94F]/20 transition cursor-pointer"
           >
-            <LogIn class="w-4 h-4" />
+            <LogIn class="w-4 h-4 text-[#101827]" />
             <span>{{
               languageStore.currentLanguage === 'am' ? 'የሰራተኞች መግቢያ' : 'Staff Portal Login'
             }}</span>
@@ -225,21 +239,19 @@ const hotelLogoUrl = computed(() => {
         </div>
       </div>
 
+      <!-- Bottom Hairline & Legal -->
       <div
-        class="pt-8 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-medium text-slate-500"
+        class="pt-8 border-t border-[#26354D] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-light text-slate-400"
       >
         <p>
-          &copy; {{ new Date().getFullYear() }} {{ guestHotelStore.hotelName }}. All rights
-          reserved.
+          &copy; {{ new Date().getFullYear() }} {{ guestHotelStore.hotelName }}. All rights reserved.
         </p>
         <div class="flex items-center gap-4 text-slate-400">
-          <RouterLink to="/contact" class="hover:text-white transition">Privacy Policy</RouterLink>
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Privacy Policy</RouterLink>
           <span>•</span>
-          <RouterLink to="/contact" class="hover:text-white transition"
-            >Terms of Service</RouterLink
-          >
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Terms of Service</RouterLink>
           <span>•</span>
-          <RouterLink to="/contact" class="hover:text-white transition">Support</RouterLink>
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Concierge Support</RouterLink>
         </div>
       </div>
     </div>

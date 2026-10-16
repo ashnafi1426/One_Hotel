@@ -385,13 +385,6 @@ onMounted(loadData)
                   languageStore.t('floor_management_title', 'Floor Management & Staff Allocation')
                 }}
               </h1>
-              <span
-                v-if="hotelStore.hotelName"
-                class="inline-flex items-center gap-1.5 px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50"
-              >
-                <Building2 class="w-3.5 h-3.5" />
-                {{ hotelStore.hotelName }}
-              </span>
             </div>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {{

@@ -559,17 +559,20 @@ onMounted(() => {
         :style="{ transform: `scale(${modalScale})`, opacity: isVisible ? 1 : 0 }"
       >
         <div
-          class="relative bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 px-4 md:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-shrink-0"
+          class="relative bg-[#101827] border-b border-[#26354D] px-4 md:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-shrink-0"
         >
+          <!-- Top gold hairline -->
+          <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+
           <div class="flex items-center gap-3">
-            <div class="p-1.5 bg-white/20 rounded-lg backdrop-blur-sm">
-              <Sparkles class="w-5 h-5 text-white" />
+            <div class="p-1.5 bg-[#182235] border border-[#D6A94F]/30 rounded-xl backdrop-blur-sm">
+              <Sparkles class="w-5 h-5 text-[#D6A94F]" />
             </div>
             <div>
-              <h2 class="text-lg md:text-2xl font-bold text-white tracking-tight">
-                {{ languageStore.t('complete_your_booking', 'Complete Your Booking') }}
+              <h2 class="font-serif text-lg md:text-2xl font-bold text-white tracking-tight">
+                {{ languageStore.t('complete_your_booking', 'Complete Your Reservation') }}
               </h2>
-              <p class="text-xs text-amber-100/90 hidden sm:block">
+              <p class="text-xs text-[#D6A94F] hidden sm:block">
                 {{ languageStore.t('secure_your_stay', 'Secure your stay at') }}
                 {{ guestHotelStore.hotelName || room?.hotel?.name || 'our luxury hotel' }}
               </p>
@@ -577,7 +580,7 @@ onMounted(() => {
           </div>
           <button
             @click="closeModal"
-            class="text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-lg transition-all duration-200 leading-none flex-shrink-0 cursor-pointer"
+            class="text-slate-400 hover:text-white hover:bg-[#182235] p-2 rounded-xl transition-all duration-200 leading-none flex-shrink-0 cursor-pointer"
           >
             <X class="w-5 h-5 md:w-6 md:h-6" />
           </button>
@@ -1176,13 +1179,14 @@ onMounted(() => {
         class="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden border border-slate-200 dark:border-slate-800 animate-in fade-in zoom-in-95 duration-200"
       >
         <div
-          class="bg-gradient-to-r from-blue-600 via-blue-700 to-indigo-700 px-5 py-4 text-white flex items-center justify-between flex-shrink-0"
+          class="bg-[#101827] border-b border-[#26354D] px-5 py-4 text-white flex items-center justify-between flex-shrink-0 relative overflow-hidden"
         >
+          <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
           <div>
-            <h3 class="text-lg sm:text-xl font-bold tracking-tight">
+            <h3 class="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">
               {{ languageStore.t('payment_confirmation', 'Payment Confirmation') }}
             </h3>
-            <p class="text-xs text-blue-100">
+            <p class="text-xs text-[#D6A94F]">
               {{
                 languageStore.t(
                   'review_stay_charges',
@@ -1193,7 +1197,7 @@ onMounted(() => {
           </div>
           <button
             @click="closePaymentDialog"
-            class="text-white/80 hover:text-white hover:bg-white/20 p-1.5 rounded-lg transition cursor-pointer"
+            class="text-slate-400 hover:text-white hover:bg-[#182235] p-1.5 rounded-lg transition cursor-pointer"
             title="Close"
           >
             <X class="w-5 h-5" />

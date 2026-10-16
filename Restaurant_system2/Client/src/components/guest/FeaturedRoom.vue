@@ -4,7 +4,8 @@ import { useRouter } from 'vue-router'
 import { useRoomStore } from '@/stores/room'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import { useLanguageStore } from '@/stores/language'
-import { BedDouble, Users, ArrowRight } from 'lucide-vue-next'
+import { BedDouble, Users, ArrowRight, Sparkles, Check } from 'lucide-vue-next'
+import BookingModal from './BookingModal.vue'
 
 const router = useRouter()
 const roomStore = useRoomStore()
@@ -12,27 +13,30 @@ const guestHotelStore = useGuestHotelStore()
 const languageStore = useLanguageStore()
 const loading = ref(false)
 
+const showBookingModal = ref(false)
+const selectedRoomForBooking = ref<any>(null)
+
 const fallbackRooms = [
   {
     id: 'f1',
     room_number: '101',
-    room_type: { name: 'Executive Deluxe Suite', base_price_per_night: 2500, max_occupancy: 2 },
-    images: ['https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop'],
-    amenities: ['King Bed', 'City View', 'Free Wi-Fi', 'Jacuzzi'],
+    room_type: { name: 'Executive Deluxe Suite', base_price_per_night: 3500, capacity: 2 },
+    images: ['/images/rooms/deluxe.jpg'],
+    amenities: ['King Bed', 'City Skyline View', 'High-Speed Wi-Fi', 'En-suite Jacuzzi'],
   },
   {
     id: 'f2',
     room_number: '202',
-    room_type: { name: 'Presidential Family Suite', base_price_per_night: 4500, max_occupancy: 4 },
-    images: ['https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800&h=600&fit=crop'],
-    amenities: ['2 Bedrooms', 'Balcony', 'Breakfast Included', 'Mini Bar'],
+    room_type: { name: 'Presidential Royal Suite', base_price_per_night: 5500, capacity: 4 },
+    images: ['/images/rooms/suite.jpg'],
+    amenities: ['2 Master Bedrooms', 'Private Balcony', 'Breakfast Included', 'Mini Bar & Lounge'],
   },
   {
     id: 'f3',
     room_number: '303',
-    room_type: { name: 'Standard King Room', base_price_per_night: 1800, max_occupancy: 2 },
-    images: ['https://images.unsplash.com/photo-1590490360182-c33d57733427?w=800&h=600&fit=crop'],
-    amenities: ['King Bed', 'Work Desk', 'Smart TV', 'Room Service'],
+    room_type: { name: 'Premier King Sanctuary', base_price_per_night: 2800, capacity: 2 },
+    images: ['/images/rooms/family.jpg'],
+    amenities: ['King Bed', 'Ergonomic Work Desk', 'Smart 4K TV', '24/7 Room Service'],
   },
 ]
 
@@ -48,9 +52,34 @@ function getRoomName(room: any): string {
 }
 
 function getRoomPrice(room: any): string {
-  const price = room.room_type?.base_price_per_night || room.price_per_night || 2500
+  const price = room.room_type?.base_price_per_night || room.price_per_night || 2800
   const currency = guestHotelStore.currency || 'ETB'
   return `${Number(price).toLocaleString()} ${currency}`
+}
+
+function getRoomImage(room: any): string {
+  if (room.images && room.images.length > 0) {
+    const firstImg = typeof room.images[0] === 'object' ? room.images[0]?.url : room.images[0]
+    if (firstImg) return firstImg
+  }
+  const name = getRoomName(room).toLowerCase()
+  if (name.includes('presidential') || name.includes('royal') || name.includes('suite')) {
+    return '/images/rooms/suite.jpg'
+  }
+  if (name.includes('family') || name.includes('twin')) {
+    return '/images/rooms/family.jpg'
+  }
+  return '/images/rooms/deluxe.jpg'
+}
+
+function openBooking(room: any) {
+  selectedRoomForBooking.value = room
+  showBookingModal.value = true
+}
+
+function closeBooking() {
+  showBookingModal.value = false
+  selectedRoomForBooking.value = null
 }
 
 function goToRooms() {
@@ -85,26 +114,27 @@ watch(
 
 <template>
   <section
-    class="bg-white dark:bg-slate-900 py-12 sm:py-16 lg:py-24 transition-colors duration-300 font-sans border-b border-slate-200 dark:border-slate-800"
+    id="featured-rooms"
+    class="py-16 sm:py-20 lg:py-28 transition-colors duration-300 font-sans border-b border-slate-200/80 dark:border-[#26354D]/70 bg-[#F7F7F5] dark:bg-[#0B111D]"
   >
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div class="space-y-2">
-          <span
-            class="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-          >
-            {{ languageStore.t('featured_accommodation', 'Featured Accommodation') }}
-          </span>
+      <!-- Section Header -->
+      <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+        <div class="space-y-3 max-w-2xl">
+          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+            <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
+            <span>{{ languageStore.t('featured_accommodation', 'Exclusive Accommodations') }}</span>
+          </div>
           <h2
-            class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight"
+            class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#101827] dark:text-white tracking-tight"
           >
-            {{ languageStore.t('explore_fine_rooms', 'Explore Our Fine Rooms') }}
+            {{ languageStore.t('explore_fine_rooms', 'Signature Rooms & Suites') }}
           </h2>
-          <p class="text-sm text-slate-600 dark:text-slate-400 font-medium">
+          <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
             {{
               languageStore.t(
                 'designed_for_luxury',
-                'Designed for luxury, comfort, and peaceful relaxation during your stay.',
+                'Each private sanctuary combines handcrafted furnishings, bespoke amenities, and serene comfort for an extraordinary stay.',
               )
             }}
           </p>
@@ -112,86 +142,105 @@ watch(
 
         <button
           @click="goToRooms"
-          class="px-5 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-900 dark:text-white font-extrabold text-xs transition flex items-center gap-2 cursor-pointer self-start md:self-auto border border-slate-200 dark:border-slate-700"
+          class="px-6 py-3 rounded-full bg-[#182235] hover:bg-[#101827] text-white dark:bg-[#182235] dark:hover:bg-[#26354D] font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 cursor-pointer self-start md:self-auto border border-[#26354D] shadow-md hover:border-[#D6A94F]/60"
         >
-          <span>{{ languageStore.t('view_all_rooms', 'View All Rooms') }}</span>
-          <ArrowRight class="w-4 h-4" />
+          <span>{{ languageStore.t('view_all_rooms', 'View All Suites') }}</span>
+          <ArrowRight class="w-4 h-4 text-[#D6A94F]" />
         </button>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <!-- Room Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div
           v-for="room in rooms"
           :key="room.id"
-          class="group bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden shadow-xs hover:border-amber-500/40 transition duration-300 flex flex-col justify-between"
+          class="group bg-white dark:bg-[#182235] border border-slate-200/90 dark:border-[#26354D] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl hover:border-[#D6A94F]/50 transition-all duration-500 flex flex-col justify-between"
         >
-          <div class="relative h-64 overflow-hidden bg-slate-900">
+          <!-- Image Container with 16:10 aspect ratio and rate badge -->
+          <div class="relative aspect-[16/10] overflow-hidden bg-slate-900">
             <img
-              :src="
-                (typeof room.images?.[0] === 'object' ? room.images?.[0]?.url : room.images?.[0]) ||
-                'https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=800&h=600&fit=crop'
-              "
+              :src="getRoomImage(room)"
               :alt="getRoomName(room)"
-              class="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+              class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+              loading="lazy"
+              @error="(e: any) => (e.target.src = '/images/rooms/deluxe.jpg')"
             />
+            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+
             <div
-              class="absolute top-4 right-4 px-3 py-1 bg-slate-950/80 backdrop-blur-md text-amber-400 font-black text-xs rounded-full border border-amber-500/30"
+              class="absolute bottom-3 left-3 px-3 py-1.5 bg-[#101827]/90 backdrop-blur-md text-[#D6A94F] font-bold text-xs rounded-xl border border-[#D6A94F]/40 shadow-lg"
             >
-              {{ getRoomPrice(room) }}
-              <span class="text-[10px] text-slate-300 font-medium">{{
-                languageStore.t('per_night', '/ night')
-              }}</span>
+              <span>{{ getRoomPrice(room) }}</span>
+              <span class="text-[10px] text-slate-300 font-normal"> / {{ languageStore.t('per_night', 'night') }}</span>
             </div>
           </div>
 
+          <!-- Room Details Body -->
           <div class="p-6 space-y-4 flex-1 flex flex-col justify-between">
-            <div class="space-y-2">
+            <div class="space-y-2.5">
               <h3
-                class="text-lg font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition"
+                class="font-serif text-xl font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug"
               >
                 {{ getRoomName(room) }}
               </h3>
 
               <div
-                class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400"
+                class="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400"
               >
                 <div class="flex items-center gap-1.5">
-                  <Users class="w-4 h-4 text-amber-500" />
-                  <span
-                    >{{ languageStore.t('up_to', 'Up to') }}
-                    {{ room.room_type?.max_occupancy || 2 }}
-                    {{ languageStore.t('guests_count', 'Guests') }}</span
-                  >
+                  <Users class="w-4 h-4 text-[#D6A94F]" />
+                  <span>
+                    {{ languageStore.t('up_to', 'Up to') }}
+                    {{ (room.room_type as any)?.capacity || (room.room_type as any)?.max_occupancy || 2 }}
+                    {{ languageStore.t('guests_count', 'Guests') }}
+                  </span>
                 </div>
                 <div class="flex items-center gap-1.5">
-                  <BedDouble class="w-4 h-4 text-amber-500" />
-                  <span>{{ languageStore.t('room', 'Room') }} #{{ room.room_number }}</span>
+                  <BedDouble class="w-4 h-4 text-[#D6A94F]" />
+                  <span>{{ languageStore.t('room', 'Room') }} #{{ room.room_number || '101' }}</span>
                 </div>
               </div>
             </div>
 
-            <div
-              class="pt-4 border-t border-slate-200/60 dark:border-slate-800 flex flex-wrap gap-2"
-            >
+            <!-- Amenities Badges -->
+            <div class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex flex-wrap gap-1.5">
               <span
-                v-for="(amenity, idx) in room.amenities || ['King Bed', 'City View', 'Free Wi-Fi']"
-                :key="typeof amenity === 'object' ? amenity.id || amenity.name : amenity || idx"
-                class="px-2.5 py-0.5 rounded-full text-[10px] font-extrabold bg-slate-200/60 dark:bg-slate-900 text-slate-700 dark:text-slate-300 border border-slate-300/60 dark:border-slate-800"
+                v-for="(amenity, idx) in (room.amenities || ['King Bed', 'City View', 'Free Wi-Fi']).slice(0, 3)"
+                :key="typeof amenity === 'object' ? amenity.name || idx : amenity || idx"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#FAF3E7] dark:bg-[#101827] text-[#8A641A] dark:text-slate-300 border border-[#D6A94F]/20 dark:border-[#26354D]"
               >
+                <Check class="w-3 h-3 text-[#D6A94F]" />
                 {{ typeof amenity === 'object' ? amenity.name : amenity }}
               </span>
             </div>
 
-            <button
-              @click="goToRooms"
-              class="w-full mt-4 py-3 rounded-2xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs uppercase tracking-wider transition cursor-pointer flex items-center justify-center gap-2"
-            >
-              <span>{{ languageStore.t('book_suite', 'Book Suite') }}</span>
-              <ArrowRight class="w-4 h-4" />
-            </button>
+            <!-- Action Buttons -->
+            <div class="grid grid-cols-2 gap-2.5 pt-4">
+              <button
+                @click="openBooking(room)"
+                class="py-2.5 px-3 rounded-xl border border-[#26354D] dark:border-[#26354D] text-[#101827] dark:text-slate-200 font-bold text-xs uppercase tracking-wider hover:border-[#D6A94F] hover:text-[#D6A94F] transition-all cursor-pointer text-center"
+              >
+                {{ languageStore.t('details', 'Details') }}
+              </button>
+
+              <button
+                @click="openBooking(room)"
+                class="py-2.5 px-3 rounded-xl bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black text-xs uppercase tracking-wider shadow-md shadow-[#D6A94F]/20 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
+              >
+                <span>{{ languageStore.t('book_now', 'Book Now') }}</span>
+                <ArrowRight class="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Integrated Booking Modal for seamless direct booking -->
+    <BookingModal
+      :is-open="showBookingModal"
+      :room="selectedRoomForBooking"
+      @close="closeBooking"
+    />
   </section>
 </template>

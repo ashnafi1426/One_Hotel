@@ -11,7 +11,7 @@ import GuestLayout from '@/Layouts/GuestLayout.vue'
 <template>
   <GuestLayout>
     <div
-      class="bg-slate-50 dark:bg-slate-950 min-h-screen text-slate-900 dark:text-white transition-colors duration-300"
+      class="bg-[#F7F7F5] dark:bg-[#0B111D] min-h-screen text-[#20242B] dark:text-slate-100 transition-colors duration-300"
     >
       <HeroSection />
       <FeaturedRooms />

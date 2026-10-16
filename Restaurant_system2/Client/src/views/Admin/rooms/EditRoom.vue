@@ -170,13 +170,6 @@ onMounted(() => {
       <div class="mb-8">
         <div class="flex items-center gap-2">
           <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Edit Room</h1>
-          <span
-            v-if="hotelStore.hotelName"
-            class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-700/50"
-          >
-            <Building2 class="w-3 h-3" />
-            {{ hotelStore.hotelName }}
-          </span>
         </div>
         <p class="text-slate-500 mt-1 text-sm">
           Update room status, assigned type, floor, or description.
@@ -317,7 +310,7 @@ onMounted(() => {
                 empty-text="No matching room types found"
                 :format-option-label="
                   (t) =>
-                    `${t.name}${t.base_price_per_night ? ` - ${parseFloat(t.base_price_per_night).toLocaleString()} ${hotelStore.currency || 'ETB'}/night` : ''}`
+                    `${t.name}${t.base_price_per_night ? ` - ${parseFloat(t.base_price_per_night).toLocaleString()} ETB/night` : ''}`
                 "
               >
                 <template #option="{ option }">
@@ -341,8 +334,7 @@ onMounted(() => {
                       class="text-xs font-bold text-emerald-600 dark:text-emerald-400 ml-2 whitespace-nowrap"
                     >
                       {{ parseFloat(option.base_price_per_night || 0).toLocaleString() }}
-                      {{ hotelStore.currency || 'ETB'
-                      }}<span class="text-[10px] font-normal text-slate-400">/night</span>
+                      ETB<span class="text-[10px] font-normal text-slate-400">/night</span>
                     </span>
                   </div>
                 </template>

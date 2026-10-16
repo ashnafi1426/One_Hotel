@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import { useRoomStore } from '@/stores/room'
+import { Sparkles, Calendar, BedDouble, Clock, MapPin, ShieldCheck } from 'lucide-vue-next'
 
 const router = useRouter()
 const languageStore = useLanguageStore()
@@ -12,7 +13,7 @@ const roomStore = useRoomStore()
 
 const roomCount = computed(() => {
   const count = roomStore.rooms?.length || 0
-  return count > 0 ? `${count}+` : '60+'
+  return count > 0 ? `${count}` : 'Suites'
 })
 
 function goToRooms() {
@@ -26,48 +27,49 @@ function goToReservation() {
 
 <template>
   <section
-    class="relative min-h-[500px] overflow-hidden sm:h-[450px] md:h-[550px] lg:h-[600px] bg-slate-950 font-sans pt-16"
+    class="relative min-h-[500px] overflow-hidden sm:h-[450px] md:h-[550px] lg:h-[600px] bg-[#101827] text-white font-sans pt-20"
   >
     <img
       src="/images/gallery/luxury-suite.jpg"
       :alt="guestHotelStore.hotelName + ' Gallery'"
-      class="absolute inset-0 h-full w-full object-cover brightness-75"
+      class="absolute inset-0 h-full w-full object-cover brightness-75 scale-100"
+      @error="(e: any) => (e.target.src = '/images/hero/hero.jpg')"
     />
 
+    <!-- Luxury dark navy gradient vignettes -->
     <div
-      class="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/70 to-slate-950/40"
+      class="absolute inset-0 bg-gradient-to-r from-[#101827]/95 via-[#101827]/75 to-[#101827]/40"
     />
-
-    <div class="absolute inset-0 bg-gradient-to-t from-slate-950 via-transparent to-transparent" />
+    <div class="absolute inset-0 bg-gradient-to-t from-[#101827] via-transparent to-transparent" />
 
     <div
       class="relative z-10 mx-auto flex h-full max-w-7xl items-center px-4 sm:px-6 py-12 sm:py-0"
     >
-      <div class="max-w-3xl w-full space-y-4">
-        <span
-          class="inline-block px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/20 text-amber-400 border border-amber-500/30"
+      <div class="max-w-3xl w-full space-y-5">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/20 text-[#D6A94F] border border-[#D6A94F]/30"
         >
-          {{ guestHotelStore.hotelName }} • {{ languageStore.t('gallery', 'Visual Showcase') }}
-        </span>
+          <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
+          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('gallery', 'Visual Showcase') }}</span>
+        </div>
 
         <h1
-          class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-black leading-tight text-white tracking-tight"
+          class="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white tracking-tight"
         >
           {{ languageStore.t('explore_every', 'Explore Every') }}
-          <span class="text-amber-400"> {{ languageStore.t('corner', 'Corner') }} </span>
-          <br />
-          {{ languageStore.t('of_our_hotel', 'of Our Hotel') }}
+          <span class="italic font-normal text-[#D6A94F]"> {{ languageStore.t('corner', 'Corner') }} </span>
+          {{ languageStore.t('of_our_hotel', 'of Our Sanctuary') }}
         </h1>
 
         <p
-          class="max-w-2xl text-xs sm:text-sm md:text-base leading-relaxed text-slate-200 font-medium"
+          class="max-w-2xl text-xs sm:text-sm md:text-base leading-relaxed text-slate-200/90 font-light"
         >
           {{
             languageStore.t(
               'gallery_hero_desc',
-              'Discover our luxurious suites, elegant dining rooms, spa center, and world-class guest facilities at ' +
+              'Tour our signature suites, gourmet dining venues, wellness spa, and curated architectural spaces at ' +
                 guestHotelStore.hotelName +
-                ' before your stay.',
+                '.',
             )
           }}
         </p>
@@ -75,46 +77,45 @@ function goToReservation() {
         <div class="pt-2 flex flex-col sm:flex-row flex-wrap gap-3 sm:gap-4">
           <button
             @click="goToReservation"
-            class="rounded-2xl bg-amber-500 hover:bg-amber-600 px-6 sm:px-8 py-3.5 font-black text-slate-950 shadow-lg shadow-amber-500/20 transition text-xs uppercase tracking-wider cursor-pointer"
+            class="rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] px-8 py-3.5 font-black text-[#101827] shadow-lg shadow-[#D6A94F]/20 transition text-xs uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2"
           >
-            {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
+            <Calendar class="w-4 h-4 text-[#101827]" />
+            <span>{{ languageStore.t('book_your_stay', 'Book Your Stay') }}</span>
           </button>
 
           <button
             @click="goToRooms"
-            class="rounded-2xl border border-slate-700 bg-slate-900/80 hover:bg-slate-900 px-6 sm:px-8 py-3.5 font-black text-white transition text-xs uppercase tracking-wider cursor-pointer backdrop-blur-md"
+            class="rounded-full border border-[#26354D] bg-[#182235]/80 hover:bg-[#182235] px-8 py-3.5 font-bold text-white transition text-xs uppercase tracking-widest cursor-pointer backdrop-blur-md flex items-center justify-center gap-2"
           >
-            {{ languageStore.t('view_rooms', 'View Rooms') }}
+            <BedDouble class="w-4 h-4 text-[#D6A94F]" />
+            <span>{{ languageStore.t('view_rooms', 'View Suites') }}</span>
           </button>
         </div>
 
-        <div class="pt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-6">
-          <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <h3 class="text-xl sm:text-2xl font-black text-amber-400">{{ roomCount }}</h3>
-            <p class="mt-0.5 text-[10px] sm:text-xs font-bold text-slate-300 uppercase">
-              {{ languageStore.t('luxury_rooms', 'Luxury Rooms') }}
+        <!-- Real Property Operational Information -->
+        <div class="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
+            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+              <BedDouble class="w-3.5 h-3.5 text-[#D6A94F]" />
+              Accommodations
             </p>
+            <p class="text-sm font-bold text-white">{{ roomCount }} Available Suites</p>
           </div>
 
-          <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <h3 class="text-xl sm:text-2xl font-black text-amber-400">5★</h3>
-            <p class="mt-0.5 text-[10px] sm:text-xs font-bold text-slate-300 uppercase">
-              {{ languageStore.t('hotel_rating', 'Hotel Rating') }}
+          <div class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
+            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+              <Clock class="w-3.5 h-3.5 text-[#D6A94F]" />
+              Front Desk
             </p>
+            <p class="text-sm font-bold text-white truncate">{{ guestHotelStore.frontDeskHours }}</p>
           </div>
 
-          <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <h3 class="text-xl sm:text-2xl font-black text-amber-400">20+</h3>
-            <p class="mt-0.5 text-[10px] sm:text-xs font-bold text-slate-300 uppercase">
-              {{ languageStore.t('premium_facilities', 'Facilities') }}
+          <div class="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
+            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+              <MapPin class="w-3.5 h-3.5 text-[#D6A94F]" />
+              Destination
             </p>
-          </div>
-
-          <div class="p-3 rounded-2xl bg-slate-900/70 border border-slate-800">
-            <h3 class="text-xl sm:text-2xl font-black text-amber-400">15K+</h3>
-            <p class="mt-0.5 text-[10px] sm:text-xs font-bold text-slate-300 uppercase">
-              {{ languageStore.t('happy_guests', 'Happy Guests') }}
-            </p>
+            <p class="text-sm font-bold text-white truncate">{{ guestHotelStore.hotelCity }}, {{ guestHotelStore.hotelCountry }}</p>
           </div>
         </div>
       </div>

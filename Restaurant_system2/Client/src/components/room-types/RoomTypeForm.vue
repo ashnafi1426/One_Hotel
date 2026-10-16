@@ -134,16 +134,14 @@ const submit = () => {
         class="text-red-500 text-xs mt-1.5 flex items-center gap-1 font-medium"
       >
         <AlertCircle class="w-3.5 h-3.5 flex-shrink-0" />
-        <span
-          >A room type named "{{ form.name }}" already exists in {{ hotelStore.hotelName }}.</span
-        >
+        <span>A room type named "{{ form.name }}" already exists.</span>
       </div>
       <div
         v-else-if="form.name && !loadingExisting"
         class="text-emerald-600 dark:text-emerald-400 text-xs mt-1.5 flex items-center gap-1 font-medium"
       >
         <CheckCircle2 class="w-3.5 h-3.5 flex-shrink-0" />
-        <span>Name is available for {{ hotelStore.hotelName }}.</span>
+        <span>Name is available.</span>
       </div>
     </div>
 
@@ -165,7 +163,7 @@ const submit = () => {
       <label
         class="block mb-1.5 sm:mb-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100"
       >
-        Price Per Night ({{ hotelStore.currency || 'ETB' }}) <span class="text-red-500">*</span>
+        Price Per Night (ETB) <span class="text-red-500">*</span>
       </label>
       <div class="relative">
         <input

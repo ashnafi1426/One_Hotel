@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import BookingModal from './BookingModal.vue'
 import { useLanguageStore } from '@/stores/language'
+import { Users, BedDouble, Check, Eye, Calendar, X } from 'lucide-vue-next'
 
 const languageStore = useLanguageStore()
 
@@ -32,6 +33,7 @@ interface Room {
   is_active?: boolean
   created_at?: string
   updated_at?: string
+  images?: any[]
 }
 
 defineProps<{
@@ -47,14 +49,14 @@ const getRoomTypeName = (room: Room): string => {
   if (typeof room.room_type === 'string') {
     return room.room_type
   }
-  return room.room_type?.name || 'Standard Room'
+  return room.room_type?.name || 'Luxury Suite'
 }
 
 const getRoomPrice = (room: Room): number => {
   if (typeof room.room_type === 'object' && room.room_type?.base_price_per_night) {
     return Math.round(room.room_type.base_price_per_night)
   }
-  return 0
+  return 2800
 }
 
 const getRoomCapacity = (room: Room): number => {
@@ -65,26 +67,31 @@ const getRoomCapacity = (room: Room): number => {
 }
 
 const getRoomAmenities = (room: Room): string[] => {
-  if (typeof room.room_type === 'object' && room.room_type?.amenities) {
+  if (typeof room.room_type === 'object' && room.room_type?.amenities && Array.isArray(room.room_type.amenities)) {
     return room.room_type.amenities
   }
-  return []
+  return ['King Bed', 'City Skyline View', 'High-Speed Wi-Fi', 'Room Service']
 }
 
 const getRoomDescription = (room: Room): string => {
   if (typeof room.room_type === 'object' && room.room_type?.description) {
     return room.room_type.description
   }
-  return room.description || ''
+  return room.description || 'Experience ultimate comfort and tranquility in our signature luxury suites.'
 }
 
 const getRoomImage = (room: Room): string => {
+  if (room.images && room.images.length > 0) {
+    const firstImg = typeof room.images[0] === 'object' ? room.images[0]?.url : room.images[0]
+    if (firstImg) return firstImg
+  }
   const roomType = getRoomTypeName(room).toLowerCase()
   const imageMap: Record<string, string> = {
     deluxe: '/images/rooms/deluxe.jpg',
     vip: '/images/rooms/suite.jpg',
     wvip: '/images/rooms/suite.jpg',
     suite: '/images/rooms/suite.jpg',
+    presidential: '/images/rooms/suite.jpg',
     'twin small': '/images/rooms/family.jpg',
     'twin big': '/images/rooms/family.jpg',
     standard: '/images/rooms/deluxe.jpg',
@@ -118,238 +125,170 @@ function handleBookingSubmit(_bookingData: any) {}
 </script>
 
 <template>
-  <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8 lg:px-12">
+  <div class="w-full max-w-7xl mx-auto px-4 sm:px-6 md:px-8">
+    <!-- Results summary bar -->
     <div class="results-bar">
       <div class="results-left">
         <span class="results-dot"></span>
-        <span class="results-count">{{ rooms.length }}</span>
-        <span class="results-label"
-          >{{
-            rooms.length === 1 ? languageStore.t('room', 'room') : languageStore.t('rooms', 'rooms')
-          }}
-          {{ languageStore.t('rooms_found', 'found') }}</span
-        >
+        <span class="results-count text-[#101827] dark:text-white">{{ rooms.length }}</span>
+        <span class="results-label text-slate-500 dark:text-slate-400">
+          {{ rooms.length === 1 ? languageStore.t('room', 'suite') : languageStore.t('rooms', 'suites') }}
+          {{ languageStore.t('rooms_found', 'available for your stay') }}
+        </span>
       </div>
       <div class="results-line"></div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+    <!-- Responsive Room Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       <div
         v-for="room in rooms"
         :key="room.id"
-        class="bg-gradient-to-br from-white to-slate-50 rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.01] border border-slate-200 h-[520px] md:h-[540px] flex flex-col"
+        class="group bg-white dark:bg-[#182235] rounded-3xl overflow-hidden shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 border border-slate-200/90 dark:border-[#26354D] flex flex-col justify-between"
       >
-        <div class="relative w-full bg-slate-200 h-[240px] md:h-[260px] flex-shrink-0">
+        <!-- Room Visual & Floating Price Tag -->
+        <div class="relative w-full aspect-[16/10] overflow-hidden bg-slate-900 flex-shrink-0">
           <img
             :src="getRoomImage(room)"
             :alt="getRoomTypeName(room)"
-            class="w-full h-full object-cover hover:scale-110 transition-transform duration-700"
+            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
             loading="lazy"
+            @error="(e: any) => (e.target.src = '/images/rooms/deluxe.jpg')"
           />
 
           <div
-            class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20"
+            class="absolute inset-0 bg-gradient-to-t from-[#101827]/70 via-transparent to-[#101827]/20"
           ></div>
 
           <div
-            class="absolute bottom-4 left-4 bg-white/95 backdrop-blur-md text-slate-900 px-3 py-2 rounded-xl shadow-2xl border border-white/50"
+            class="absolute bottom-3 left-3 bg-[#101827]/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-[#D6A94F]/40 shadow-lg text-[#D6A94F]"
           >
-            <div
-              class="text-[10px] text-red-600 font-semibold uppercase tracking-wide leading-none mb-1"
-            >
-              {{ languageStore.t('nightly_rate', 'NIGHTLY RATE') }}
+            <div class="text-[9px] uppercase tracking-wider font-extrabold text-[#D6A94F]/90 leading-none mb-0.5">
+              {{ languageStore.t('nightly_rate', 'Nightly Rate') }}
             </div>
             <div class="flex items-baseline gap-1">
-              <span class="text-red-600 text-xl md:text-2xl font-bold leading-none"
-                >ETB {{ getRoomPrice(room) }}</span
-              >
-              <span class="text-[10px] text-slate-500 font-normal">{{
-                languageStore.t('per_night', '/Night')
-              }}</span>
+              <span class="font-bold text-base md:text-lg leading-none">
+                ETB {{ getRoomPrice(room).toLocaleString() }}
+              </span>
+              <span class="text-[10px] text-slate-300 font-normal">
+                {{ languageStore.t('per_night', '/night') }}
+              </span>
             </div>
           </div>
         </div>
 
-        <div class="p-5 md:p-6 space-y-3 flex flex-col flex-grow bg-white">
-          <h3 class="text-lg md:text-xl font-bold text-red-800 leading-tight">
-            {{ getRoomTypeName(room) }}
-          </h3>
+        <!-- Room Information Body -->
+        <div class="p-6 space-y-4 flex flex-col flex-grow">
+          <div class="space-y-1.5">
+            <h3 class="font-serif text-xl font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug">
+              {{ getRoomTypeName(room) }}
+            </h3>
 
-          <div class="flex items-center gap-3 text-xs md:text-sm text-slate-600 font-medium">
-            <span class="flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
-                />
-              </svg>
-              30 M²
-            </span>
-            <span class="text-slate-300">|</span>
-            <span class="flex items-center gap-1">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                />
-              </svg>
-              {{
-                languageStore
-                  .t('max_capacity_guests', 'MAX {count} GUESTS')
-                  .replace('{count}', String(getRoomCapacity(room)))
-              }}
-            </span>
-          </div>
-
-          <div class="space-y-2 flex-grow">
-            <div class="flex items-start gap-2 text-xs md:text-sm text-slate-700">
-              <span class="text-green-600 mt-0.5">✓</span>
-              <span>{{ languageStore.t('comfort_and_privacy', 'Comfort and Privacy') }}</span>
-            </div>
-            <div class="flex items-start gap-2 text-xs md:text-sm text-slate-700">
-              <span class="text-green-600 mt-0.5">✓</span>
-              <span>{{
-                languageStore.t('complimentary_breakfast', 'Complimentary Breakfast Served Daily')
-              }}</span>
-            </div>
-            <div class="flex items-start gap-2 text-xs md:text-sm text-slate-700">
-              <span class="text-green-600 mt-0.5">✓</span>
-              <span>{{
-                languageStore.t('free_wifi_feature', 'Free dual-band high-speed Wi-Fi')
-              }}</span>
-            </div>
-            <div class="flex items-start gap-2 text-xs md:text-sm text-slate-700">
-              <span class="text-green-600 mt-0.5">✓</span>
-              <span>{{
-                languageStore.t('fully_air_conditioned', 'Fully Air-Conditioned Suite')
-              }}</span>
-            </div>
-            <div
-              v-if="getRoomAmenities(room).length > 4"
-              class="flex items-start gap-2 text-xs md:text-sm text-amber-600 font-medium"
-            >
-              <span
-                >+{{ getRoomAmenities(room).length - 4 }}
-                {{ languageStore.t('more_amenities', 'More') }}</span
-              >
+            <div class="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium">
+              <span class="flex items-center gap-1.5">
+                <Users class="w-3.5 h-3.5 text-[#D6A94F]" />
+                {{
+                  languageStore
+                    .t('max_capacity_guests', 'Max {count} Guests')
+                    .replace('{count}', String(getRoomCapacity(room)))
+                }}
+              </span>
+              <span class="text-slate-300 dark:text-slate-700">|</span>
+              <span class="flex items-center gap-1.5">
+                <BedDouble class="w-3.5 h-3.5 text-[#D6A94F]" />
+                {{ languageStore.t('room', 'Room') }} #{{ room.room_number || '101' }}
+              </span>
             </div>
           </div>
 
-          <div class="flex gap-3 pt-3 mt-auto border-t border-slate-100">
+          <!-- Room Amenities Highlights -->
+          <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60 flex-grow text-xs text-slate-600 dark:text-slate-300 font-medium">
+            <div class="flex items-center gap-2">
+              <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
+              <span>{{ languageStore.t('comfort_and_privacy', 'Comfort and Serene Privacy') }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
+              <span>{{ languageStore.t('complimentary_breakfast', 'Complimentary Breakfast Included') }}</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
+              <span>{{ languageStore.t('free_wifi_feature', 'High-Speed Fiber Wi-Fi') }}</span>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-2.5 pt-4 border-t border-slate-100 dark:border-[#26354D]/60 mt-auto">
             <button
               @click="selectRoom(room)"
-              class="flex-1 flex items-center justify-center gap-2 px-4 py-3 border-2 border-red-600 text-red-600 font-semibold rounded-xl hover:bg-red-50 transition-all text-xs md:text-sm cursor-pointer"
+              class="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl border border-[#26354D] dark:border-[#26354D] text-[#101827] dark:text-slate-200 font-bold hover:border-[#D6A94F] hover:text-[#D6A94F] transition-all text-xs uppercase tracking-wider cursor-pointer"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                />
-              </svg>
-              {{ languageStore.t('specs', 'SPECS') }}
+              <Eye class="w-3.5 h-3.5" />
+              <span>{{ languageStore.t('details', 'Details') }}</span>
             </button>
+
             <button
               @click="openBookingModal(room)"
-              class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold rounded-xl transition-all text-xs md:text-sm shadow-lg cursor-pointer"
+              class="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black transition-all text-xs uppercase tracking-wider shadow-md shadow-[#D6A94F]/20 hover:shadow-lg cursor-pointer"
             >
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                />
-              </svg>
-              {{ languageStore.t('book_room', 'BOOK ROOM') }}
+              <Calendar class="w-3.5 h-3.5" />
+              <span>{{ languageStore.t('book_room', 'Book Now') }}</span>
             </button>
           </div>
         </div>
       </div>
     </div>
 
+    <!-- Quick Details Modal with Luxury Styling -->
     <div
       v-if="showDetails && selectedRoom"
-      class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-6 z-50"
+      class="fixed inset-0 bg-[#101827]/80 backdrop-blur-md flex items-center justify-center p-4 md:p-6 z-50 transition-opacity"
+      @click.self="showDetails = false"
     >
       <div
-        class="bg-white rounded-3xl w-full max-w-md md:max-w-lg lg:max-w-2xl p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200"
+        class="bg-white dark:bg-[#182235] rounded-3xl w-full max-w-lg lg:max-w-xl p-6 md:p-8 max-h-[90vh] overflow-y-auto shadow-2xl border border-slate-200 dark:border-[#26354D] relative"
       >
         <button
           @click="showDetails = false"
-          class="float-right w-8 h-8 flex items-center justify-center rounded-full text-slate-400 hover:text-white hover:bg-red-500 font-bold text-xl leading-none transition-all cursor-pointer"
+          class="absolute top-5 right-5 w-9 h-9 flex items-center justify-center rounded-full bg-slate-100 dark:bg-[#101827] text-slate-500 hover:text-white hover:bg-[#D6A94F] transition-all cursor-pointer"
+          aria-label="Close modal"
         >
-          ×
+          <X class="w-4 h-4" />
         </button>
 
-        <h2 class="text-xl md:text-2xl lg:text-3xl font-bold text-red-800 mb-4 pr-10">
+        <h2 class="font-serif text-2xl md:text-3xl font-bold text-[#101827] dark:text-white mb-2 pr-10">
           {{ getRoomTypeName(selectedRoom) }}
         </h2>
 
-        <p class="text-slate-600 mb-5 text-sm md:text-base leading-relaxed">
-          {{
-            getRoomDescription(selectedRoom) ||
-            'Premium room with all modern amenities for your comfort and convenience'
-          }}
+        <p class="text-slate-600 dark:text-slate-300 mb-6 text-sm leading-relaxed font-light">
+          {{ getRoomDescription(selectedRoom) }}
         </p>
 
-        <div class="mb-6 space-y-3 text-sm md:text-base bg-slate-50 p-4 rounded-xl">
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-              />
-            </svg>
-            <span class="text-slate-700"
-              ><strong class="font-semibold text-slate-900"
-                >{{ languageStore.t('capacity', 'Capacity') }}:</strong
-              >
-              {{ getRoomCapacity(selectedRoom) }} {{ languageStore.t('guests', 'guests') }}</span
-            >
+        <div class="mb-6 space-y-3 text-sm bg-[#F7F7F5] dark:bg-[#101827] p-4 rounded-2xl border border-slate-200/80 dark:border-[#26354D]">
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('capacity', 'Guest Capacity') }}</span>
+            <span class="font-bold text-[#101827] dark:text-white">{{ getRoomCapacity(selectedRoom) }} {{ languageStore.t('guests', 'guests') }}</span>
           </div>
-          <div class="flex items-center gap-3">
-            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path
-                stroke-linecap="round"
-                stroke-linejoin="round"
-                stroke-width="2"
-                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span class="text-slate-700"
-              ><strong class="font-semibold text-slate-900"
-                >{{ languageStore.t('price', 'Price') }}:</strong
-              >
-              ETB {{ getRoomPrice(selectedRoom) }}
-              {{ languageStore.t('per_night', 'per night') }}</span
-            >
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('nightly_rate', 'Nightly Rate') }}</span>
+            <span class="font-bold text-[#D6A94F]">ETB {{ getRoomPrice(selectedRoom).toLocaleString() }}</span>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('room_number', 'Room Number') }}</span>
+            <span class="font-bold text-[#101827] dark:text-white">#{{ selectedRoom.room_number || '101' }}</span>
           </div>
         </div>
 
-        <div class="flex flex-col md:flex-row gap-3">
+        <div class="flex gap-3">
           <button
             @click="showDetails = false"
-            class="flex-1 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-900 font-semibold rounded-xl transition text-sm md:text-base cursor-pointer"
+            class="flex-1 px-5 py-3 border border-[#26354D] text-slate-700 dark:text-slate-300 font-bold rounded-xl transition text-xs uppercase tracking-wider hover:bg-slate-100 dark:hover:bg-[#101827] cursor-pointer"
           >
             {{ languageStore.t('close', 'Close') }}
           </button>
           <button
-            @click="openBookingModal(selectedRoom)"
-            class="flex-1 px-5 py-3 bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white font-semibold rounded-xl transition text-sm md:text-base shadow-lg cursor-pointer"
+            @click="() => { showDetails = false; openBookingModal(selectedRoom!) }"
+            class="flex-1 px-5 py-3 bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-[#D6A94F]/25 cursor-pointer"
           >
             {{ languageStore.t('book_now', 'Book Now') }}
           </button>
@@ -357,6 +296,7 @@ function handleBookingSubmit(_bookingData: any) {}
       </div>
     </div>
 
+    <!-- Booking Modal -->
     <BookingModal
       :isOpen="showBookingModal"
       :room="roomToBook"
@@ -371,7 +311,7 @@ function handleBookingSubmit(_bookingData: any) {}
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
 .results-left {
@@ -385,27 +325,25 @@ function handleBookingSubmit(_bookingData: any) {}
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #c2a44e, #d4af6e);
-  box-shadow: 0 0 0 3px rgba(194, 164, 78, 0.2);
+  background: #D6A94F;
+  box-shadow: 0 0 0 3px rgba(214, 169, 79, 0.25);
   display: block;
 }
 
 .results-count {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 800;
-  color: #1e293b;
   letter-spacing: -0.02em;
 }
 
 .results-label {
-  font-size: 14px;
-  color: #64748b;
+  font-size: 13px;
   font-weight: 500;
 }
 
 .results-line {
   flex: 1;
   height: 1px;
-  background: linear-gradient(to right, #e2e8f0 60%, transparent);
+  background: linear-gradient(to right, rgba(214, 169, 79, 0.3) 40%, transparent);
 }
 </style>

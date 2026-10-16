@@ -6,24 +6,27 @@
 :root,
 [data-hotel-theme='luxury-gold'],
 [data-hotel-theme='sheraton'] {
-  /* Brand / Primary Palette (#F59E0B) */
-  --color-primary: #f59e0b;
-  --color-primary-rgb: 245, 158, 11;
-  --color-primary-hover: #d97706;
-  --color-primary-hover-rgb: 217, 119, 6;
-  --color-primary-foreground: #111827;
-  --color-primary-foreground-rgb: 17, 24, 39;
-  --color-primary-subtle: #fef3c7;
-  --color-primary-subtle-rgb: 254, 243, 199;
-  --color-primary-subtle-foreground: #92400e;
+  /* Brand / Primary Palette - Warm Luxury Gold (#D6A94F) */
+  --color-primary: #D6A94F;
+  --color-primary-rgb: 214, 169, 79;
+  --color-primary-hover: #C59B3F;
+  --color-primary-hover-rgb: 197, 155, 63;
+  --color-primary-foreground: #101827;
+  --color-primary-foreground-rgb: 16, 24, 39;
+  --color-primary-subtle: #FAF3E7;
+  --color-primary-subtle-rgb: 250, 243, 231;
+  --color-primary-subtle-foreground: #8A641A;
 
   /* Surfaces & Backgrounds */
-  --color-background: #f8fafc;
-  --color-background-rgb: 248, 250, 252;
+  --color-background: #F7F7F5;
+  --color-background-rgb: 247, 247, 245;
   --color-surface: #ffffff;
   --color-surface-rgb: 255, 255, 255;
-  --color-surface-secondary: #f1f5f9;
-  --color-surface-secondary-rgb: 241, 245, 249;
+  --color-surface-secondary: #EFEFEA;
+  --color-surface-secondary-rgb: 239, 239, 234;
+  --color-navy: #101827;
+  --color-navy-surface: #182235;
+  --color-navy-border: #26354D;
 
   /* Typography */
   --color-text: #0f172a;

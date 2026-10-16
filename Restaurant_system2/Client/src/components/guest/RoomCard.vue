@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
 import { useLanguageStore } from '@/stores/language'
+import { useGuestHotelStore } from '@/stores/guestHotelStore'
+import { Users, BedDouble, Check, Calendar, Eye } from 'lucide-vue-next'
+import BookingModal from './BookingModal.vue'
 
 interface Room {
   id: string
@@ -10,13 +12,13 @@ interface Room {
   room_type: string
   price: number
   capacity: number
-  size: number
-  bed_type: string
+  size?: number
+  bed_type?: string
   image: string
-  rating: number
-  reviews: number
-  available: boolean
-  amenities: string[]
+  rating?: number
+  reviews?: number
+  available?: boolean
+  amenities?: string[]
 }
 
 const props = defineProps<{
@@ -25,157 +27,117 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'details', room: Room): void
+  (e: 'book', room: Room): void
 }>()
 
-const router = useRouter()
 const languageStore = useLanguageStore()
+const guestHotelStore = useGuestHotelStore()
+const showBookingModal = ref(false)
 
-const formattedPrice = computed(() => `${props.room.price.toFixed(2)}`)
-
-const availabilityClass = computed(() =>
-  props.room.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700',
-)
-
-const availabilityText = computed(() =>
-  props.room.available
-    ? languageStore.t('available', 'Available')
-    : languageStore.t('fully_booked', 'Fully Booked'),
-)
+const formattedPrice = computed(() => {
+  const currency = guestHotelStore.currency || 'ETB'
+  return `${Number(props.room.price || 0).toLocaleString()} ${currency}`
+})
 
 function viewDetails() {
   emit('details', props.room)
 }
 
 function reserveRoom() {
-  router.push({
-    path: '/reservation',
-    query: {
-      room: props.room.id,
-    },
-  })
+  emit('book', props.room)
+  showBookingModal.value = true
+}
+
+function closeBooking() {
+  showBookingModal.value = false
 }
 </script>
 
 <template>
   <div
-    class="group relative overflow-hidden rounded-2xl bg-white dark:bg-slate-900 shadow-sm transition-all duration-500 hover:-translate-y-0.5 hover:shadow-md border border-slate-100 dark:border-slate-800 h-[360px] md:h-[380px] flex flex-col text-slate-800 dark:text-slate-100"
+    class="group relative overflow-hidden rounded-3xl bg-white dark:bg-[#182235] shadow-md hover:shadow-2xl transition-all duration-500 hover:-translate-y-1 border border-slate-200/90 dark:border-[#26354D] flex flex-col text-slate-800 dark:text-slate-100 justify-between"
   >
-    <div class="relative overflow-hidden h-[160px] md:h-[180px] flex-shrink-0">
+    <!-- Room Visual -->
+    <div class="relative overflow-hidden aspect-[16/10] flex-shrink-0 bg-slate-900">
       <img
-        :src="room.image"
+        :src="room.image || '/images/rooms/deluxe.jpg'"
         :alt="room.name"
-        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-110"
+        class="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+        loading="lazy"
+        @error="(e: any) => (e.target.src = '/images/rooms/deluxe.jpg')"
       />
 
-      <div
-        class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent"
-      ></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-[#101827]/70 via-transparent to-[#101827]/20" />
 
-      <div class="absolute bottom-2 left-2 flex items-baseline gap-0.5">
-        <span class="text-xl md:text-2xl font-semibold text-white drop-shadow-lg">
+      <div
+        class="absolute bottom-3 left-3 bg-[#101827]/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-[#D6A94F]/40 shadow-lg text-[#D6A94F]"
+      >
+        <span class="font-bold text-sm md:text-base leading-none">
           {{ formattedPrice }}
         </span>
-        <span class="text-[9px] font-light text-white/90">{{
-          languageStore.t('per_night', '/night')
-        }}</span>
+        <span class="text-[10px] text-slate-300 font-normal">
+          / {{ languageStore.t('per_night', 'night') }}
+        </span>
       </div>
     </div>
 
-    <div class="p-3 flex flex-col flex-grow">
-      <div class="mb-2">
-        <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-1 leading-tight">
+    <!-- Room Body -->
+    <div class="p-5 flex flex-col flex-grow justify-between space-y-4">
+      <div class="space-y-1.5">
+        <h3 class="font-serif text-lg font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug">
           {{ room.name }}
         </h3>
 
-        <div class="flex items-center gap-1">
-          <div class="flex items-center gap-0.5">
-            <span class="text-amber-400 text-[10px]">★</span>
-            <span class="text-amber-400 text-[10px]">★</span>
-            <span class="text-amber-400 text-[10px]">★</span>
-            <span class="text-amber-400 text-[10px]">★</span>
-            <span class="text-amber-400 text-[10px]">★</span>
-          </div>
-          <span class="text-[9px] font-light text-slate-700">
-            {{ room.rating }}
+        <div class="flex items-center gap-3 text-xs text-slate-500 dark:text-slate-400 font-medium">
+          <span class="flex items-center gap-1">
+            <Users class="w-3.5 h-3.5 text-[#D6A94F]" />
+            {{ room.capacity }} {{ languageStore.t('guests', 'Guests') }}
           </span>
-          <span class="text-[9px] text-slate-400 font-light"> ({{ room.reviews }}) </span>
-        </div>
-      </div>
-
-      <div
-        class="grid grid-cols-3 gap-1.5 mb-2 pb-2 border-b border-slate-100 dark:border-slate-800"
-      >
-        <div class="text-center">
-          <p
-            class="text-[8px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-light mb-0.5"
-          >
-            {{ languageStore.t('guests', 'Guests') }}
-          </p>
-          <p class="text-[11px] font-medium text-slate-900 dark:text-slate-100">
-            {{ room.capacity }}
-          </p>
-        </div>
-
-        <div class="text-center border-x border-slate-100 dark:border-slate-800">
-          <p
-            class="text-[8px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-light mb-0.5"
-          >
-            {{ languageStore.t('size', 'Size') }}
-          </p>
-          <p class="text-[11px] font-medium text-slate-900 dark:text-slate-100">
-            {{ room.size }}m²
-          </p>
-        </div>
-
-        <div class="text-center">
-          <p
-            class="text-[8px] uppercase tracking-wide text-slate-500 dark:text-slate-400 font-light mb-0.5"
-          >
-            {{ languageStore.t('bed', 'Bed') }}
-          </p>
-          <p class="text-[11px] font-medium text-slate-900 dark:text-slate-100">
-            {{ room.bed_type }}
-          </p>
-        </div>
-      </div>
-
-      <div class="mb-2">
-        <p class="text-[9px] font-light text-slate-700 mb-1">
-          {{ languageStore.t('amenities', 'Amenities') }}
-        </p>
-        <div class="flex flex-wrap gap-1">
-          <span
-            v-for="item in room.amenities.slice(0, 3)"
-            :key="item"
-            class="inline-block rounded bg-slate-50 px-1.5 py-0.5 text-[8px] font-light text-slate-600 border border-slate-200"
-          >
-            {{ item }}
-          </span>
-          <span
-            v-if="room.amenities.length > 3"
-            class="inline-block rounded bg-amber-50 px-1.5 py-0.5 text-[8px] font-light text-amber-700 border border-amber-200"
-          >
-            +{{ room.amenities.length - 3 }}
+          <span class="text-slate-300 dark:text-slate-700">|</span>
+          <span class="flex items-center gap-1">
+            <BedDouble class="w-3.5 h-3.5 text-[#D6A94F]" />
+            {{ room.bed_type || 'King Bed' }}
           </span>
         </div>
       </div>
 
-      <div class="grid grid-cols-2 gap-1.5 mt-auto">
+      <!-- Amenities Highlights -->
+      <div v-if="room.amenities && room.amenities.length" class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60">
+        <span
+          v-for="item in room.amenities.slice(0, 3)"
+          :key="item"
+          class="inline-flex items-center gap-1 text-[10px] font-medium bg-[#FAF3E7] dark:bg-[#101827] text-[#8A641A] dark:text-slate-300 px-2 py-0.5 rounded-md border border-[#D6A94F]/20 dark:border-[#26354D]"
+        >
+          <Check class="w-2.5 h-2.5 text-[#D6A94F]" />
+          {{ item }}
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100 dark:border-[#26354D]/60 mt-auto">
         <button
           @click="viewDetails"
-          class="rounded-xl border border-slate-300 dark:border-slate-700 py-2 text-[10px] font-semibold text-slate-700 dark:text-slate-200 transition-all hover:border-amber-500 dark:hover:border-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/30 hover:text-amber-700 dark:hover:text-amber-300 cursor-pointer"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#26354D] text-[#101827] dark:text-slate-200 font-bold hover:border-[#D6A94F] hover:text-[#D6A94F] transition text-xs uppercase tracking-wider cursor-pointer"
         >
-          {{ languageStore.t('details', 'Details') }}
+          <Eye class="w-3.5 h-3.5" />
+          <span>{{ languageStore.t('details', 'Details') }}</span>
         </button>
 
         <button
           @click="reserveRoom"
-          class="rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 text-[10px] transition-all disabled:bg-slate-300 dark:disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed shadow-sm cursor-pointer"
-          :disabled="!room.available"
+          class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black transition text-xs uppercase tracking-wider shadow-md shadow-[#D6A94F]/20 cursor-pointer"
         >
-          {{ languageStore.t('book_now', 'Book Now') }}
+          <Calendar class="w-3.5 h-3.5" />
+          <span>{{ languageStore.t('book_now', 'Book Now') }}</span>
         </button>
       </div>
     </div>
+
+    <!-- Booking Modal -->
+    <BookingModal
+      :isOpen="showBookingModal"
+      :room="(room as any)"
+      @close="closeBooking"
+    />
   </div>
 </template>

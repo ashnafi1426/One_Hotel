@@ -61,10 +61,12 @@ function isItemActive(itemRoute: string) {
 // Title Case navigation labels
 const menus = computed(() => [
   { title: languageStore.t('home', 'Home'), route: '/' },
-  { title: languageStore.t('rooms', 'Rooms'), route: '/rooms' },
+  { title: languageStore.t('rooms', 'Rooms & Suites'), route: '/rooms' },
+  { title: languageStore.t('facilities', 'Facilities'), route: '/#facilities' },
+  { title: languageStore.t('dining', 'Dining'), route: '/#dining' },
   { title: languageStore.t('gallery', 'Gallery'), route: '/gallery' },
   { title: languageStore.t('about', 'About Us'), route: '/about' },
-  { title: languageStore.t('contact', 'Contact Us'), route: '/contact' },
+  { title: languageStore.t('contact', 'Contact'), route: '/contact' },
 ])
 
 function toggleMenu() {
@@ -95,24 +97,32 @@ onUnmounted(() => {
 
 <template>
   <header
-    class="fixed inset-x-0 top-0 z-50 transition-colors duration-200 bg-white/95 dark:bg-[#0B1B35]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-slate-800 shadow-xs"
+    class="fixed inset-x-0 top-0 z-50 transition-all duration-300 border-b"
+    :class="[
+      scrolled
+        ? 'bg-[#101827]/95 dark:bg-[#0B111D]/95 backdrop-blur-md border-[#26354D]/80 shadow-xl py-0'
+        : 'bg-[#101827]/90 dark:bg-[#0B111D]/90 backdrop-blur-sm border-[#26354D]/50 py-0.5',
+    ]"
   >
+    <!-- Top gold accent hairline -->
+    <div class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+
     <div
       class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 sm:h-20 flex items-center justify-between"
     >
-      <!-- Logo + Brand + Main Nav -->
-      <div class="flex items-center gap-4 lg:gap-10 min-w-0 flex-1 mr-2 sm:mr-4">
+      <!-- Logo + Hotel Brand -->
+      <div class="flex items-center gap-4 lg:gap-8 min-w-0 flex-1 mr-2 sm:mr-4">
         <RouterLink
           to="/"
-          class="flex items-center gap-2.5 sm:gap-3 min-w-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A] rounded-lg group"
+          class="flex items-center gap-3 min-w-0 select-none focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A94F] rounded-lg group"
         >
           <div
-            class="relative w-9 h-9 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-white p-1 shadow-xs border border-slate-200/60 dark:border-slate-700/60 shrink-0 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
+            class="relative w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-[#182235] p-1.5 shadow-md border border-[#D6A94F]/30 shrink-0 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
           >
             <img
               :src="currentHotelLogo"
               :alt="guestHotelStore.hotelName"
-              class="w-full h-full object-contain select-none"
+              class="w-full h-full object-contain select-none brightness-110"
               @error="
                 (e: any) => {
                   e.target.src = '/images/Hotel logo.png'
@@ -123,54 +133,55 @@ onUnmounted(() => {
 
           <div class="flex flex-col min-w-0 flex-1">
             <span
-              class="text-[13px] xs:text-[15px] sm:text-[17px] font-bold tracking-tight text-[#0B1B35] dark:text-white leading-tight uppercase truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none"
+              class="font-serif text-[15px] sm:text-[18px] lg:text-[19px] font-bold tracking-wider text-white leading-tight uppercase truncate"
             >
               {{ guestHotelStore.hotelName }}
             </span>
             <span
-              class="text-[9px] sm:text-[10px] font-semibold text-[#E9A11A] tracking-wider uppercase mt-0.5 leading-none truncate max-w-[130px] xs:max-w-[180px] sm:max-w-none"
+              class="text-[9px] sm:text-[10px] font-semibold text-[#D6A94F] tracking-[0.2em] uppercase mt-0.5 leading-none truncate"
             >
               {{
                 (guestHotelStore.hotelCity || 'ADDIS ABABA')
                   .toUpperCase()
                   .replace('ADDISS', 'ADDIS')
-              }}
+              }} • LUXURY HOTEL
             </span>
           </div>
         </RouterLink>
 
+        <!-- Desktop Navigation Links -->
         <nav
-          class="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0"
+          class="hidden lg:flex items-center gap-5 xl:gap-7 shrink-0 ml-2"
           aria-label="Main Navigation"
         >
           <RouterLink
             v-for="menu in menus"
             :key="menu.route"
             :to="menu.route"
-            class="text-[13px] xl:text-[14px] font-semibold tracking-wide transition-colors relative py-1 focus:outline-none focus-visible:text-[#E9A11A]"
+            class="text-[12px] xl:text-[13px] font-medium uppercase tracking-wider transition-colors relative py-1 focus:outline-none focus-visible:text-[#D6A94F]"
             :class="[
               isItemActive(menu.route)
-                ? 'text-[#0B1B35] dark:text-white font-bold'
-                : 'text-slate-600 dark:text-slate-300 hover:text-[#0B1B35] dark:hover:text-white',
+                ? 'text-[#D6A94F] font-bold'
+                : 'text-slate-200 hover:text-white',
             ]"
           >
             {{ menu.title }}
             <span
               v-if="isItemActive(menu.route)"
-              class="absolute inset-x-0 bottom-0 h-0.5 bg-[#E9A11A] rounded-full"
+              class="absolute inset-x-0 -bottom-1 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent rounded-full"
             />
           </RouterLink>
         </nav>
       </div>
 
       <!-- Desktop Right Actions -->
-      <div class="hidden lg:flex items-center gap-2.5 xl:gap-3 shrink-0">
+      <div class="hidden lg:flex items-center gap-3 shrink-0">
         <LanguageSelector variant="header" />
 
         <button
           @click="handleThemeToggle"
           type="button"
-          class="w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-[#E9A11A] dark:hover:border-[#E9A11A] transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A]"
+          class="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-full border border-[#26354D] bg-[#182235]/60 hover:bg-[#182235] text-slate-300 hover:text-white hover:border-[#D6A94F]/60 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A94F]"
           :title="
             theme.isDark
               ? languageStore.t('light_mode', 'Light Mode')
@@ -178,57 +189,57 @@ onUnmounted(() => {
           "
           :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <Sun v-if="theme.isDark" class="w-4.5 h-4.5 text-[#E9A11A]" />
-          <Moon v-else class="w-4.5 h-4.5 text-slate-700 dark:text-slate-300" />
+          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#D6A94F]" />
+          <Moon v-else class="w-4 h-4 text-slate-300" />
         </button>
 
         <RouterLink
           to="/rooms"
-          class="h-10 px-6 flex items-center justify-center rounded-full bg-primary hover:bg-primary-hover text-primary-foreground font-bold text-[13px] tracking-wide shadow-md shadow-amber-500/25 hover:shadow-lg hover:shadow-amber-500/35 transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+          class="h-10 px-5 xl:px-6 flex items-center justify-center rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-extrabold text-[12px] tracking-wider uppercase shadow-md shadow-[#D6A94F]/20 hover:shadow-lg hover:shadow-[#D6A94F]/30 transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A94F]"
         >
-          {{ languageStore.t('book_now', 'Book Now') }}
+          {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
         </RouterLink>
       </div>
 
       <!-- Mobile & Tablet Right Actions -->
-      <div class="flex items-center gap-1.5 sm:gap-2 shrink-0 lg:hidden">
+      <div class="flex items-center gap-2 shrink-0 lg:hidden">
         <LanguageSelector variant="header" />
 
         <button
           @click="handleThemeToggle"
           type="button"
-          class="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-transparent text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+          class="flex h-9 w-9 items-center justify-center rounded-full border border-[#26354D] bg-[#182235] text-slate-300 hover:text-white transition-colors shrink-0"
           :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#E9A11A]" />
+          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#D6A94F]" />
           <Moon v-else class="w-4 h-4" />
         </button>
 
         <button
           @click="toggleMenu"
           type="button"
-          class="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center rounded-full border border-slate-200 dark:border-slate-700 bg-transparent text-[#0B1B35] dark:text-white transition-colors hover:bg-slate-100 dark:hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A] shrink-0"
+          class="h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center rounded-full border border-[#26354D] bg-[#182235] text-white transition-colors hover:border-[#D6A94F] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A94F] shrink-0 cursor-pointer"
           :aria-expanded="mobileMenu"
           aria-label="Toggle navigation"
         >
-          <MenuIcon v-if="!mobileMenu" class="w-4.5 h-4.5 sm:w-5 sm:h-5" />
-          <CloseIcon v-else class="w-4.5 h-4.5 sm:w-5 sm:h-5 text-[#E9A11A]" />
+          <MenuIcon v-if="!mobileMenu" class="w-4.5 h-4.5" />
+          <CloseIcon v-else class="w-4.5 h-4.5 text-[#D6A94F]" />
         </button>
       </div>
     </div>
 
     <!-- Mobile Drawer -->
     <Transition
-      enter-active-class="transition duration-150 ease-out"
+      enter-active-class="transition duration-200 ease-out"
       enter-from-class="opacity-0 -translate-y-2"
       enter-to-class="opacity-100 translate-y-0"
-      leave-active-class="transition duration-100 ease-in"
+      leave-active-class="transition duration-150 ease-in"
       leave-from-class="opacity-100 translate-y-0"
       leave-to-class="opacity-0 -translate-y-2"
     >
       <div
         v-if="mobileMenu"
-        class="lg:hidden bg-white dark:bg-[#0B1B35] border-b border-slate-200 dark:border-slate-800 px-4 py-4 space-y-3 shadow-lg"
+        class="lg:hidden bg-[#101827]/98 border-b border-[#26354D] px-4 py-5 space-y-4 shadow-2xl backdrop-blur-xl"
       >
         <div class="flex flex-col space-y-1">
           <RouterLink
@@ -236,24 +247,26 @@ onUnmounted(() => {
             :key="menu.route"
             :to="menu.route"
             @click="closeMenu"
-            class="px-3.5 py-2.5 rounded-lg text-sm transition-colors"
+            class="px-4 py-2.5 rounded-xl text-sm font-medium tracking-wide uppercase transition-colors"
             :class="[
               isItemActive(menu.route)
-                ? 'font-semibold text-[#0B1B35] dark:text-white bg-slate-100 dark:bg-slate-800'
-                : 'text-slate-600 dark:text-slate-300 hover:text-[#0B1B35] dark:hover:text-white',
+                ? 'font-bold text-[#D6A94F] bg-[#182235] border border-[#D6A94F]/30'
+                : 'text-slate-300 hover:text-white hover:bg-[#182235]/60',
             ]"
           >
             {{ menu.title }}
           </RouterLink>
         </div>
 
-        <RouterLink
-          to="/rooms"
-          @click="closeMenu"
-          class="block w-full text-center py-3 rounded-full bg-primary hover:bg-primary-hover text-primary-foreground text-xs font-bold shadow-md shadow-amber-500/25 transition-all"
-        >
-          {{ languageStore.t('book_now', 'Book Now') }}
-        </RouterLink>
+        <div class="pt-2 border-t border-[#26354D]">
+          <RouterLink
+            to="/rooms"
+            @click="closeMenu"
+            class="block w-full text-center py-3 rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] text-xs font-black tracking-widest uppercase shadow-lg shadow-[#D6A94F]/20 transition-all cursor-pointer"
+          >
+            {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
+          </RouterLink>
+        </div>
       </div>
     </Transition>
   </header>

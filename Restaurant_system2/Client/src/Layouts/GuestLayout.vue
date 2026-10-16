@@ -18,7 +18,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white transition-colors duration-300 font-sans"
+    class="min-h-screen bg-[#F7F7F5] dark:bg-[#0B111D] text-[#20242B] dark:text-slate-100 transition-colors duration-300 font-sans"
   >
     <GuestNavbar />
     <main class="min-h-screen">

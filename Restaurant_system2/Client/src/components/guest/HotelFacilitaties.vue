@@ -21,29 +21,26 @@ interface Facility {
   icon: any
   title: string
   description: string
-  color: string
 }
 
 const facilities = computed<Facility[]>(() => [
   {
     id: 1,
     icon: Wifi,
-    title: languageStore.t('free_wifi', 'Free High-Speed Wi-Fi'),
+    title: languageStore.t('free_wifi', 'High-Speed Fiber Wi-Fi'),
     description:
       languageStore.currentLanguage === 'am'
         ? 'በሆቴሉ ውስጥ በሙሉ ፈጣን የፋይበር ኢንተርኔት በነጻ ያግኙ።'
-        : 'Stay connected throughout the hotel with complimentary high-speed fiber internet.',
-    color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+        : 'Stay seamlessly connected throughout all suites, dining lounges, and gardens with high-speed fiber internet.',
   },
   {
     id: 2,
     icon: Utensils,
-    title: languageStore.t('signature_dining', 'Fine Dining Restaurant'),
+    title: languageStore.t('signature_dining', 'Signature Fine Dining'),
     description:
       languageStore.currentLanguage === 'am'
         ? 'በተዋጣላቸው ሼፎች ትኩስ ግብዓቶች የተዘጋጁ ምርጥ ምግቦችን ያጣጥሙ።'
-        : 'Enjoy gourmet cuisine prepared by experienced chefs using fresh local ingredients.',
-    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+        : 'Gourmet cuisine prepared by seasoned culinary masters using fresh locally harvested ingredients.',
   },
   {
     id: 3,
@@ -52,18 +49,16 @@ const facilities = computed<Facility[]>(() => [
     description:
       languageStore.currentLanguage === 'am'
         ? 'ውብ የከተማ እይታ ባለው የዋና ገንዳችን ውስጥ ዘና ይበሉ።'
-        : 'Relax and unwind in our luxury outdoor pool overlooking stunning city panoramas.',
-    color: 'text-teal-500 bg-teal-500/10 border-teal-500/20',
+        : 'Unwind in our heated outdoor infinity pool offering panoramic views of the city skyline.',
   },
   {
     id: 4,
     icon: Sparkles,
-    title: languageStore.currentLanguage === 'am' ? 'ስፓ እና ጤና' : 'Luxury Spa & Wellness',
+    title: languageStore.currentLanguage === 'am' ? 'ስፓ እና ጤና' : 'Thermal Spa & Wellness',
     description:
       languageStore.currentLanguage === 'am'
         ? 'በማሳጅ እና በሳውና አገልግሎቶቻችን ሰውነትዎን ያድሱ።'
-        : 'Refresh your body and mind with premium massage treatments and thermal saunas.',
-    color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
+        : 'Rejuvenate body and mind with bespoke therapeutic massages, herbal saunas, and relaxation lounges.',
   },
   {
     id: 5,
@@ -72,97 +67,91 @@ const facilities = computed<Facility[]>(() => [
     description:
       languageStore.currentLanguage === 'am'
         ? 'ዘመናዊ መሣሪያዎች የተሟሉለት የጂም ማዕከል 24/7 ክፍት ነው።'
-        : 'Fully equipped gym with modern cardio & strength training gear open 24/7.',
-    color: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
+        : 'Fully equipped modern gymnasium with premium cardio gear, free weights, and dedicated trainers open 24/7.',
   },
   {
     id: 6,
     icon: Car,
     title:
-      languageStore.currentLanguage === 'am' ? 'አስተማማኝ የመኪና ማቆሚያ' : 'Free Valet & Secure Parking',
+      languageStore.currentLanguage === 'am' ? 'አስተማማኝ የመኪና ማቆሚያ' : 'Secure Valet Parking',
     description:
       languageStore.currentLanguage === 'am'
         ? 'የ24 ሰዓት ጥበቃ ያለው አስተማማኝና ሰፊ የመኪና ማቆሚያ።'
-        : 'Safe and spacious parking area with 24-hour security & valet service.',
-    color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
+        : 'Spacious secure parking area featuring 24/7 guarded surveillance and professional valet handling.',
   },
   {
     id: 7,
     icon: ShieldCheck,
     title:
-      languageStore.currentLanguage === 'am' ? 'የአውሮፕላን ማረፊያ ትራንስፖርት' : 'Airport Luxury Transfer',
+      languageStore.currentLanguage === 'am' ? 'የአውሮፕላን ማረፊያ ትራንስፖርት' : 'Luxury Chauffeur Transfer',
     description:
       languageStore.currentLanguage === 'am'
         ? 'ከአውሮፕላን ማረፊያ ነጻ የትራንስፖርት አገልግሎት።'
-        : 'Complimentary airport pickup and shuttle services available upon request.',
-    color: 'text-indigo-500 bg-indigo-500/10 border-indigo-500/20',
+        : 'Seamless airport executive chauffeur and private shuttle service available upon request.',
   },
   {
     id: 8,
     icon: ConciergeBell,
-    title: languageStore.t('concierge_service', '24/7 Personal Concierge'),
+    title: languageStore.t('concierge_service', '24/7 Private Concierge'),
     description:
       languageStore.currentLanguage === 'am'
         ? 'ጣፋጭ ምግቦችን እና አገልግሎቶችን በማንኛውም ሰዓት በQR ኮድ ይዘዙ።'
-        : 'Order delicious meals and guest services anytime directly through QR room menu.',
-    color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
+        : 'Personal concierge care and instant in-room dining available 24 hours a day directly at your service.',
   },
 ])
 </script>
 
 <template>
   <section
-    class="bg-white dark:bg-slate-900 py-12 sm:py-16 md:py-20 lg:py-24 border-b border-slate-200 dark:border-slate-800 transition-colors duration-300 font-sans"
+    id="facilities"
+    class="py-16 sm:py-20 lg:py-28 border-b border-slate-200/80 dark:border-[#26354D]/70 bg-white dark:bg-[#101827] transition-colors duration-300 font-sans"
   >
     <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-10 space-y-12">
+      <!-- Section Header -->
       <div class="mx-auto max-w-3xl text-center space-y-3">
-        <span
-          class="px-3.5 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-        >
-          {{ guestHotelStore.hotelName }} •
-          {{ languageStore.t('curated_comfort', 'Curated Comfort') }}
-        </span>
+        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+          <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
+          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('curated_comfort', 'Curated Amenities') }}</span>
+        </div>
 
         <h2
-          class="text-3xl sm:text-4xl lg:text-5xl font-black text-slate-900 dark:text-white tracking-tight"
+          class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#101827] dark:text-white tracking-tight"
         >
-          {{ languageStore.t('world_class_facilities', 'World-Class Hotel Facilities') }}
+          {{ languageStore.t('world_class_facilities', 'World-Class Hospitality Facilities') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-medium">
+        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
           {{
             languageStore.t(
               'facilities_desc',
-              'Every facility at ' +
+              'Every space at ' +
                 guestHotelStore.hotelName +
-                ' has been thoughtfully designed to provide comfort, relaxation, and unforgettable luxury experiences.',
+                ' is curated to deliver serenity, wellness, and exceptional guest comfort.',
             )
           }}
         </p>
       </div>
 
+      <!-- Facilities Grid -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         <div
           v-for="facility in facilities"
           :key="facility.id"
-          class="group rounded-3xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 p-6 transition-all duration-300 hover:border-amber-500/40 hover:shadow-md space-y-3"
+          class="group rounded-3xl border border-slate-200/90 dark:border-[#26354D] bg-[#F7F7F5] dark:bg-[#182235] p-7 transition-all duration-300 hover:border-[#D6A94F]/50 hover:shadow-xl space-y-4"
         >
           <div
-            :class="[
-              'w-12 h-12 rounded-2xl border flex items-center justify-center',
-              facility.color,
-            ]"
+            class="w-12 h-12 rounded-2xl bg-[#D6A94F]/10 border border-[#D6A94F]/30 flex items-center justify-center text-[#D6A94F] transition-transform duration-300 group-hover:scale-110"
           >
-            <component :is="facility.icon" class="w-6 h-6" />
+            <component :is="facility.icon" class="w-6 h-6 text-[#D6A94F]" />
           </div>
 
           <h3
-            class="text-base font-black text-slate-900 dark:text-white group-hover:text-amber-500 transition"
+            class="font-serif text-lg font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug"
           >
             {{ facility.title }}
           </h3>
 
-          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-light">
             {{ facility.description }}
           </p>
         </div>

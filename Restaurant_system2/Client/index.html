@@ -15,15 +15,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Load critical fonts only with display=swap to prevent render blocking -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Load luxury hotel fonts: Cormorant Garamond for elegant display/headings, Plus Jakarta Sans & Inter for UI -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Preload critical assets -->
     <link rel="modulepreload" href="/src/main.ts">
     
-    <title>Hotel Management System</title>
+    <title>Luxury Hotel & Suites | Premium Hospitality</title>
     <style>
-      /* Initial loader styles - shown before Vue app loads */
+      /* Initial loader styles - luxury dark navy and gold palette */
       #initial-loader {
         position: fixed;
         inset: 0;
@@ -32,7 +32,8 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: white;
+        background: #101827;
+        color: #ffffff;
         transition: opacity 0.3s ease;
       }
       
@@ -50,20 +51,21 @@
       }
       
       #initial-loader .ring-static {
-        width: 12rem;
-        height: 12rem;
+        width: 10rem;
+        height: 10rem;
         border-radius: 9999px;
-        border: 4px solid #fee2e2;
+        border: 2px solid rgba(214, 169, 79, 0.2);
       }
       
       #initial-loader .ring-animated {
         position: absolute;
-        width: 12rem;
-        height: 12rem;
+        width: 10rem;
+        height: 10rem;
         border-radius: 9999px;
-        border: 4px solid transparent;
-        border-top-color: #dc2626;
-        animation: spin 1.5s linear infinite;
+        border: 2px solid transparent;
+        border-top-color: #D6A94F;
+        border-right-color: rgba(214, 169, 79, 0.5);
+        animation: spin 1.4s cubic-bezier(0.68, -0.55, 0.27, 1.55) infinite;
       }
       
       #initial-loader .logo-image {
@@ -71,21 +73,24 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 12rem;
-        height: 12rem;
+        width: 10rem;
+        height: 10rem;
       }
       
       #initial-loader img {
-        width: 8rem;
-        height: 8rem;
+        width: 6.5rem;
+        height: 6.5rem;
         object-fit: contain;
         animation: pulse 2s ease-in-out infinite;
       }
       
       #initial-loader h1 {
+        font-family: 'Cormorant Garamond', Georgia, serif;
         font-size: 1.875rem;
-        font-weight: bold;
-        color: #991b1b;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: #ffffff;
         margin-bottom: 0.5rem;
         animation: fadeIn 0.8s ease-out forwards;
         animation-delay: 0.3s;
@@ -93,8 +98,11 @@
       }
       
       #initial-loader .subtitle {
-        font-size: 1.25rem;
-        color: #4b5563;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.85rem;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+        color: #D6A94F;
         margin-bottom: 1.5rem;
         animation: fadeIn 0.8s ease-out forwards;
         animation-delay: 0.5s;
@@ -111,29 +119,30 @@
       }
       
       #initial-loader .star {
-        color: #dc2626;
-        font-size: 1.5rem;
+        color: #D6A94F;
+        font-size: 1.25rem;
       }
       
       #initial-loader .loading-text {
-        font-size: 0.875rem;
-        font-weight: 500;
-        color: #374151;
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #94a3b8;
         text-transform: uppercase;
-        letter-spacing: 0.05em;
+        letter-spacing: 0.15em;
         animation: pulse 1.5s ease-in-out infinite;
       }
       
       #initial-loader .dots {
         display: flex;
         gap: 0.5rem;
-        margin-top: 1.5rem;
+        margin-top: 1.25rem;
       }
       
       #initial-loader .dot {
-        width: 0.5rem;
-        height: 0.5rem;
-        background-color: #dc2626;
+        width: 0.45rem;
+        height: 0.45rem;
+        background-color: #D6A94F;
         border-radius: 9999px;
         animation: bounce 1.4s ease-in-out infinite;
       }
