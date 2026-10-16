@@ -156,15 +156,10 @@ const trackOrder = () => {
     if (qrToken) {
       localStorage.setItem('guest_qr_token', qrToken)
     }
-    const hotelId =
-      (route.query.hotel_id as string) ||
-      localStorage.getItem('hotel_id') ||
-      localStorage.getItem('active_hotel_id')
 
     console.log('[PaymentSuccess] Navigating to order status:', {
       orderId,
       qrToken: qrToken ? qrToken.substring(0, 4) + '****' : 'none',
-      hotelId: hotelId ? hotelId.substring(0, 8) + '...' : 'none',
     })
 
     router.push({

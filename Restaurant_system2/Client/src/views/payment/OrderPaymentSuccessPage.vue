@@ -506,16 +506,9 @@ function trackOrder(): void {
       localStorage.setItem('guest_qr_token', qrToken)
     }
 
-    const hotelId =
-      orderData.value?.hotel_id ||
-      (route.query.hotel_id as string) ||
-      localStorage.getItem('hotel_id') ||
-      localStorage.getItem('active_hotel_id')
-
     console.log('[OrderPaymentSuccess] Navigating to order status with:', {
       orderId,
       qrToken: qrToken ? qrToken.substring(0, 8) + '...' : 'none',
-      hotelId: hotelId ? hotelId.substring(0, 8) + '...' : 'none',
     })
 
     const tipVal = Number(

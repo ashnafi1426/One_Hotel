@@ -7,7 +7,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RbacSeeder::class,                   // ← Create roles and permissions
+            // RbacSeeder::class,                   // ← Create roles and permissions
             RoleUserSeeder::class,               // ← CREATE USERS (admin, manager, waiter, etc.)
             // RoomTypeSeeder::class,
             // RoomSeeder::class,
@@ -15,12 +15,12 @@ class DatabaseSeeder extends Seeder
             // ClearMockMenuItemsSeeder::class,    // ← Remove all mock menu items
             // FixCashierPasswordSeeder::class,    // ← Fix cashier password and user info
             // ManagerSeeder::class,                // ← Create manager test data
-            HotelShiftSeeder::class,             // ← Create shifts (prerequisite for floor assignments)
-            WaiterManagementSeeder::class,       // ← Create waiter + floor + shift data
-            // // WaiterSeeder::class,                 // ← Create additional waiter test data (commented - using WaiterManagementSeeder)
-            DeliveryTaskSeeder::class,           // ← Create delivery tasks for testing
-            RestaurantTableSeeder::class,        // ← Create restaurant tables for walk-in customers
-            ReviewPermissionsSeeder::class,      // ← Create review system permissions and assign to roles
+            // HotelShiftSeeder::class,             // ← Create shifts (prerequisite for floor assignments)
+            // WaiterManagementSeeder::class,       // ← Create waiter + floor + shift data
+            // // // WaiterSeeder::class,                 // ← Create additional waiter test data (commented - using WaiterManagementSeeder)
+            // DeliveryTaskSeeder::class,           // ← Create delivery tasks for testing
+            // RestaurantTableSeeder::class,        // ← Create restaurant tables for walk-in customers
+            // ReviewPermissionsSeeder::class,      // ← Create review system permissions and assign to roles
         ]);
     }
 }

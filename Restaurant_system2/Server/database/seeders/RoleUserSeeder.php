@@ -25,7 +25,6 @@ class RoleUserSeeder extends Seeder
                 'password_hash' => Hash::make('Admin123@'),
                 'role' => 'admin',
                 'is_active' => true,
-                'is_platform_admin' => true,
             ]
         );
 

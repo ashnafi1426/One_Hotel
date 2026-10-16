@@ -267,8 +267,7 @@ const save = () => {
       <div class="flex items-center gap-2">
         <AlertCircle class="w-5 h-5 text-amber-600 flex-shrink-0" />
         <span>
-          No floors found for <strong>{{ hotelStore.hotelName }}</strong
-          >. Every room must belong to an existing floor for room service & waiter assignments.
+          No floors found. Every room must belong to an existing floor for room service & waiter assignments.
         </span>
       </div>
       <div class="flex items-center gap-2">
@@ -297,8 +296,7 @@ const save = () => {
       <div class="flex items-center gap-2">
         <AlertCircle class="w-5 h-5 text-amber-600 flex-shrink-0" />
         <span>
-          No room types found for <strong>{{ hotelStore.hotelName }}</strong
-          >. You must create a room type before adding rooms.
+          No room types found. You must create a room type before adding rooms.
         </span>
       </div>
       <button
@@ -356,14 +354,14 @@ const save = () => {
           class="text-red-500 text-xs mt-1.5 flex items-center gap-1 font-medium"
         >
           <AlertCircle class="w-3.5 h-3.5 flex-shrink-0" />
-          <span>Room #{{ form.room_number }} is already taken in {{ hotelStore.hotelName }}.</span>
+          <span>Room #{{ form.room_number }} is already taken.</span>
         </div>
         <div
           v-else-if="form.room_number"
           class="text-emerald-600 dark:text-emerald-400 text-xs mt-1.5 flex items-center gap-1 font-medium"
         >
           <CheckCircle2 class="w-3.5 h-3.5 flex-shrink-0" />
-          <span>Room #{{ form.room_number }} is available in {{ hotelStore.hotelName }}.</span>
+          <span>Room #{{ form.room_number }} is available.</span>
         </div>
         <p class="text-slate-500 text-xs mt-1 flex items-center gap-1">
           <span>{{ languageStore.t('next_available', 'Next available:') }}</span>
@@ -526,7 +524,7 @@ const save = () => {
           :has-error="Boolean(serverErrors?.room_type_id)"
           :format-option-label="
             (type) =>
-              `${type.name} - ${parseFloat(type.base_price_per_night || 0).toLocaleString('en-US')} ${hotelStore.currency || 'ETB'}/night`
+              `${type.name} - ${parseFloat(type.base_price_per_night || 0).toLocaleString('en-US')} ETB/night`
           "
           @change="
             (opt) => {
@@ -557,8 +555,7 @@ const save = () => {
                 class="text-xs font-bold text-emerald-600 dark:text-emerald-400 ml-2 whitespace-nowrap"
               >
                 {{ parseFloat(option.base_price_per_night || 0).toLocaleString('en-US') }}
-                {{ hotelStore.currency || 'ETB'
-                }}<span class="text-[10px] font-normal text-slate-400">/night</span>
+                ETB<span class="text-[10px] font-normal text-slate-400">/night</span>
               </span>
             </div>
           </template>
@@ -708,7 +705,7 @@ const save = () => {
     <div v-if="loadingRooms" class="text-center text-slate-500 text-xs sm:text-sm py-2">
       <span class="inline-flex items-center gap-2">
         <Loader2 class="w-4 h-4 animate-spin text-blue-600" />
-        {{ languageStore.t('loading_rooms', 'Loading existing rooms for this hotel...') }}
+        {{ languageStore.t('loading_rooms', 'Loading existing rooms...') }}
       </span>
     </div>
 
@@ -719,8 +716,7 @@ const save = () => {
       <div class="flex items-center gap-2 mb-2">
         <Building2 class="w-4 h-4 text-blue-700 dark:text-blue-400" />
         <p class="text-xs sm:text-sm font-semibold text-blue-950 dark:text-blue-300">
-          {{ languageStore.t('existing_rooms_label', 'Existing Rooms in') }}
-          {{ hotelStore.hotelName }} ({{ existingRoomNumbers.length }}):
+          {{ languageStore.t('existing_rooms_label', 'Existing Rooms') }} ({{ existingRoomNumbers.length }}):
         </p>
       </div>
       <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">
@@ -742,8 +738,7 @@ const save = () => {
       v-else-if="!loadingRooms"
       class="p-3 sm:p-4 bg-slate-50 dark:bg-slate-900/40 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm text-slate-500"
     >
-      📍 No rooms exist in <strong>{{ hotelStore.hotelName }}</strong> yet. This will be the first
-      room!
+      📍 No rooms exist yet. This will be the first room!
     </div>
   </form>
 </template>

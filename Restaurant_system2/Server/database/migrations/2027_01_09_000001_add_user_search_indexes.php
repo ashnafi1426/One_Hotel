@@ -19,7 +19,7 @@ return new class extends Migration
             });
         }
 
-        if (Schema::hasTable('hotel_users')) {
+        if (Schema::hasTable('hotel_users') && Schema::hasColumn('hotel_users', 'hotel_id')) {
             Schema::table('hotel_users', function (Blueprint $table) {
                 if (!Schema::hasIndex('hotel_users', 'hotel_users_hotel_id_is_active_index')) {
                     $table->index(['hotel_id', 'is_active'], 'hotel_users_hotel_id_is_active_index');
@@ -35,13 +35,17 @@ return new class extends Migration
     {
         if (Schema::hasTable('users')) {
             Schema::table('users', function (Blueprint $table) {
-                try { $table->dropIndex('users_first_name_last_name_index'); } catch (\Throwable $e) {}
+                if (Schema::hasIndex('users', 'users_first_name_last_name_index')) {
+                    $table->dropIndex('users_first_name_last_name_index');
+                }
             });
         }
 
         if (Schema::hasTable('hotel_users')) {
             Schema::table('hotel_users', function (Blueprint $table) {
-                try { $table->dropIndex('hotel_users_hotel_id_is_active_index'); } catch (\Throwable $e) {}
+                if (Schema::hasIndex('hotel_users', 'hotel_users_hotel_id_is_active_index')) {
+                    $table->dropIndex('hotel_users_hotel_id_is_active_index');
+                }
             });
         }
     }

@@ -14,20 +14,18 @@ use Illuminate\Support\Facades\Log;
 | application supports. The given channel authorization callbacks are
 | used to check if an authenticated user can listen to the channel.
 |
-| MULTI-TENANT SECURITY: All channels MUST validate hotel_id to prevent
-| cross-tenant data leakage.
+| Single-Hotel Architecture: Channel authorization verifies roles and user permissions.
 |
 */
 
 /**
  * Customer Order Status Channel
  * 
- * Channel: orders.{hotelId}.{orderId}
+ * Channel: orders.{orderId} or orders.{hotelId}.{orderId} (for backward compatibility)
  * 
  * Authorization:
  * - Order must exist
- * - Order's hotel_id must match {hotelId} parameter
- * - User must own the order OR be authenticated staff of that hotel
+ * - User must own the order OR be authenticated staff member
  */
 Broadcast::channel('orders.{hotelId}.{orderId}', function ($user, string $hotelId, string $orderId) {
     return authorizeOrderChannel($user, $orderId);
@@ -37,37 +35,39 @@ Broadcast::channel('orders.{orderId}', function ($user, string $orderId) {
     return authorizeOrderChannel($user, $orderId);
 });
 
-function authorizeOrderChannel($user, string $orderId): bool {
-    try {
-        $order = Order::withoutGlobalScopes()->find($orderId);
-        
-        if (!$order) {
-            Log::warning("[WebSocket Auth] Order not found", ['order_id' => $orderId]);
+if (!function_exists('authorizeOrderChannel')) {
+    function authorizeOrderChannel($user, string $orderId): bool {
+        try {
+            $order = Order::withoutGlobalScopes()->find($orderId);
+            
+            if (!$order) {
+                Log::warning("[WebSocket Auth] Order not found", ['order_id' => $orderId]);
+                return false;
+            }
+            
+            // If guest tracking their order
+            if (!$user) {
+                return true;
+            }
+            
+            // If user owns this order
+            if ($order->guest_id && $order->guest_id === $user->id) {
+                return true;
+            }
+            
+            // Any authenticated staff member has access
+            if ($user instanceof User) {
+                return true;
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[WebSocket Auth] Channel authorization error: " . $e->getMessage(), [
+                'order_id' => $orderId,
+                'trace' => $e->getTraceAsString()
+            ]);
             return false;
         }
-        
-        // If guest tracking their order
-        if (!$user) {
-            return true;
-        }
-        
-        // If user owns this order
-        if ($order->guest_id && $order->guest_id === $user->id) {
-            return true;
-        }
-        
-        // Any authenticated staff member has access
-        if ($user instanceof User) {
-            return true;
-        }
-        
-        return false;
-    } catch (\Exception $e) {
-        Log::error("[WebSocket Auth] Channel authorization error: " . $e->getMessage(), [
-            'order_id' => $orderId,
-            'trace' => $e->getTraceAsString()
-        ]);
-        return false;
     }
 }
 
@@ -82,31 +82,33 @@ Broadcast::channel('hotel.kitchen', function ($user) {
     return authorizeKitchenChannel($user);
 });
 
-function authorizeKitchenChannel($user): bool {
-    if (!$user) {
-        return false;
-    }
-    
-    try {
-        $userRole = strtolower($user->role ?? '');
-        $kitchenRoles = ['chef', 'cook', 'kitchen_staff', 'manager', 'admin', 'administrator', 'super_admin'];
-        
-        if (in_array($userRole, $kitchenRoles)) {
-            return true;
+if (!function_exists('authorizeKitchenChannel')) {
+    function authorizeKitchenChannel($user): bool {
+        if (!$user) {
+            return false;
         }
         
-        if (method_exists($user, 'hasRole')) {
-            foreach ($kitchenRoles as $role) {
-                if ($user->hasRole($role)) {
-                    return true;
+        try {
+            $userRole = strtolower($user->role ?? '');
+            $kitchenRoles = ['chef', 'cook', 'kitchen_staff', 'manager', 'admin', 'administrator', 'super_admin'];
+            
+            if (in_array($userRole, $kitchenRoles)) {
+                return true;
+            }
+            
+            if (method_exists($user, 'hasRole')) {
+                foreach ($kitchenRoles as $role) {
+                    if ($user->hasRole($role)) {
+                        return true;
+                    }
                 }
             }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[WebSocket Auth] Kitchen channel error: " . $e->getMessage());
+            return false;
         }
-        
-        return false;
-    } catch (\Exception $e) {
-        Log::error("[WebSocket Auth] Kitchen channel error: " . $e->getMessage());
-        return false;
     }
 }
 
@@ -121,31 +123,33 @@ Broadcast::channel('hotel.waiters', function ($user) {
     return authorizeWaiterChannel($user);
 });
 
-function authorizeWaiterChannel($user): bool {
-    if (!$user) {
-        return false;
-    }
-    
-    try {
-        $userRole = strtolower($user->role ?? '');
-        $waiterRoles = ['waiter', 'manager', 'admin', 'administrator', 'super_admin'];
-        
-        if (in_array($userRole, $waiterRoles)) {
-            return true;
+if (!function_exists('authorizeWaiterChannel')) {
+    function authorizeWaiterChannel($user): bool {
+        if (!$user) {
+            return false;
         }
         
-        if (method_exists($user, 'hasRole')) {
-            foreach ($waiterRoles as $role) {
-                if ($user->hasRole($role)) {
-                    return true;
+        try {
+            $userRole = strtolower($user->role ?? '');
+            $waiterRoles = ['waiter', 'manager', 'admin', 'administrator', 'super_admin'];
+            
+            if (in_array($userRole, $waiterRoles)) {
+                return true;
+            }
+            
+            if (method_exists($user, 'hasRole')) {
+                foreach ($waiterRoles as $role) {
+                    if ($user->hasRole($role)) {
+                        return true;
+                    }
                 }
             }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[WebSocket Auth] Waiters channel error: " . $e->getMessage());
+            return false;
         }
-        
-        return false;
-    } catch (\Exception $e) {
-        Log::error("[WebSocket Auth] Waiters channel error: " . $e->getMessage());
-        return false;
     }
 }
 
@@ -171,27 +175,29 @@ Broadcast::channel('payments', function ($user) {
     return authorizePaymentsChannel($user);
 });
 
-function authorizePaymentsChannel($user): bool {
-    if (!$user) {
-        return false;
-    }
-    
-    $paymentRoles = ['cashier', 'receptionist', 'manager', 'admin', 'administrator', 'accountant', 'super_admin'];
-    $userRole = strtolower($user->role ?? '');
-    
-    if (in_array($userRole, $paymentRoles)) {
-        return true;
-    }
-    
-    if (method_exists($user, 'hasRole')) {
-        foreach ($paymentRoles as $role) {
-            if ($user->hasRole($role)) {
-                return true;
+if (!function_exists('authorizePaymentsChannel')) {
+    function authorizePaymentsChannel($user): bool {
+        if (!$user) {
+            return false;
+        }
+        
+        $paymentRoles = ['cashier', 'receptionist', 'manager', 'admin', 'administrator', 'accountant', 'super_admin'];
+        $userRole = strtolower($user->role ?? '');
+        
+        if (in_array($userRole, $paymentRoles)) {
+            return true;
+        }
+        
+        if (method_exists($user, 'hasRole')) {
+            foreach ($paymentRoles as $role) {
+                if ($user->hasRole($role)) {
+                    return true;
+                }
             }
         }
+        
+        return false;
     }
-    
-    return false;
 }
 
 /**
