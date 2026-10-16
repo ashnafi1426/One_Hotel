@@ -16,7 +16,6 @@ class TaxRateResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'hotel_id' => $this->hotel_id,
             'name' => $this->name,
             'code' => $this->code,
             'type' => $this->type,

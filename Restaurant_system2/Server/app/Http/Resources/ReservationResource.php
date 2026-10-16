@@ -42,7 +42,6 @@ class ReservationResource extends JsonResource
             'total_amount' => (float) $this->total_amount,
             'total_price' => (float) $this->total_amount,
             'payment_status' => $this->payment_status ?? 'pending',
-            'hotel_id' => $this->hotel_id,
             'status' => $this->status,
             'special_requests' => $this->special_requests,
             'can_check_in' => $this->canCheckIn(),

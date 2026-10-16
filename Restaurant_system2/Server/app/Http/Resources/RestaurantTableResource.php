@@ -11,7 +11,6 @@ class RestaurantTableResource extends JsonResource
     {
         return [
             'id'              => $this->id,
-            'hotel_id'        => $this->hotel_id,
             'table_number'    => $this->table_number,
             'table_name'      => $this->table_name,
             'capacity'        => (int) $this->capacity,

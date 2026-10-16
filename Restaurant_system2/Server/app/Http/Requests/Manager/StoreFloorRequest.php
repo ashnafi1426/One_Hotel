@@ -15,26 +15,20 @@ class StoreFloorRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = app(TenantContext::class)->getHotelId();
-
         return [
             'floor_number' => [
                 'required',
                 'integer',
                 'min:-10',
                 'max:200',
-                $hotelId
-                    ? Rule::unique('floors', 'floor_number')->where('hotel_id', $hotelId)
-                    : 'unique:floors,floor_number',
+                'unique:floors,floor_number',
             ],
             'name' => [
                 'required',
                 'string',
                 'min:1',
                 'max:100',
-                $hotelId
-                    ? Rule::unique('floors', 'name')->where('hotel_id', $hotelId)
-                    : 'unique:floors,name',
+                'unique:floors,name',
             ],
             'description' => ['nullable', 'string', 'max:500'],
             'total_rooms' => ['nullable', 'integer', 'min:0'],

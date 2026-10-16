@@ -22,16 +22,8 @@ class AdminBookingController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $hotelId = TenantContext::id();
-        if (!$hotelId) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Unable to identify hotel context.',
-            ], 403);
-        }
-
         $perPage = $request->integer('per_page', 15);
-        $reservations = $this->reservationService->getReservations($request->all(), $perPage, $hotelId);
+        $reservations = $this->reservationService->getReservations($request->all(), $perPage);
 
         return response()->json([
             'success' => true,
@@ -52,9 +44,7 @@ class AdminBookingController extends Controller
      */
     public function show(string $reservationId): JsonResponse
     {
-        $hotelId = TenantContext::id();
-        $reservation = Reservation::where('hotel_id', $hotelId)
-            ->where('id', $reservationId)
+        $reservation = Reservation::where('id', $reservationId)
             ->with(['guest', 'room.roomType', 'creator', 'checkIn'])
             ->first();
 
@@ -76,8 +66,7 @@ class AdminBookingController extends Controller
      */
     public function update(Request $request, string $reservationId): JsonResponse
     {
-        $hotelId = TenantContext::id();
-        $reservation = Reservation::where('hotel_id', $hotelId)->where('id', $reservationId)->first();
+        $reservation = Reservation::where('id', $reservationId)->first();
 
         if (!$reservation) {
             return response()->json([
@@ -96,7 +85,7 @@ class AdminBookingController extends Controller
         ]);
 
         try {
-            $updated = $this->reservationService->updateReservation($reservation, $validated, $hotelId);
+            $updated = $this->reservationService->updateReservation($reservation, $validated);
 
             return response()->json([
                 'success' => true,
@@ -117,8 +106,7 @@ class AdminBookingController extends Controller
      */
     public function destroy(Request $request, string $reservationId): JsonResponse
     {
-        $hotelId = TenantContext::id();
-        $reservation = Reservation::where('hotel_id', $hotelId)->where('id', $reservationId)->first();
+        $reservation = Reservation::where('id', $reservationId)->first();
 
         if (!$reservation) {
             return response()->json([

@@ -15,7 +15,6 @@ class UpdateFloorRequest extends FormRequest
 
     public function rules(): array
     {
-        $hotelId = app(TenantContext::class)->getHotelId();
         $floor = $this->route('floor');
         $floorId = is_object($floor) ? $floor->id : $floor;
 
@@ -25,18 +24,14 @@ class UpdateFloorRequest extends FormRequest
                 'integer',
                 'min:-10',
                 'max:200',
-                Rule::unique('floors', 'floor_number')
-                    ->where(fn($q) => $hotelId ? $q->where('hotel_id', $hotelId) : $q)
-                    ->ignore($floorId),
+                Rule::unique('floors', 'floor_number')->ignore($floorId),
             ],
             'name' => [
                 'sometimes',
                 'string',
                 'min:1',
                 'max:100',
-                Rule::unique('floors', 'name')
-                    ->where(fn($q) => $hotelId ? $q->where('hotel_id', $hotelId) : $q)
-                    ->ignore($floorId),
+                Rule::unique('floors', 'name')->ignore($floorId),
             ],
             'description' => ['nullable', 'string', 'max:500'],
             'total_rooms' => ['nullable', 'integer', 'min:0'],

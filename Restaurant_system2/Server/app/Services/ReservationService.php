@@ -19,22 +19,16 @@ use Illuminate\Validation\ValidationException;
 class ReservationService
 {
     /**
-     * Get paginated reservations scoped to the active hotel tenant.
+     * Get paginated reservations.
      */
     public function getReservations(array $filters = [], int $perPage = 10, ?string $hotelId = null): LengthAwarePaginator
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $query = Reservation::with([
             'guest',
             'room.roomType',
             'creator',
             'checkIn',
         ]);
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
@@ -79,23 +73,13 @@ class ReservationService
     }
 
     /**
-     * Create a new reservation with tenant isolation and room overlap validation.
+     * Create a new reservation with room overlap validation.
      */
     public function createReservation(array $data, ?string $hotelId = null, ?string $userId = null): Reservation
     {
-        $hotelId = $hotelId ?: TenantContext::id();
+        return DB::transaction(function () use ($data, $userId) {
 
-        if (!$hotelId) {
-            throw ValidationException::withMessages([
-                'hotel_id' => ['Active hotel tenant context is required.'],
-            ]);
-        }
-
-        return DB::transaction(function () use ($data, $hotelId, $userId) {
-
-            $room = Room::where('hotel_id', $hotelId)
-                ->with('roomType')
-                ->findOrFail($data['room_id']);
+            $room = Room::with('roomType')->findOrFail($data['room_id']);
 
             if (!$room->is_active || $room->status === 'maintenance') {
                 throw ValidationException::withMessages([
@@ -114,7 +98,7 @@ class ReservationService
             $checkIn = $data['check_in_date'];
             $checkOut = $data['check_out_date'];
 
-            if ($this->hasOverlapConflict($room->id, $checkIn, $checkOut, $hotelId)) {
+            if ($this->hasOverlapConflict($room->id, $checkIn, $checkOut)) {
                 throw ValidationException::withMessages([
                     'room_id' => ['The selected room is already reserved for these dates.'],
                 ]);
@@ -122,7 +106,7 @@ class ReservationService
 
             $guestId = $data['guest_id'] ?? null;
             if ($guestId) {
-                $guest = Guest::where('hotel_id', $hotelId)->findOrFail($guestId);
+                $guest = Guest::findOrFail($guestId);
             } else {
                 $firstName = $data['first_name'] ?? $data['guest_info']['first_name'] ?? 'Guest';
                 $lastName  = $data['last_name'] ?? $data['guest_info']['last_name'] ?? 'Booking';
@@ -134,7 +118,7 @@ class ReservationService
                     'last_name'  => $lastName,
                     'email'      => !empty($email) ? strtolower(trim($email)) : null,
                     'phone'      => trim($phone),
-                ], $hotelId);
+                ]);
                 $guestId = $guest->id;
             }
 
@@ -143,7 +127,6 @@ class ReservationService
             $totalAmount = $data['total_amount'] ?? ($nights * $rate);
 
             $reservation = Reservation::create([
-                'hotel_id'          => $hotelId,
                 'guest_id'          => $guestId,
                 'room_id'           => $room->id,
                 'check_in_date'     => $checkIn,
@@ -168,14 +151,12 @@ class ReservationService
      */
     public function updateReservation(Reservation $reservation, array $data, ?string $hotelId = null): Reservation
     {
-        $hotelId = $hotelId ?: $reservation->hotel_id ?: TenantContext::id();
-
-        return DB::transaction(function () use ($reservation, $data, $hotelId) {
+        return DB::transaction(function () use ($reservation, $data) {
             $roomId = $data['room_id'] ?? $reservation->room_id;
             $checkIn = $data['check_in_date'] ?? $reservation->check_in_date;
             $checkOut = $data['check_out_date'] ?? $reservation->check_out_date;
 
-            $room = Room::where('hotel_id', $hotelId)->with('roomType')->findOrFail($roomId);
+            $room = Room::with('roomType')->findOrFail($roomId);
 
             if (!empty($data['number_of_guests']) && $room->roomType) {
                 if ((int) $data['number_of_guests'] > $room->roomType->capacity) {
@@ -187,7 +168,7 @@ class ReservationService
 
             $newStatus = $data['status'] ?? $reservation->status;
             if ($newStatus !== 'cancelled') {
-                if ($this->hasOverlapConflict($roomId, $checkIn, $checkOut, $hotelId, $reservation->id)) {
+                if ($this->hasOverlapConflict($roomId, $checkIn, $checkOut, null, $reservation->id)) {
                     throw ValidationException::withMessages([
                         'room_id' => ['The selected room is already booked for these dates.'],
                     ]);
@@ -270,18 +251,12 @@ class ReservationService
      */
     public function hasOverlapConflict(string $roomId, $checkIn, $checkOut, ?string $hotelId = null, ?string $excludeReservationId = null): bool
     {
-        $hotelId = $hotelId ?: TenantContext::id();
-
         $query = Reservation::where('room_id', $roomId)
             ->whereNotIn('status', ['cancelled', 'checked_out'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('check_in_date', '<', $checkOut)
                   ->where('check_out_date', '>', $checkIn);
             });
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if ($excludeReservationId) {
             $query->where('id', '!=', $excludeReservationId);
@@ -295,12 +270,10 @@ class ReservationService
      */
     public function checkAvailability(array $criteria, ?string $hotelId = null): array
     {
-        $hotelId = $hotelId ?: TenantContext::id();
         $checkIn = $criteria['check_in_date'];
         $checkOut = $criteria['check_out_date'];
 
-        $bookedRoomIds = Reservation::where('hotel_id', $hotelId)
-            ->whereNotIn('status', ['cancelled', 'checked_out'])
+        $bookedRoomIds = Reservation::whereNotIn('status', ['cancelled', 'checked_out'])
             ->where(function ($q) use ($checkIn, $checkOut) {
                 $q->where('check_in_date', '<', $checkOut)
                   ->where('check_out_date', '>', $checkIn);
@@ -309,15 +282,14 @@ class ReservationService
             ->toArray();
 
         if (!empty($criteria['room_id'])) {
-            $room = Room::where('hotel_id', $hotelId)
-                ->where('id', $criteria['room_id'])
+            $room = Room::where('id', $criteria['room_id'])
                 ->with('roomType')
                 ->first();
 
             if (!$room) {
                 return [
                     'available' => false,
-                    'message' => 'Room not found in this hotel.',
+                    'message' => 'Room not found.',
                 ];
             }
 
@@ -326,7 +298,6 @@ class ReservationService
                 && $room->status !== 'maintenance';
 
             return [
-                'hotel_id'       => $hotelId,
                 'room_id'        => $room->id,
                 'room_number'    => $room->room_number,
                 'available'      => $isAvailable,
@@ -336,8 +307,7 @@ class ReservationService
             ];
         }
 
-        $query = Room::where('hotel_id', $hotelId)
-            ->where('is_active', true)
+        $query = Room::where('is_active', true)
             ->where('status', '!=', 'maintenance')
             ->whereNotIn('id', $bookedRoomIds)
             ->with('roomType');
@@ -354,7 +324,6 @@ class ReservationService
         $availableRooms = $query->get();
 
         return [
-            'hotel_id'              => $hotelId,
             'check_in_date'         => $checkIn,
             'check_out_date'        => $checkOut,
             'available_rooms_count' => $availableRooms->count(),
@@ -377,4 +346,3 @@ class ReservationService
         }
     }
 }
-

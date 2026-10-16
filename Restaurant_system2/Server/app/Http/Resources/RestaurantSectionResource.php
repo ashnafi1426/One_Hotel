@@ -11,7 +11,6 @@ class RestaurantSectionResource extends JsonResource
     {
         return [
             'id'           => $this->id,
-            'hotel_id'     => $this->hotel_id,
             'name'         => $this->name,
             'description'  => $this->description,
             'is_active'    => (bool) $this->is_active,

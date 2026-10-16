@@ -13,7 +13,6 @@ class FloorResource extends JsonResource
 
         return [
             'id' => $this->id,
-            'hotel_id' => $this->hotel_id,
             'floor_number' => (int) $this->floor_number,
             'name' => $this->name,
             'description' => $this->description,
