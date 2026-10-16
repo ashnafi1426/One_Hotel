@@ -7,7 +7,6 @@ use App\Models\Reservation;
 use App\Models\Order;
 use App\Models\User;
 use App\Models\MenuItem;
-use App\Services\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,29 +14,19 @@ use Illuminate\Support\Facades\Schema;
 
 class DashboardService
 {
-    protected function getHotelId(): ?string
-    {
-        return request()->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId()
-            ?: (auth()->check() && !auth()->user()->isPlatformAdmin() ? auth()->user()->hotel_id : null);
-    }
-
     public function getDashboardStats(): array
     {
-        $hotelId = $this->getHotelId();
         $forceRefresh = request()->query('refresh') === 'true' || request()->header('X-Refresh') === 'true';
-        $cacheKey = "manager_dashboard_stats:" . ($hotelId ?: 'all');
+        $cacheKey = "manager_dashboard_stats:single";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, 300, function () use ($hotelId) {
+        return Cache::remember($cacheKey, 300, function () {
             $today = Carbon::today();
 
-            $roomStats = Room::withoutGlobalScopes()
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                ->selectRaw("
+            $roomStats = Room::selectRaw("
                     COUNT(*) as total_rooms,
                     SUM(CASE WHEN status = 'occupied' THEN 1 ELSE 0 END) as occupied_rooms,
                     SUM(CASE WHEN status = 'available' THEN 1 ELSE 0 END) as available_rooms
@@ -48,9 +37,7 @@ class DashboardService
             $availableRooms = (int) ($roomStats->available_rooms ?? 0);
             $occupancyRate = $totalRooms > 0 ? round(($occupiedRooms / $totalRooms) * 100, 1) : 0;
 
-            $resStats = Reservation::withoutGlobalScopes()
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                ->selectRaw("
+            $resStats = Reservation::selectRaw("
                     COUNT(*) as total_reservations,
                     SUM(CASE WHEN DATE(created_at) = CURDATE() THEN 1 ELSE 0 END) as today_reservations,
                     SUM(CASE WHEN DATE(check_in_date) = CURDATE() THEN 1 ELSE 0 END) as today_check_ins,
@@ -73,11 +60,9 @@ class DashboardService
             $dailyRevenue = 0.0;
             $weeklyRevenue = 0.0;
             $monthlyRevenue = 0.0;
-            $pendingPayments = 0.0;
 
             try {
-                $payQuery = DB::table('payments')->where('status', 'completed')
-                    ->when($hotelId && Schema::hasColumn('payments', 'hotel_id'), fn($q) => $q->where('hotel_id', $hotelId));
+                $payQuery = DB::table('payments')->where('status', 'completed');
 
                 $payStats = (clone $payQuery)->selectRaw("
                     SUM(CASE WHEN DATE(created_at) = CURDATE() THEN amount ELSE 0 END) as daily,
@@ -89,18 +74,12 @@ class DashboardService
                 $weeklyRevenue = (float) ($payStats->weekly ?? 0.0);
                 $monthlyRevenue = (float) ($payStats->monthly ?? 0.0);
             } catch (\Throwable $e) {
-                $dailyRevenue = (float) (Reservation::withoutGlobalScopes()
-                    ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                    ->whereDate('created_at', $today)
-                    ->sum('total_amount') ?: 0.0);
+                $dailyRevenue = (float) (Reservation::whereDate('created_at', $today)->sum('total_amount') ?: 0.0);
                 $weeklyRevenue = $dailyRevenue * 6;
                 $monthlyRevenue = $dailyRevenue * 25;
             }
 
-            $orderQuery = Order::withoutGlobalScopes()
-                ->when($hotelId && Schema::hasColumn('orders', 'hotel_id'), fn($q) => $q->where('hotel_id', $hotelId));
-
-            $orderStats = (clone $orderQuery)->selectRaw("
+            $orderStats = Order::selectRaw("
                 COUNT(*) as total_orders,
                 SUM(CASE WHEN status = 'completed' THEN 1 ELSE 0 END) as completed_orders,
                 SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) as pending_orders,
@@ -119,64 +98,39 @@ class DashboardService
             $preparingOrders = (int) ($orderStats->preparing_orders ?? 0);
             $delayedOrders = 0;
 
-            $waiterStats = User::where(function($q) {
-                    $q->where('role', 'waiter')
-                      ->orWhereHas('roles', fn($r) => $r->where('slug', 'waiter'));
-                })
-                ->selectRaw("
-                    COUNT(*) as total_waiters,
-                    SUM(CASE WHEN is_active = 1 THEN 1 ELSE 0 END) as active_waiters
-                ")->first();
-
-            $waiterCount = (int) ($waiterStats->total_waiters ?? 0);
-            $activeWaiters = (int) ($waiterStats->active_waiters ?? 0);
+            $activeWaiters = User::where('role', 'waiter')->count();
 
             return [
-                'reception' => [
-                    'total_reservations' => $totalReservations,
-                    'today_reservations' => $todayReservations,
-                    'today_check_ins' => $todayCheckIns,
-                    'today_check_outs' => $todayCheckOuts,
-                    'available_rooms' => $availableRooms,
-                    'occupied_rooms' => $occupiedRooms,
-                    'total_rooms' => $totalRooms,
-                ],
-                'occupancy' => [
-                    'total_rooms' => $totalRooms,
-                    'occupied_rooms' => $occupiedRooms,
-                    'available_rooms' => $availableRooms,
+                'rooms' => [
+                    'total' => $totalRooms,
+                    'occupied' => $occupiedRooms,
+                    'available' => $availableRooms,
                     'occupancy_rate' => $occupancyRate,
+                ],
+                'reservations' => [
+                    'total' => $totalReservations,
+                    'today' => $todayReservations,
+                    'check_ins' => $todayCheckIns,
+                    'check_outs' => $todayCheckOuts,
                     'checked_in_guests' => $checkedInGuests,
                     'checked_out_guests' => $checkedOutGuests,
                 ],
                 'revenue' => [
-                    'daily_revenue' => round($dailyRevenue, 2),
-                    'weekly_revenue' => round($weeklyRevenue, 2),
-                    'monthly_revenue' => round($monthlyRevenue, 2),
-                    'pending_payments' => $pendingPayments,
+                    'daily' => $dailyRevenue,
+                    'weekly' => $weeklyRevenue,
+                    'monthly' => $monthlyRevenue,
                 ],
                 'orders' => [
-                    'total_orders' => $totalOrders,
-                    'completed_orders' => $completedOrders,
-                    'pending_orders' => $pendingOrders,
-                    'cancelled_orders' => $cancelledOrders,
+                    'total' => $totalOrders,
+                    'completed' => $completedOrders,
+                    'pending' => $pendingOrders,
+                    'cancelled' => $cancelledOrders,
                     'delivery_in_progress' => $deliveryInProgress,
+                    'ready' => $readyOrders,
+                    'preparing' => $preparingOrders,
+                    'delayed' => $delayedOrders,
                 ],
-                'kitchen' => [
-                    'total_orders' => $totalOrders,
-                    'ready_orders' => $readyOrders,
-                    'preparing_orders' => $preparingOrders,
-                    'delayed_orders' => $delayedOrders,
-                ],
-                'waiters' => [
-                    'total_waiters' => $waiterCount,
-                    'active_waiters' => $activeWaiters,
-                    'on_break_waiters' => 0,
-                    'inactive_waiters' => max(0, $waiterCount - $activeWaiters),
-                    'total_deliveries_today' => $completedOrders,
-                ],
-                'overall' => [
-                    'health_score' => 95,
+                'operations' => [
                     'active_staff' => $activeWaiters,
                     'system_status' => 'operational',
                 ],
@@ -186,21 +140,18 @@ class DashboardService
 
     public function getDailyStats(int $days = 7): array
     {
-        $hotelId = $this->getHotelId();
         $forceRefresh = request()->query('refresh') === 'true' || request()->header('X-Refresh') === 'true';
-        $cacheKey = "manager_daily_trends:" . ($hotelId ?: 'all') . ":{$days}";
+        $cacheKey = "manager_daily_trends:single:{$days}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, 300, function () use ($hotelId, $days) {
+        return Cache::remember($cacheKey, 300, function () use ($days) {
             $startDate = Carbon::now()->subDays($days - 1)->startOfDay();
             $endDate = Carbon::now()->endOfDay();
 
-            $resCounts = Reservation::withoutGlobalScopes()
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                ->whereBetween('created_at', [$startDate, $endDate])
+            $resCounts = Reservation::whereBetween('created_at', [$startDate, $endDate])
                 ->selectRaw("DATE(created_at) as dt, COUNT(*) as cnt")
                 ->groupBy('dt')
                 ->pluck('cnt', 'dt')
@@ -210,16 +161,13 @@ class DashboardService
             try {
                 $paySums = DB::table('payments')
                     ->where('status', 'completed')
-                    ->when($hotelId && Schema::hasColumn('payments', 'hotel_id'), fn($q) => $q->where('hotel_id', $hotelId))
                     ->whereBetween('created_at', [$startDate, $endDate])
                     ->selectRaw("DATE(created_at) as dt, SUM(amount) as amt")
                     ->groupBy('dt')
                     ->pluck('amt', 'dt')
                     ->toArray();
             } catch (\Throwable $e) {
-                $paySums = Reservation::withoutGlobalScopes()
-                    ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                    ->whereBetween('created_at', [$startDate, $endDate])
+                $paySums = Reservation::whereBetween('created_at', [$startDate, $endDate])
                     ->selectRaw("DATE(created_at) as dt, SUM(total_amount) as amt")
                     ->groupBy('dt')
                     ->pluck('amt', 'dt')
@@ -250,19 +198,15 @@ class DashboardService
 
     public function getTopSellingItems(int $limit = 5): array
     {
-        $hotelId = $this->getHotelId();
         $forceRefresh = request()->query('refresh') === 'true' || request()->header('X-Refresh') === 'true';
-        $cacheKey = "manager_top_items:" . ($hotelId ?: 'all') . ":{$limit}";
+        $cacheKey = "manager_top_items:single:{$limit}";
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, 300, function () use ($hotelId, $limit) {
-
-            $items = MenuItem::withoutGlobalScopes()
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
-                ->where('is_available', true)
+        return Cache::remember($cacheKey, 300, function () use ($limit) {
+            $items = MenuItem::where('is_available', true)
                 ->select(['id', 'name', 'price'])
                 ->limit($limit)
                 ->get();
@@ -289,4 +233,3 @@ class DashboardService
         ];
     }
 }
-

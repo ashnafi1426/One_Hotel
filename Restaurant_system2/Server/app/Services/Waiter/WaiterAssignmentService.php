@@ -262,11 +262,9 @@ class WaiterAssignmentService
 
     public function getWaiterAssignments(int|string|null $waiterId = null, array $filters = [], int $perPage = 10)
     {
-        $hotelId = app(\App\Services\TenantContext::class)->getHotelId();
-        $isAdminOrManager = auth()->user() && (auth()->user()->isPlatformAdmin() || in_array(auth()->user()->role, ['admin', 'hotel_admin', 'manager']));
+        $isAdminOrManager = auth()->user() && in_array(auth()->user()->role, ['admin', 'manager', 'receptionist']);
 
-        $query = DeliveryTask::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
-            ->with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
+        $query = DeliveryTask::with(['order.guest', 'order.orderItems', 'order.room', 'waiter.user', 'floor', 'assignedBy']);
 
         if (!$isAdminOrManager && $waiterId) {
             $query->where('waiter_id', $waiterId);

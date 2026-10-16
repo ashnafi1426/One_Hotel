@@ -8,7 +8,6 @@ use App\Models\HotelShift;
 use App\Models\RestaurantTable;
 use App\Models\WaiterFloorAssignment;
 use App\Models\WaiterTableAssignment;
-use App\Services\TenantContext;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -24,10 +23,7 @@ class WaiterSelectionEngine
             return null;
         }
 
-        $hotelId = $floor->hotel_id ?? app(TenantContext::class)->getHotelId();
-
         try {
-
             $query = Waiter::query()
                 ->select('waiters.*')
                 ->join('waiter_floor_assignments', 'waiter_floor_assignments.waiter_id', '=', 'waiters.id')
@@ -36,8 +32,7 @@ class WaiterSelectionEngine
                     $q->where('waiter_floor_assignments.is_active', true)
                       ->orWhere('waiter_floor_assignments.status', 'active');
                 })
-                ->where('waiters.status', 'active')
-                ->when($hotelId, fn($q) => $q->where('waiters.hotel_id', $hotelId));
+                ->where('waiters.status', 'active');
 
             $hasTodayAssignment = (clone $query)
                 ->whereDate('waiter_floor_assignments.assignment_date', today())
@@ -46,7 +41,6 @@ class WaiterSelectionEngine
             if ($hasTodayAssignment) {
                 $query->whereDate('waiter_floor_assignments.assignment_date', today());
             } else {
-
                 $query->where(function ($q) {
                     $q->whereNull('waiter_floor_assignments.assignment_date')
                       ->orWhere('waiter_floor_assignments.is_active', true)
@@ -105,7 +99,6 @@ class WaiterSelectionEngine
             }
 
             $hotelFallbackWaiter = Waiter::query()
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
                 ->where('status', 'active')
                 ->with('user')
                 ->orderBy('current_orders', 'asc')
@@ -124,7 +117,6 @@ class WaiterSelectionEngine
 
             Log::warning('[WaiterSelection] No waiter available anywhere in hotel', [
                 'floor_id' => $floor->id,
-                'hotel_id' => $hotelId,
             ]);
             return null;
 
@@ -143,17 +135,13 @@ class WaiterSelectionEngine
      */
     public function selectWaiterForTable(RestaurantTable $table, ?HotelShift $shift = null): ?Waiter
     {
-        $hotelId = $table->hotel_id ?? app(TenantContext::class)->getHotelId();
-
         try {
-
             $tableAssignmentQuery = Waiter::query()
                 ->select('waiters.*')
                 ->join('waiter_table_assignments', 'waiter_table_assignments.waiter_id', '=', 'waiters.id')
                 ->where('waiter_table_assignments.table_id', $table->id)
                 ->where('waiter_table_assignments.status', 'active')
-                ->where('waiters.status', 'active')
-                ->when($hotelId, fn($q) => $q->where('waiters.hotel_id', $hotelId));
+                ->where('waiters.status', 'active');
 
             $tableWaiter = $tableAssignmentQuery
                 ->with('user')
@@ -172,7 +160,6 @@ class WaiterSelectionEngine
             $section = $table->section_name ?: $table->section ?: $table->location;
             if (!empty($section)) {
                 $sectionWaiter = Waiter::query()
-                    ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
                     ->where('status', 'active')
                     ->where(function ($q) {
                         $q->where('availability', '!=', 'offline')
@@ -209,7 +196,6 @@ class WaiterSelectionEngine
         }
 
         $fallbackWaiter = Waiter::query()
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
             ->where('status', 'active')
             ->where(function ($q) {
                 $q->where('availability', '!=', 'offline')
@@ -225,7 +211,7 @@ class WaiterSelectionEngine
             ->first();
 
         if ($fallbackWaiter) {
-            Log::info('[WaiterSelection] Hotel fallback waiter selected for table', [
+            Log::info('[WaiterSelection] Fallback waiter selected for table', [
                 'table_id' => $table->id,
                 'waiter_id' => $fallbackWaiter->id,
             ]);
@@ -233,7 +219,6 @@ class WaiterSelectionEngine
         }
 
         return Waiter::query()
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
             ->where('status', 'active')
             ->with('user')
             ->orderBy('current_orders', 'asc')
@@ -250,4 +235,3 @@ class WaiterSelectionEngine
             && ($waiter->maximum_orders === null || $waiter->current_orders < $waiter->maximum_orders);
     }
 }
-

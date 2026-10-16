@@ -6,7 +6,6 @@ use App\Models\Floor;
 use App\Models\Room;
 use App\Models\DeliveryTask;
 use App\Models\WaiterFloorAssignment;
-use App\Services\TenantContext;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -16,27 +15,15 @@ use Illuminate\Support\Str;
 class FloorManagementService
 {
     /**
-     * Get paginated list of floors for current tenant with room counts and filters.
+     * Get paginated list of floors with room counts and filters.
      */
     public function listFloors(array $filters = [], int $perPage = 100): LengthAwarePaginator
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?: request()->input('hotel_id')
-            ?: request()->header('X-Hotel-ID')
-            ?: request()->header('x-hotel-id')
-            ?: auth()->user()?->hotel_id;
-
-        if ($hotelId) {
-            $this->ensureFloorsExistForHotel($hotelId);
-        }
+        $this->ensureFloorsExist();
 
         $query = Floor::query()
             ->withCount('rooms')
             ->with(['activeWaiterAssignments.waiter.user', 'activeWaiterAssignments.shift']);
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (isset($filters['is_active']) && $filters['is_active'] !== null && $filters['is_active'] !== '') {
             $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN));
@@ -57,26 +44,24 @@ class FloorManagementService
     }
 
     /**
-     * Auto-discover or backfill floors from existing rooms if hotel has none.
+     * Auto-discover or backfill floors from existing rooms if none exist.
      */
-    public function ensureFloorsExistForHotel(string $hotelId): void
+    public function ensureFloorsExist(): void
     {
-        $floorsCount = Floor::withoutTenant()->where('hotel_id', $hotelId)->count();
+        $floorsCount = Floor::count();
         if ($floorsCount > 0) {
             return;
         }
 
-        $existingRoomFloors = Room::withoutTenant()
-            ->where('hotel_id', $hotelId)
-            ->whereNotNull('floor')
+        $existingRoomFloors = Room::whereNotNull('floor')
             ->distinct()
             ->pluck('floor');
 
         foreach ($existingRoomFloors as $flNum) {
             $num = (int) $flNum;
             if ($num > 0) {
-                $created = Floor::withoutTenant()->firstOrCreate(
-                    ['hotel_id' => $hotelId, 'floor_number' => $num],
+                $created = Floor::firstOrCreate(
+                    ['floor_number' => $num],
                     [
                         'id' => (string) Str::uuid(),
                         'name' => "Floor {$num}",
@@ -84,17 +69,15 @@ class FloorManagementService
                         'is_active' => true,
                     ]
                 );
-                Room::withoutTenant()
-                    ->where('hotel_id', $hotelId)
-                    ->where('floor', $num)
+                Room::where('floor', $num)
                     ->whereNull('floor_id')
                     ->update(['floor_id' => $created->id]);
             }
         }
 
-        if (Floor::withoutTenant()->where('hotel_id', $hotelId)->count() === 0) {
-            Floor::withoutTenant()->firstOrCreate(
-                ['hotel_id' => $hotelId, 'floor_number' => 1],
+        if (Floor::count() === 0) {
+            Floor::firstOrCreate(
+                ['floor_number' => 1],
                 [
                     'id' => (string) Str::uuid(),
                     'name' => 'Floor 1',
@@ -110,11 +93,8 @@ class FloorManagementService
      */
     public function createFloor(array $data): Floor
     {
-        $hotelId = app(TenantContext::class)->getHotelId();
-
         $floor = Floor::create([
             'id' => (string) Str::uuid(),
-            'hotel_id' => $hotelId,
             'floor_number' => (int) $data['floor_number'],
             'name' => trim($data['name']),
             'description' => isset($data['description']) ? trim($data['description']) : null,
@@ -125,7 +105,6 @@ class FloorManagementService
         Log::info('[FloorManagementService] Floor created', [
             'floor_id' => $floor->id,
             'floor_number' => $floor->floor_number,
-            'hotel_id' => $hotelId,
         ]);
 
         return $floor;
@@ -272,4 +251,3 @@ class FloorManagementService
         ];
     }
 }
-
