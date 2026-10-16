@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Services\Waiter\WaiterDashboardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use App\Services\TenantContext;
 use App\Services\Waiter\WaiterContextResolver;
 
 class WaiterDashboardController extends Controller
@@ -15,19 +14,6 @@ class WaiterDashboardController extends Controller
     public function __construct(WaiterDashboardService $dashboardService)
     {
         $this->dashboardService = $dashboardService;
-    }
-    private function resolveTenant(Request $request): ?string
-    {
-        $hotelId = $request->input('hotel_id')
-            ?: $request->query('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId();
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
     }
 
     private function getWaiterId()
@@ -45,8 +31,6 @@ class WaiterDashboardController extends Controller
     private function handleAction(callable $action, array $defaultData = []): JsonResponse
     {
         try {
-            $request = request();
-            $this->resolveTenant($request);
             $waiterId = $this->getWaiterId();
 
             $result = $action($waiterId);
@@ -73,7 +57,6 @@ class WaiterDashboardController extends Controller
     public function getDashboard(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->resolveTenant($request);
             $waiterId = $this->getWaiterId();
 
             $result = $this->dashboardService->getDashboardStats($waiterId);

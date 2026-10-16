@@ -20,7 +20,6 @@ class ReportController extends Controller
     public function revenue(Request $request): JsonResponse
     {
         try {
-            $this->resolveTenant($request);
             $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
             $endDate = $request->input('end_date', now()->toDateString());
             $groupBy = $request->input('group_by', 'day');
@@ -74,7 +73,6 @@ class ReportController extends Controller
     public function operations(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->resolveTenant($request);
             $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
             $endDate = $request->input('end_date', now()->toDateString());
 
@@ -146,7 +144,6 @@ class ReportController extends Controller
     public function staff(Request $request): JsonResponse
     {
         try {
-            $this->resolveTenant($request);
             $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
             $endDate = $request->input('end_date', now()->toDateString());
 

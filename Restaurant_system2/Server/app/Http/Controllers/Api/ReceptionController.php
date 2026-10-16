@@ -7,7 +7,6 @@ use App\Models\CheckIn;
 use App\Models\Guest;
 use App\Models\Reservation;
 use App\Models\Room;
-use App\Services\TenantContext;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,14 +18,6 @@ class ReceptionController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $hotelId = $request->input('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: TenantContext::id();
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
         $today = Carbon::today();
 
         $statistics = [

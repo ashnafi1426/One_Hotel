@@ -13,8 +13,6 @@ use App\Services\Waiter\WaiterContextResolver;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use App\Services\Waiter\WaiterAssignmentService;
-use App\Services\TenantContext;
-
 class WaiterAssignmentController extends Controller
 {
     protected WaiterAssignmentService $assignmentService;
@@ -29,23 +27,8 @@ class WaiterAssignmentController extends Controller
         $this->waiterContextResolver = $waiterContextResolver;
     }
 
-    private function resolveTenant(Request $request): ?string
-    {
-        $hotelId = $request->input('hotel_id')
-            ?: $request->query('hotel_id')
-            ?: $request->header('X-Hotel-ID')
-            ?: app(TenantContext::class)->getHotelId();
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
-
     public function index(Request $request): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user());
 
         if (!$waiterId) {
@@ -100,7 +83,6 @@ class WaiterAssignmentController extends Controller
 
     public function getPending(Request $request): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user());
         if (!$waiterId) {
             return response()->json([
@@ -118,7 +100,6 @@ class WaiterAssignmentController extends Controller
 
     public function getActive(Request $request): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user());
         if (!$waiterId) {
             return response()->json([
@@ -136,7 +117,6 @@ class WaiterAssignmentController extends Controller
 
     public function getCompleted(Request $request): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user());
         if (!$waiterId) {
             return response()->json([
@@ -155,7 +135,6 @@ class WaiterAssignmentController extends Controller
 
     public function accept(AcceptAssignmentRequest $request, $id): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user());
         if (!$waiterId) {
             return response()->json([
@@ -193,7 +172,6 @@ class WaiterAssignmentController extends Controller
 
     public function pickup(Request $request, $id): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user()) ?: auth()->id();
         if (!$waiterId) {
             return response()->json([
@@ -213,7 +191,6 @@ class WaiterAssignmentController extends Controller
 
     public function startDelivery(Request $request, $id): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user()) ?: auth()->id();
 
         if (!$waiterId) {
@@ -234,7 +211,6 @@ class WaiterAssignmentController extends Controller
 
     public function deliver(DeliverOrderRequest $request, $id): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user()) ?: auth()->id();
         if (!$waiterId) {
             return response()->json([
@@ -254,7 +230,6 @@ class WaiterAssignmentController extends Controller
 
     public function failed(FailedDeliveryRequest $request, $id): JsonResponse
     {
-        $this->resolveTenant($request);
         $waiterId = $this->waiterContextResolver->resolveWaiterId(auth()->user()) ?: auth()->id();
         if (!$waiterId) {
             return response()->json([

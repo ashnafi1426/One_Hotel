@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Room;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -66,11 +65,7 @@ class QRCodeController extends Controller
     public function generateAll(): JsonResponse
     {
         try {
-            $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;
-
-            $rooms = Room::where('is_active', true)
-                ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))
-                ->get();
+            $rooms = Room::where('is_active', true)->get();
 
             $qrCodes = [];
             $baseUrl = config('app.frontend_url', 'http://localhost:5173');

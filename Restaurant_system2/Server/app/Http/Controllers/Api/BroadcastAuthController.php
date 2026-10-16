@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
-use App\Services\TenantContext;
+use App\Models\Payment;
+use App\Models\RestaurantTable;
+use App\Models\Room;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -12,15 +14,11 @@ use Illuminate\Support\Facades\Log;
 /**
  * BroadcastAuthController
  *
- * Handles WebSocket channel authorization for Laravel Echo.
+ * Handles WebSocket channel authorization for Laravel Echo / Reverb.
  * Supports both authenticated users and public guest order tracking.
  */
 class BroadcastAuthController extends Controller
 {
-    public function __construct(
-        protected TenantContext $tenantContext
-    ) {}
-
     /**
      * Authenticate WebSocket channel access.
      */
@@ -66,21 +64,16 @@ class BroadcastAuthController extends Controller
     }
 
     /**
-     * Authorize access to order-specific channels: orders.{hotelId}.{orderId}
+     * Authorize access to order-specific channels: orders.{hotelId}.{orderId} or orders.{orderId}
      */
     protected function authorizeOrderChannel(Request $request, string $channelName, string $socketId): JsonResponse
     {
         $parts = explode('.', str_replace('private-', '', $channelName));
 
-        if (count($parts) !== 3 || $parts[0] !== 'orders') {
-            return response()->json(['error' => 'Invalid channel format'], 400);
-        }
+        // Format could be orders.{hotelId}.{orderId} or orders.{orderId}
+        $orderId = end($parts);
 
-        $hotelId = $parts[1];
-        $orderId = $parts[2];
-
-        $order = Order::withoutGlobalScopes()
-            ->with(['room', 'table'])
+        $order = Order::with(['room', 'table'])
             ->where('id', $orderId)
             ->orWhere('order_number', $orderId)
             ->first();
@@ -93,36 +86,24 @@ class BroadcastAuthController extends Controller
             return response()->json(['error' => 'Order not found'], 404);
         }
 
-        if ($order->hotel_id !== $hotelId) {
-            Log::warning('[BroadcastAuth] Hotel ID mismatch - unauthorized access attempt', [
-                'channel' => $channelName,
-                'order_hotel_id' => $order->hotel_id,
-                'requested_hotel_id' => $hotelId,
-                'ip' => $request->ip()
-            ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $qrToken = $request->input('qr_token') ?? $request->header('X-QR-Token');
 
         if ($qrToken) {
-
             $isValidToken = false;
 
             if ($order->room && $order->room->qr_token === $qrToken) {
                 $isValidToken = true;
             } elseif ($order->table && $order->table->qr_token === $qrToken) {
                 $isValidToken = true;
-            } elseif ($order->hotel_id && \App\Models\RestaurantTable::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {
+            } elseif (RestaurantTable::where('qr_token', $qrToken)->exists()) {
                 $isValidToken = true;
-            } elseif ($order->hotel_id && \App\Models\Room::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {
+            } elseif (Room::where('qr_token', $qrToken)->exists()) {
                 $isValidToken = true;
-            } elseif (\App\Models\Payment::withoutGlobalScopes()->where('order_id', $order->id)->where('metadata->qr_token', $qrToken)->exists()) {
+            } elseif (Payment::where('order_id', $order->id)->where('metadata->qr_token', $qrToken)->exists()) {
                 $isValidToken = true;
             }
 
             if (!$isValidToken) {
-
                 $user = $request->user();
                 if (!$user) {
                     Log::warning('[BroadcastAuth] Invalid QR token for guest WebSocket subscription', [
@@ -136,7 +117,6 @@ class BroadcastAuthController extends Controller
                 Log::info('[BroadcastAuth] Order channel authorized for authenticated staff user', [
                     'channel' => $channelName,
                     'order_id' => $order->id,
-                    'hotel_id' => $order->hotel_id,
                     'user_id' => $user->id,
                     'user_role' => $user->role
                 ]);
@@ -144,11 +124,9 @@ class BroadcastAuthController extends Controller
                 Log::info('[BroadcastAuth] Guest WebSocket channel authorized via QR token', [
                     'channel' => $channelName,
                     'order_id' => $order->id,
-                    'hotel_id' => $order->hotel_id
                 ]);
             }
         } else {
-
             $user = $request->user();
             if (!$user) {
                 Log::warning('[BroadcastAuth] No QR token and no authenticated user', [
@@ -162,7 +140,6 @@ class BroadcastAuthController extends Controller
             Log::info('[BroadcastAuth] Order channel authorized for authenticated user', [
                 'channel' => $channelName,
                 'order_id' => $order->id,
-                'hotel_id' => $order->hotel_id,
                 'user_id' => $user->id
             ]);
         }
@@ -180,36 +157,14 @@ class BroadcastAuthController extends Controller
      */
     protected function authorizeHotelChannel(Request $request, string $channelName, string $socketId): JsonResponse
     {
-        $parts = explode('.', str_replace('private-', '', $channelName));
-
-        if (count($parts) !== 3 || $parts[0] !== 'hotel') {
-            return response()->json(['error' => 'Invalid channel format'], 400);
-        }
-
-        $hotelId = $parts[1];
-        $scope = $parts[2];
-
         $user = $request->user();
         if (!$user) {
             return response()->json(['error' => 'Authentication required'], 401);
         }
 
-        $hasAccess = (bool) $user;
-
-        if (!$hasAccess) {
-            Log::warning('[BroadcastAuth] Hotel channel unauthorized', [
-                'channel' => $channelName,
-                'requested_hotel_id' => $hotelId,
-                'user_id' => $user->id
-            ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         Log::info('[BroadcastAuth] Hotel channel authorized', [
             'channel' => $channelName,
             'user_id' => $user->id,
-            'hotel_id' => $hotelId,
-            'scope' => $scope
         ]);
 
         $auth = $this->generateChannelAuth($channelName, $socketId);
@@ -225,27 +180,14 @@ class BroadcastAuthController extends Controller
      */
     protected function authorizePaymentsChannel(Request $request, string $channelName, string $socketId): JsonResponse
     {
-        $hotelId = str_replace('private-payments.', '', $channelName);
         $user = $request->user();
         if (!$user) {
             return response()->json(['error' => 'Authentication required'], 401);
         }
 
-        $hasAccess = (bool) $user;
-
-        if (!$hasAccess) {
-            Log::warning('[BroadcastAuth] Payments channel unauthorized', [
-                'channel' => $channelName,
-                'requested_hotel_id' => $hotelId,
-                'user_id' => $user->id
-            ]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         Log::info('[BroadcastAuth] Payments channel authorized', [
             'channel' => $channelName,
             'user_id' => $user->id,
-            'hotel_id' => $hotelId
         ]);
 
         $auth = $this->generateChannelAuth($channelName, $socketId);
@@ -270,4 +212,3 @@ class BroadcastAuthController extends Controller
         return $appKey . ':' . $signature;
     }
 }
-

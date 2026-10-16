@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Room;
 use App\Services\QRCodeService;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -136,10 +135,7 @@ class QRCodePrintController extends Controller
      */
     public function getAllQRCodes(): JsonResponse
     {
-        $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;
-
         $rooms = Room::where('is_active', true)
-            ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))
             ->select('id', 'room_number', 'qr_token', 'qr_image_path', 'qr_code_url')
             ->orderBy('room_number')
             ->get();
