@@ -310,7 +310,6 @@ function removeItem(index: number) {
 
 function preparePayload() {
   return {
-    hotel_id: hotelStore.hotelId || undefined,
     reservation_id: form.reservation_id,
     guest_id: form.guest_id,
     room_id: form.room_id,

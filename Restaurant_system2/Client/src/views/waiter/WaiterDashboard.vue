@@ -545,7 +545,6 @@ const loadDashboard = async (isManualRefresh = false) => {
     error.value = null
 
     const dashboardData = await waiterService.getDashboard({
-      hotel_id: hotelStore.hotelId,
       ...(isManualRefresh ? { refresh: 'true' } : {}),
     })
 
@@ -590,25 +589,23 @@ const setupWebSocket = () => {
         })
     }
 
-    if (hotelStore.hotelId) {
-      echo
-        .private(`hotel.${hotelStore.hotelId}.waiters`)
-        .listen('.waiter.assigned', () => {
-          loadDashboard(true)
-        })
-        .listen('WaiterAssignedEvent', () => {
-          loadDashboard(true)
-        })
+    echo
+      .private('hotel.waiters')
+      .listen('.waiter.assigned', () => {
+        loadDashboard(true)
+      })
+      .listen('WaiterAssignedEvent', () => {
+        loadDashboard(true)
+      })
 
-      echo
-        .private(`hotel.${hotelStore.hotelId}.orders`)
-        .listen('.OrderStatusUpdated', () => {
-          loadDashboard(true)
-        })
-        .listen('.OrderCreated', () => {
-          loadDashboard(true)
-        })
-    }
+    echo
+      .private('hotel.orders')
+      .listen('.OrderStatusUpdated', () => {
+        loadDashboard(true)
+      })
+      .listen('.OrderCreated', () => {
+        loadDashboard(true)
+      })
   } catch (e) {
     console.warn('[WaiterDashboard] Echo subscription warning:', e)
   }
@@ -622,22 +619,10 @@ const teardownWebSocket = () => {
     if (waiterId) {
       echo.leave(`waiter.${waiterId}`)
     }
-    if (hotelStore.hotelId) {
-      echo.leave(`hotel.${hotelStore.hotelId}.waiters`)
-      echo.leave(`hotel.${hotelStore.hotelId}.orders`)
-    }
+    echo.leave('hotel.waiters')
+    echo.leave('hotel.orders')
   } catch (e) {}
 }
-
-watch(
-  () => hotelStore.hotelId,
-  () => {
-    teardownWebSocket()
-    restoreCachedData()
-    loadDashboard(true)
-    setupWebSocket()
-  },
-)
 
 onMounted(() => {
   restoreCachedData()

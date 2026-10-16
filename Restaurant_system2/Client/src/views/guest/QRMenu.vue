@@ -1005,11 +1005,6 @@ const detectOrderContext = async () => {
       if (result.data.hotel_id) {
         hotelId.value = result.data.hotel_id
         hotelName.value = result.data.hotel_name || ''
-        localStorage.setItem('hotel_id', result.data.hotel_id)
-        localStorage.setItem('guest_hotel_id', result.data.hotel_id)
-        localStorage.setItem('active_hotel_id', result.data.hotel_id)
-        console.log('[QRMenu] Stored hotel_id from QR resolution:', result.data.hotel_id)
-        guestHotelStore.selectHotelById(result.data.hotel_id)
       }
 
       orderContext.value = {
@@ -1038,15 +1033,9 @@ const detectOrderContext = async () => {
       eligibilityMessage.value = ''
       reservationStatusVal.value = 'not_applicable'
 
-      // CRITICAL: Store hotel_id from QR resolution for table orders
       if (result.data.hotel_id) {
         hotelId.value = result.data.hotel_id
         hotelName.value = result.data.hotel_name || ''
-        localStorage.setItem('hotel_id', result.data.hotel_id)
-        localStorage.setItem('guest_hotel_id', result.data.hotel_id)
-        localStorage.setItem('active_hotel_id', result.data.hotel_id)
-        console.log('[QRMenu] Stored hotel_id from table QR resolution:', result.data.hotel_id)
-        guestHotelStore.selectHotelById(result.data.hotel_id)
       }
 
       orderContext.value = {
@@ -1117,15 +1106,8 @@ onMounted(async () => {
   if (qrToken.value) {
     await detectOrderContext()
   } else {
-    const qHotel = (route.query.hotel_id as string) || (route.query.hotel as string)
-    if (qHotel) {
-      await guestHotelStore.selectHotelById(qHotel)
-      hotelId.value = guestHotelStore.hotelId
-      hotelName.value = guestHotelStore.hotelName
-    } else if (guestHotelStore.hotelId) {
-      hotelId.value = guestHotelStore.hotelId
-      hotelName.value = guestHotelStore.hotelName
-    }
+    hotelId.value = guestHotelStore.hotelId
+    hotelName.value = guestHotelStore.hotelName
     roomNumber.value = localStorage.getItem('roomNumber') || '101'
     isLoadingContext.value = false
   }

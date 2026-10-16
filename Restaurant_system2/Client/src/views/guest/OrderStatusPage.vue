@@ -480,7 +480,6 @@ const handlePayNow = () => {
       room_id: orderData.value.room_id || null,
       order_type: orderData.value.order_type || (isRoom ? 'room_service' : 'dine_in'),
       qr_token: currentQrToken,
-      hotel_id: currentHotelId,
       items: formattedItems,
       calculation: {
         subtotal: Number(orderData.value.subtotal || orderData.value.total || 0),

@@ -719,20 +719,13 @@ onMounted(() => {
   updateIsMobile()
   window.addEventListener('resize', updateIsMobile)
   window.addEventListener('keydown', handleKeyDown)
-  window.addEventListener('hotel-switched', handleHotelSwitched)
-  window.addEventListener('guest-hotel-selected', handleHotelSwitched)
   window.addEventListener('permissions-updated', handleHotelSwitched)
   updateActiveSection()
-  if (!hotelStore.currentHotel || !hotelStore.availableHotels.length) {
-    hotelStore.fetchMyHotels().catch(() => {})
-  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('resize', updateIsMobile)
   window.removeEventListener('keydown', handleKeyDown)
-  window.removeEventListener('hotel-switched', handleHotelSwitched)
-  window.removeEventListener('guest-hotel-selected', handleHotelSwitched)
   window.removeEventListener('permissions-updated', handleHotelSwitched)
 })
 </script>

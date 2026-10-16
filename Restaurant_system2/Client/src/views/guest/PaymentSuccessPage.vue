@@ -172,7 +172,6 @@ const trackOrder = () => {
       params: { orderId },
       query: {
         qr_token: qrToken || undefined,
-        hotel_id: hotelId || undefined,
         order_number: orderNumber.value || undefined,
       },
     })
