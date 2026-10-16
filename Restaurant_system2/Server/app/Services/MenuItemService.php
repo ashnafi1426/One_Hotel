@@ -13,15 +13,7 @@ class MenuItemService
 {
     public function listMenuItems(array $filters = [], int $perPage = 10): LengthAwarePaginator
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
         $query = MenuItem::with(['taxRate', 'categoryRelation']);
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (!empty($filters['search'])) {
             $search = trim($filters['search']);
@@ -58,29 +50,18 @@ class MenuItemService
     }
 
     /**
-     * Create a menu item scoped to the current hotel.
+     * Create a menu item.
      */
     public function createMenuItem(array $data, ?UploadedFile $imageFile = null): MenuItem
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
+        return DB::transaction(function () use ($data, $imageFile) {
 
-        return DB::transaction(function () use ($data, $imageFile, $hotelId) {
-
-            $categorySlug = $data['category'];
-            $category = Category::where('hotel_id', $hotelId)
-                ->where(function ($q) use ($categorySlug, $data) {
-                    $q->where('slug', $categorySlug)
-                      ->orWhere('id', $data['category_id'] ?? null)
-                      ->orWhere('name', $categorySlug);
-                })
-                ->first();
-
-            if (!$category) {
-
-                $category = Category::where('slug', $categorySlug)->first();
-            }
+            $categorySlug = $data['category'] ?? '';
+            $category = Category::where(function ($q) use ($categorySlug, $data) {
+                $q->where('slug', $categorySlug)
+                  ->orWhere('id', $data['category_id'] ?? null)
+                  ->orWhere('name', $categorySlug);
+            })->first();
 
             $imagePath = null;
             if ($imageFile) {
@@ -89,8 +70,7 @@ class MenuItemService
                 $imagePath = $data['image_url'];
             }
 
-            return MenuItem::create([
-                'hotel_id' => $hotelId,
+            $item = MenuItem::create([
                 'name' => trim($data['name']),
                 'description' => $data['description'] ?? null,
                 'category_id' => $category?->id,
@@ -102,23 +82,22 @@ class MenuItemService
                 'image' => $imagePath,
             ]);
 
-            MenuService::invalidateMenuCache($hotelId);
+            MenuService::invalidateMenuCache();
 
             return $item;
         });
     }
+
     public function updateMenuItem(MenuItem $menuItem, array $data, ?UploadedFile $imageFile = null): MenuItem
     {
         return DB::transaction(function () use ($menuItem, $data, $imageFile) {
 
             $categorySlug = $data['category'] ?? $menuItem->category;
-            $category = Category::where('hotel_id', $menuItem->hotel_id)
-                ->where(function ($q) use ($categorySlug, $data) {
-                    $q->where('slug', $categorySlug)
-                      ->orWhere('id', $data['category_id'] ?? null)
-                      ->orWhere('name', $categorySlug);
-                })
-                ->first();
+            $category = Category::where(function ($q) use ($categorySlug, $data) {
+                $q->where('slug', $categorySlug)
+                  ->orWhere('id', $data['category_id'] ?? null)
+                  ->orWhere('name', $categorySlug);
+            })->first();
 
             $updateData = [
                 'name' => trim($data['name']),
@@ -141,16 +120,15 @@ class MenuItemService
 
             $menuItem->update($updateData);
 
-            MenuService::invalidateMenuCache($menuItem->hotel_id);
+            MenuService::invalidateMenuCache();
 
             return $menuItem->fresh(['taxRate', 'categoryRelation']);
         });
     }
+
     public function deleteMenuItem(MenuItem $menuItem): void
     {
         DB::transaction(function () use ($menuItem) {
-            $hotelId = $menuItem->hotel_id;
-
             $hasOrders = DB::table('order_items')
                 ->where('menu_item_id', $menuItem->id)
                 ->exists();
@@ -163,7 +141,7 @@ class MenuItemService
                 $menuItem->forceDelete();
             }
 
-            MenuService::invalidateMenuCache($hotelId);
+            MenuService::invalidateMenuCache();
         });
     }
 
@@ -176,24 +154,17 @@ class MenuItemService
             'is_available' => !$menuItem->is_available,
         ]);
 
-        MenuService::invalidateMenuCache($menuItem->hotel_id);
+        MenuService::invalidateMenuCache();
 
         return $menuItem->fresh(['taxRate', 'categoryRelation']);
     }
 
     /**
-     * Calculate menu item statistics for the current hotel.
+     * Calculate menu item statistics.
      */
     public function getStatistics(): array
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
         $query = MenuItem::query();
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         $total = (clone $query)->count();
         $available = (clone $query)->where('is_available', true)->count();
@@ -211,17 +182,10 @@ class MenuItemService
         ];
     }
 
-    /**
-     * Delete an existing local image from the public disk.
-     */
-    protected function deleteStoredImage(?string $image): void
+    protected function deleteStoredImage(?string $path): void
     {
-        if ($image && !filter_var($image, FILTER_VALIDATE_URL)) {
-            try {
-                Storage::disk('public')->delete($image);
-            } catch (\Throwable $e) {
-            }
+        if ($path && !filter_var($path, FILTER_VALIDATE_URL)) {
+            Storage::disk('public')->delete($path);
         }
     }
 }
-

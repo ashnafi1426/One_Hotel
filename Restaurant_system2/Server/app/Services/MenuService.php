@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Category;
 use App\Models\MenuItem;
-use App\Models\Scopes\TenantScope;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -13,46 +12,40 @@ use Illuminate\Support\Str;
 class MenuService
 {
     /**
-     * Invalidate cached menu and category queries for a hotel or platform.
+     * Invalidate cached menu and category queries.
      */
     public static function invalidateMenuCache(?string $hotelId = null): void
     {
-        if ($hotelId) {
-            Cache::forget("qr_menu_items:{$hotelId}");
-            Cache::forget("qr_menu_categories:{$hotelId}");
-        }
+        Cache::forget('qr_menu_items:single');
+        Cache::forget('qr_menu_categories:single');
         Cache::forget('qr_menu_items:all');
         Cache::forget('qr_menu_categories:all');
         Cache::forget('qr_menu_items:default');
         Cache::forget('qr_menu_categories:default');
+        if ($hotelId) {
+            Cache::forget("qr_menu_items:{$hotelId}");
+            Cache::forget("qr_menu_categories:{$hotelId}");
+        }
     }
 
     /**
      * Get menu items for guest view, grouped by category.
      * High-speed execution with Cache::remember, column pruning, and preloaded tax relations.
      */
-    public function getCategorizedMenuItems(?string $hotelId, bool $forceRefresh = false): Collection
+    public function getCategorizedMenuItems(?string $hotelId = null, bool $forceRefresh = false): Collection
     {
-        if (!$hotelId) {
-            $hotelId = \App\Models\Hotel::where('status', 'active')->orderBy('created_at')->value('id');
-        }
-
-        $cacheScope = $hotelId ?: 'default';
-        $cacheKey = "qr_menu_items:{$cacheScope}";
+        $cacheKey = 'qr_menu_items:single';
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        $cachedData = Cache::remember($cacheKey, 600, function () use ($hotelId) {
-            if ($hotelId) {
-                $this->ensureHotelHasMenuAndCategories($hotelId);
-            }
+        $cachedData = Cache::remember($cacheKey, 600, function () {
+            $this->ensureHasMenuAndCategories();
 
-            $query = MenuItem::withoutGlobalScope(TenantScope::class)
+            $query = MenuItem::query()
                 ->select([
                     'id',
-                    'hotel_id',
                     'category_id',
                     'category',
                     'name',
@@ -69,10 +62,6 @@ class MenuService
                 ->withCount(['approvedReviews as review_count'])
                 ->withAvg('approvedReviews as average_rating', 'rating')
                 ->where('is_available', true);
-
-            if ($hotelId) {
-                $query->where('hotel_id', $hotelId);
-            }
 
             $menuItems = $query->orderBy('category')->orderBy('name')->get();
 
@@ -92,34 +81,23 @@ class MenuService
     }
 
     /**
-     * Get all active categories with counts for a hotel (without N+1 queries).
+     * Get all active categories with counts (without N+1 queries).
      * Cached with a 10-minute TTL for lightning-fast catalog navigation.
      */
-    public function getCategoriesWithCounts(?string $hotelId, bool $forceRefresh = false): array
+    public function getCategoriesWithCounts(?string $hotelId = null, bool $forceRefresh = false): array
     {
-        if (!$hotelId) {
-            $hotelId = \App\Models\Hotel::where('status', 'active')->orderBy('created_at')->value('id');
-        }
-
-        $cacheScope = $hotelId ?: 'default';
-        $cacheKey = "qr_menu_categories:{$cacheScope}";
+        $cacheKey = 'qr_menu_categories:single';
 
         if ($forceRefresh) {
             Cache::forget($cacheKey);
         }
 
-        return Cache::remember($cacheKey, 600, function () use ($hotelId) {
-            if ($hotelId) {
-                $this->ensureHotelHasMenuAndCategories($hotelId);
-            }
+        return Cache::remember($cacheKey, 600, function () {
+            $this->ensureHasMenuAndCategories();
 
-            $itemCountQuery = MenuItem::withoutGlobalScope(TenantScope::class)
+            $itemCountQuery = MenuItem::query()
                 ->where('is_available', true)
                 ->selectRaw('category, category_id, COUNT(*) as item_count');
-
-            if ($hotelId) {
-                $itemCountQuery->where('hotel_id', $hotelId);
-            }
 
             $itemCounts = $itemCountQuery->groupBy('category', 'category_id')->get();
 
@@ -135,13 +113,9 @@ class MenuService
                 }
             }
 
-            $catQuery = Category::withoutGlobalScope(TenantScope::class)
-                ->select(['id', 'hotel_id', 'name', 'slug', 'icon', 'display_order', 'is_active'])
+            $catQuery = Category::query()
+                ->select(['id', 'name', 'slug', 'icon', 'display_order', 'is_active'])
                 ->where('is_active', true);
-
-            if ($hotelId) {
-                $catQuery->where('hotel_id', $hotelId);
-            }
 
             $dbCategories = $catQuery->orderBy('display_order')->get();
 
@@ -263,16 +237,12 @@ class MenuService
     }
 
     /**
-     * Seed initial menu categories and items for newly created hotels.
+     * Seed initial menu categories if none exist.
      */
-    public function ensureHotelHasMenuAndCategories(?string $hotelId): void
+    public function ensureHasMenuAndCategories(): void
     {
-        if (!$hotelId) return;
-
         try {
-            $catCount = Category::withoutGlobalScope(TenantScope::class)
-                ->where('hotel_id', $hotelId)
-                ->count();
+            $catCount = Category::count();
 
             if ($catCount === 0) {
                 $standards = [
@@ -287,8 +257,8 @@ class MenuService
                 ];
 
                 foreach ($standards as $std) {
-                    Category::withoutGlobalScope(TenantScope::class)->firstOrCreate(
-                        ['hotel_id' => $hotelId, 'slug' => $std['slug']],
+                    Category::firstOrCreate(
+                        ['slug' => $std['slug']],
                         [
                             'id' => (string) Str::uuid(),
                             'name' => $std['name'],
@@ -304,5 +274,9 @@ class MenuService
             Log::warning('[MENU SERVICE] Could not auto-seed categories: ' . $e->getMessage());
         }
     }
-}
 
+    public function ensureHotelHasMenuAndCategories(?string $hotelId = null): void
+    {
+        $this->ensureHasMenuAndCategories();
+    }
+}

@@ -111,11 +111,7 @@ class OrderService{
 
     public function getStatistics(): array
     {
-        $hotelId = TenantContext::id() ?? app(TenantContext::class)->getHotelId();
         $query = Order::query();
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         $stats = (clone $query)->selectRaw("
             status,
@@ -228,15 +224,7 @@ class OrderService{
     private function assignChefToOrder(?string $hotelId = null): ?string
     {
         try {
-            $chefQuery = User::where('role', 'chef');
-            if ($hotelId) {
-                $chefQuery->where(function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId)
-                      ->orWhereHas('hotelMemberships', fn($m) => $m->where('hotel_id', $hotelId));
-                });
-            }
-
-            $chefs = $chefQuery->pluck('id')->toArray();
+            $chefs = User::where('role', 'chef')->pluck('id')->toArray();
             if (empty($chefs)) {
                 return null;
             }

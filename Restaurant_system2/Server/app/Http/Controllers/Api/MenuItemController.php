@@ -115,7 +115,7 @@ class MenuItemController extends Controller
                 try {
                     $menuItem->update(['is_available' => false]);
                     $menuItem->delete();
-                    \App\Services\MenuService::invalidateMenuCache($menuItem->hotel_id);
+                    \App\Services\MenuService::invalidateMenuCache();
 
                     return response()->json([
                         'success' => true,

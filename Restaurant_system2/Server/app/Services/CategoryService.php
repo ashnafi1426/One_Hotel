@@ -11,19 +11,11 @@ use Illuminate\Validation\ValidationException;
 class CategoryService
 {
     /**
-     * List categories for the current hotel/tenant.
+     * List categories for the single hotel.
      */
     public function listCategories(array $filters = []): Collection
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
         $query = Category::query();
-
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
 
         if (isset($filters['is_active'])) {
             $query->where('is_active', filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN));
@@ -55,26 +47,21 @@ class CategoryService
     }
 
     /**
-     * Create a new category for the current hotel.
+     * Create a new category.
      */
     public function createCategory(array $data): Category
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
-        return DB::transaction(function () use ($data, $hotelId) {
+        return DB::transaction(function () use ($data) {
             $slug = Str::slug($data['name']);
 
             $baseSlug = $slug;
             $counter = 1;
-            while (Category::where('hotel_id', $hotelId)->where('slug', $slug)->exists()) {
+            while (Category::where('slug', $slug)->exists()) {
                 $slug = $baseSlug . '-' . $counter;
                 $counter++;
             }
 
             return Category::create([
-                'hotel_id' => $hotelId,
                 'name' => trim($data['name']),
                 'slug' => $slug,
                 'description' => $data['description'] ?? null,
@@ -103,8 +90,7 @@ class CategoryService
                 $slug = Str::slug($updateData['name']);
                 $baseSlug = $slug;
                 $counter = 1;
-                while (Category::where('hotel_id', $category->hotel_id)
-                    ->where('slug', $slug)
+                while (Category::where('slug', $slug)
                     ->where('id', '!=', $category->id)
                     ->exists()) {
                     $slug = $baseSlug . '-' . $counter;
@@ -150,14 +136,9 @@ class CategoryService
      */
     public function reorderCategories(array $categoriesList): void
     {
-        $hotelId = app(TenantContext::class)->getHotelId()
-            ?? auth()->user()?->hotel_id
-            ?? auth()->user()?->hotelMemberships()->first()?->id;
-
-        DB::transaction(function () use ($categoriesList, $hotelId) {
+        DB::transaction(function () use ($categoriesList) {
             foreach ($categoriesList as $item) {
                 Category::where('id', $item['id'])
-                    ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
                     ->update([
                         'display_order' => (int) $item['display_order'],
                     ]);
@@ -165,4 +146,3 @@ class CategoryService
         });
     }
 }
-
