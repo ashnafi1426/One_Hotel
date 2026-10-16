@@ -11,7 +11,6 @@ class WaiterFloorAssignmentResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'hotel_id' => $this->hotel_id,
             'waiter' => new WaiterResource($this->waiter),
             'floor' => new FloorResource($this->floor),
             'shift' => new ShiftResource($this->shift),

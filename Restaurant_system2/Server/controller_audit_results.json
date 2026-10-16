@@ -1,0 +1,360 @@
+{
+    "app\/Http\/Controllers\/Api\/Admin\/AdminBookingController.php": [
+        "56: $reservation = Reservation::where('hotel_id', $hotelId)",
+        "80: $reservation = Reservation::where('hotel_id', $hotelId)->where('id', $reservationId)->first();",
+        "121: $reservation = Reservation::where('hotel_id', $hotelId)->where('id', $reservationId)->first();"
+    ],
+    "app\/Http\/Controllers\/Api\/Analytics\/BookingAnalyticsController.php": [
+        "23: return $request->input('hotel_id') ?? TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "29: $request->merge(['hotel_id' => $this->resolveHotelId($request)]);",
+        "32: 'hotel_id' => 'required|exists:hotels,id',",
+        "37: $hotelId = $validated['hotel_id'];",
+        "41: $totalRooms = Room::where('hotel_id', $hotelId)",
+        "49: 'hotel_id' => $hotelId,",
+        "67: $reservations = Reservation::where('hotel_id', $hotelId)",
+        "113: 'hotel_id' => $hotelId,",
+        "145: $request->merge(['hotel_id' => $this->resolveHotelId($request)]);",
+        "148: 'hotel_id' => 'required|exists:hotels,id',",
+        "153: $hotelId = $validated['hotel_id'];",
+        "155: $payments = Payment::where('hotel_id', $hotelId)",
+        "196: 'hotel_id' => $hotelId,",
+        "228: $request->merge(['hotel_id' => $this->resolveHotelId($request)]);",
+        "231: 'hotel_id' => 'required|exists:hotels,id',",
+        "236: $hotelId = $validated['hotel_id'];",
+        "240: $statusDistribution = Reservation::where('hotel_id', $hotelId)",
+        "246: $dailyCounts = Reservation::where('hotel_id', $hotelId)",
+        "267: $reservations = Reservation::where('hotel_id', $hotelId)",
+        "277: 'hotel_id' => $hotelId,",
+        "307: $request->merge(['hotel_id' => $this->resolveHotelId($request)]);",
+        "310: 'hotel_id' => 'required|exists:hotels,id',",
+        "315: $hotelId = $validated['hotel_id'];",
+        "319: $totalGuests = Reservation::where('hotel_id', $hotelId)",
+        "324: $guestBookingCounts = Reservation::where('hotel_id', $hotelId)",
+        "333: $averageGuestCount = Reservation::where('hotel_id', $hotelId)",
+        "340: 'hotel_id' => $hotelId,",
+        "370: $request->merge(['hotel_id' => $this->resolveHotelId($request)]);",
+        "373: 'hotel_id' => 'required|exists:hotels,id',",
+        "376: $hotelId = $validated['hotel_id'];",
+        "381: $todayBookings = Reservation::where('hotel_id', $hotelId)",
+        "385: $todayRevenue = Payment::where('hotel_id', $hotelId)",
+        "390: $monthRevenue = Payment::where('hotel_id', $hotelId)",
+        "395: $activeReservations = Reservation::where('hotel_id', $hotelId)",
+        "399: $totalRooms = Room::where('hotel_id', $hotelId)",
+        "403: $occupiedRooms = Reservation::where('hotel_id', $hotelId)",
+        "414: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/BroadcastAuthController.php": [
+        "96: if ($order->hotel_id !== $hotelId) {",
+        "99: 'order_hotel_id' => $order->hotel_id,",
+        "100: 'requested_hotel_id' => $hotelId,",
+        "116: } elseif ($order->hotel_id && \\App\\Models\\RestaurantTable::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {",
+        "118: } elseif ($order->hotel_id && \\App\\Models\\Room::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {",
+        "139: 'hotel_id' => $order->hotel_id,",
+        "147: 'hotel_id' => $order->hotel_id",
+        "165: 'hotel_id' => $order->hotel_id,",
+        "202: 'requested_hotel_id' => $hotelId,",
+        "211: 'hotel_id' => $hotelId,",
+        "239: 'requested_hotel_id' => $hotelId,",
+        "248: 'hotel_id' => $hotelId"
+    ],
+    "app\/Http\/Controllers\/Api\/CancellationPolicyController.php": [
+        "33: $query = CancellationPolicy::where('hotel_id', $hotelId);",
+        "115: 'hotel_id' => $hotelId,",
+        "294: return TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "306: $query->where('hotel_id', $hotelId);"
+    ],
+    "app\/Http\/Controllers\/Api\/Cashier\/CashierDashboardController.php": [
+        "21: $hotelId = request()->header('X-Hotel-ID')",
+        "23: ?: (auth()->check() ? auth()->user()->hotel_id : null);",
+        "26: $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "41: $baseQuery = Payment::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "107: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "150: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "188: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "229: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "267: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "298: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "345: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "452: 'total_active' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "455: 'paid_orders' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "458: 'unpaid_orders' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "462: 'cleared_today' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "519: 'hotel_id' => $order->hotel_id,"
+    ],
+    "app\/Http\/Controllers\/Api\/Cashier\/CashierPaymentController.php": [
+        "18: $hotelId = request()->header('X-Hotel-ID')",
+        "20: ?: (auth()->check() ? auth()->user()->hotel_id : null);",
+        "23: $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "39: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "166: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "241: $payment = Payment::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))"
+    ],
+    "app\/Http\/Controllers\/Api\/Cashier\/CashierReportController.php": [
+        "19: $hotelId = request()->header('X-Hotel-ID')",
+        "21: ?: (auth()->check() ? auth()->user()->hotel_id : null);",
+        "24: $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "43: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "107: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "118: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "157: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "205: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))"
+    ],
+    "app\/Http\/Controllers\/Api\/CustomerOrderController.php": [
+        "21: * Multi-tenant security: Validates hotel_id to prevent cross-tenant access.",
+        "87: } elseif ($order->hotel_id && RestaurantTable::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {",
+        "89: } elseif ($order->hotel_id && Room::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {",
+        "111: 'hotel_id' => $order->hotel_id",
+        "117: if ($requestHotelId && $order->hotel_id !== $requestHotelId) {",
+        "120: 'order_hotel_id' => $order->hotel_id,",
+        "121: 'request_hotel_id' => $requestHotelId,",
+        "206: 'hotel_id' => $order->hotel_id,",
+        "266: * Extract hotel_id from request context for validation.",
+        "269: * 1. Authenticated user's hotel_id",
+        "271: * 3. Order's hotel_id (fallback for guest access)",
+        "276: if ($user && method_exists($user, 'hotel_id')) {",
+        "277: return $user->hotel_id;",
+        "285: $headerHotelId = $request->header('X-Hotel-ID');",
+        "290: return $order->hotel_id;"
+    ],
+    "app\/Http\/Controllers\/Api\/DashboardController.php": [
+        "32: $hotelId = $request->header('X-Hotel-ID')",
+        "34: ?: ($user?->isPlatformAdmin() ? null : $user?->hotel_id);",
+        "46: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "64: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "77: if ($hotelId && Schema::hasColumn('payments', 'hotel_id')) {",
+        "78: $paymentQuery->where('hotel_id', $hotelId);",
+        "85: $resQuery->where('hotel_id', $hotelId);",
+        "93: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "124: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "158: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "195: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "200: 'hotel_id' => $hotelId,",
+        "290: $hotelId = $request->header('X-Hotel-ID')",
+        "292: ?: ($user?->isPlatformAdmin() ? null : $user?->hotel_id);",
+        "330: $hasPaymentHotelId = Schema::hasColumn('payments', 'hotel_id');",
+        "341: $q->where('hotel_id', $hotelId);",
+        "357: $resQ->where('hotel_id', $hotelId);",
+        "392: $hasPaymentHotelId = Schema::hasColumn('payments', 'hotel_id');",
+        "403: $q->where('hotel_id', $hotelId);",
+        "419: $resQ->where('hotel_id', $hotelId);"
+    ],
+    "app\/Http\/Controllers\/Api\/GuestController.php": [
+        "115: if ($hotelId && $guest->hotel_id && $guest->hotel_id !== $hotelId) {"
+    ],
+    "app\/Http\/Controllers\/Api\/GuestOrderController.php": [
+        "47: 'hotel_id' => $data['hotel_id'] ?? null,",
+        "73: 'hotel_id' => $data['hotel_id'] ?? null,",
+        "121: 'hotel_id' => $room->hotel_id,",
+        "163: if ($resolution['success'] && !empty($resolution['data']['hotel_id'])) {",
+        "164: $hotelId = $resolution['data']['hotel_id'];",
+        "168: $hotelId = $room?->hotel_id ?? $table?->hotel_id;",
+        "172: $hotelId = $request->query('hotel_id') ?? Hotel::where('status', 'active')->orderBy('created_at')->value('id');",
+        "191: 'hotel_id' => $hotelId,",
+        "215: if (!empty($resolution['data']['hotel_id'])) {",
+        "216: $hotelId = $resolution['data']['hotel_id'];",
+        "220: $hotelId = $room?->hotel_id ?? $table?->hotel_id;",
+        "224: if (!$hotelId && $request->filled('hotel_id')) {",
+        "225: $hotelId = $request->query('hotel_id');",
+        "229: $hotelId = $request->header('X-Hotel-ID')",
+        "230: ?: $request->header('x-hotel-id')",
+        "253: 'hotel_id' => $hotelId,",
+        "260: 'hotel_id' => $hotelId,",
+        "284: if (!empty($resolution['data']['hotel_id'])) {",
+        "285: $hotelId = $resolution['data']['hotel_id'];",
+        "289: $hotelId = $room?->hotel_id ?? $table?->hotel_id;",
+        "293: if (!$hotelId && $request->filled('hotel_id')) {",
+        "294: $hotelId = $request->query('hotel_id');",
+        "298: $hotelId = $request->header('X-Hotel-ID')",
+        "299: ?: $request->header('x-hotel-id')",
+        "316: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/GuestOrderPaymentController.php": [
+        "70: 'hotel_id' => $room->hotel_id,",
+        "80: 'hotel_id' => $room->hotel_id,",
+        "251: 'hotel_id' => $payment->hotel_id ?? ($metadata['hotel_id'] ?? null),",
+        "445: 'hotel_id' => $order->hotel_id,",
+        "455: 'hotel_id' => $order->hotel_id,"
+    ],
+    "app\/Http\/Controllers\/Api\/Guests\/ContactMessageController.php": [
+        "22: 'hotel_id' => 'required|string',",
+        "31: $hotel = Hotel::where('id', $validated['hotel_id'])",
+        "32: ->orWhere('slug', $validated['hotel_id'])",
+        "48: 'hotel_id' => $hotel->id,",
+        "75: 'hotel_id' => $hotel->id,"
+    ],
+    "app\/Http\/Controllers\/Api\/Guests\/GuestBookingController.php": [
+        "25: return $this->tenantContext->getHotelId() ?? TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "108: ->where('hotel_id', $hotelId)",
+        "243: $reservation = Reservation::where('hotel_id', $hotelId)",
+        "304: $reservation = Reservation::where('hotel_id', $hotelId)"
+    ],
+    "app\/Http\/Controllers\/Api\/KitchenController.php": [
+        "23: $hotelId = $request->input('hotel_id')",
+        "24: ?: $request->header('X-Hotel-ID')",
+        "43: if ($activeHotelId && $order->hotel_id && $order->hotel_id !== $activeHotelId) {",
+        "47: if ($user && method_exists($user, 'belongsToHotel') && $order->hotel_id && !$user->belongsToHotel($order->hotel_id)) {"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/FloorAssignmentController.php": [
+        "24: $hotelId = request()->input('hotel_id')",
+        "25: ?: request()->query('hotel_id')",
+        "26: ?: request()->header('X-Hotel-ID');",
+        "29: $hotelId = auth()->user()->hotel_id",
+        "30: ?: auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "53: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "88: ])->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "109: 'hotel_id' => $hotelId,",
+        "154: $query->where('hotel_id', $hotelId);",
+        "295: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));",
+        "297: $totalWaitersCount = Waiter::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/ReportController.php": [
+        "22: $hotelId = $request->input('hotel_id')",
+        "23: ?: $request->header('X-Hotel-ID')",
+        "128: $popularItemsQuery->where('orders.hotel_id', $hotelId);"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/RestaurantSectionController.php": [
+        "26: ?: (auth()->check() ? auth()->user()->hotel_id : null)",
+        "27: ?: request()->header('X-Hotel-ID');"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/RestaurantTableController.php": [
+        "27: ?: (auth()->check() ? auth()->user()->hotel_id : null)",
+        "28: ?: request()->header('X-Hotel-ID');"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/ShiftManagementController.php": [
+        "24: $hotelId = request()->header('X-Hotel-ID')",
+        "26: ?: (auth()->check() ? auth()->user()->hotel_id : null);",
+        "29: $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "46: $query->where('hotel_id', $hotelId);",
+        "86: ->where(fn($q) => $hotelId ? $q->where('hotel_id', $hotelId) : $q)",
+        "94: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/WaiterManagementController.php": [
+        "53: ->when($hotelId, fn($sub) => $sub->where('hotel_id', $hotelId))",
+        "61: $q->where('hotel_id', $hotelId)",
+        "62: ->orWhereNull('hotel_id');",
+        "117: 'hotel_id' => $hotelId,",
+        "146: $q->where('hotel_id', $hotelId)",
+        "147: ->orWhereNull('hotel_id');",
+        "389: ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))",
+        "797: $hotelId = $waiter->hotel_id ?? $this->getHotelId();",
+        "805: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/Manager\/WaiterTableAssignmentController.php": [
+        "88: $hotelId = request()->header('X-Hotel-ID')",
+        "90: ?: (auth()->check() ? auth()->user()->hotel_id : null);",
+        "93: $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');",
+        "187: if ($hotelId && $tbl->hotel_id && $tbl->hotel_id !== $hotelId) {",
+        "211: if ($hotelId && $waiter->hotel_id && $waiter->hotel_id !== $hotelId) {",
+        "283: if ($hotelId && $waiter->hotel_id && $waiter->hotel_id !== $hotelId) {"
+    ],
+    "app\/Http\/Controllers\/Api\/ManagerController.php": [
+        "158: $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "168: 'hotel_id' => $hotelId,",
+        "182: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/MenuItemController.php": [
+        "118: \\App\\Services\\MenuService::invalidateMenuCache($menuItem->hotel_id);"
+    ],
+    "app\/Http\/Controllers\/Api\/Payment\/PaymentGatewayController.php": [
+        "182: if ($request->has('hotel_id')) {",
+        "183: $query->where('hotel_id', $request->get('hotel_id'));",
+        "326: 'hotel_id' => $payment->hotel_id,",
+        "356: if ($request->has('hotel_id')) {",
+        "357: $query->where('hotel_id', $request->get('hotel_id'));"
+    ],
+    "app\/Http\/Controllers\/Api\/PaymentController.php": [
+        "40: ?: Auth::user()?->hotel_id",
+        "41: ?: ($request->metadata['hotel_id'] ?? null)",
+        "42: ?: $request->header('X-Hotel-ID');",
+        "56: if ($hotelId && empty($metadata['hotel_id'])) {",
+        "57: $metadata['hotel_id'] = $hotelId;",
+        "61: 'hotel_id' => $hotelId,",
+        "357: $hotelId = $payment->hotel_id ?? ($payment->metadata['hotel_id'] ?? null);",
+        "366: ->where('hotel_id', $hotelId)",
+        "383: $roomBelongs = Room::where('hotel_id', $hotelId)",
+        "392: 'hotel_id' => $hotelId,",
+        "472: $hotelId = $payment->hotel_id ?? ($payment->metadata['hotel_id'] ?? null);",
+        "475: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/QRCodeController.php": [
+        "69: $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "72: ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))"
+    ],
+    "app\/Http\/Controllers\/Api\/QRCodePrintController.php": [
+        "139: $hotelId = TenantContext::id() ?? auth()->user()?->hotel_id;",
+        "142: ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))"
+    ],
+    "app\/Http\/Controllers\/Api\/ReceptionController.php": [
+        "22: $hotelId = $request->input('hotel_id')",
+        "23: ?: $request->header('X-Hotel-ID')"
+    ],
+    "app\/Http\/Controllers\/Api\/ReceptionReportController.php": [
+        "23: $hotelId = $request->input('hotel_id')",
+        "24: ?: $request->header('X-Hotel-ID')"
+    ],
+    "app\/Http\/Controllers\/Api\/ReservationController.php": [
+        "92: ->when($hotelId, fn ($q) => $q->where('hotel_id', $hotelId))",
+        "103: if ($hotelId && $model->hotel_id && $model->hotel_id !== $hotelId) {",
+        "122: if ($hotelId && $reservation->hotel_id && $reservation->hotel_id !== $hotelId) {",
+        "243: ?: $request->header('X-Hotel-ID')",
+        "244: ?: $request->hotel_id",
+        "273: 'hotel_id' => $hotelId,"
+    ],
+    "app\/Http\/Controllers\/Api\/ReservationPaymentController.php": [
+        "70: $hasConflict = Reservation::where('hotel_id', $room->hotel_id)",
+        "90: ->where('hotel_id', $room->hotel_id)",
+        "96: 'hotel_id' => $room->hotel_id,",
+        "117: 'hotel_id' => $room->hotel_id,",
+        "130: 'hotel_id' => $room->hotel_id,"
+    ],
+    "app\/Http\/Controllers\/Api\/RoomTypeController.php": [
+        "24: ?: $request->input('hotel_id')",
+        "25: ?: $request->header('X-Hotel-ID')",
+        "26: ?: $request->header('x-hotel-id')",
+        "27: ?: auth()->user()?->hotel_id;",
+        "32: $query->where('hotel_id', $hotelId);",
+        "60: ?: $request->input('hotel_id')",
+        "61: ?: $request->header('X-Hotel-ID')",
+        "62: ?: $request->header('x-hotel-id');",
+        "65: $validated['hotel_id'] = $hotelId;"
+    ],
+    "app\/Http\/Controllers\/Api\/TaxRateController.php": [
+        "29: $query->where('hotel_id', $hotelId);",
+        "71: ?: $request->header('X-Hotel-ID')",
+        "72: ?: $request->header('x-hotel-id');",
+        "77: TaxRate::where('hotel_id', $hotelId)",
+        "84: 'hotel_id' => $hotelId,",
+        "131: TaxRate::where('hotel_id', $taxRate->hotel_id)"
+    ],
+    "app\/Http\/Controllers\/Api\/Waiter\/WaiterAssignmentController.php": [
+        "34: $hotelId = $request->input('hotel_id')",
+        "35: ?: $request->query('hotel_id')",
+        "36: ?: $request->header('X-Hotel-ID')"
+    ],
+    "app\/Http\/Controllers\/Api\/Waiter\/WaiterDashboardController.php": [
+        "21: $hotelId = $request->input('hotel_id')",
+        "22: ?: $request->query('hotel_id')",
+        "23: ?: $request->header('X-Hotel-ID')"
+    ],
+    "app\/Http\/Controllers\/Api\/WalkInOrderPaymentController.php": [
+        "99: $hotelId = $table->hotel_id",
+        "103: if ($table && empty($table->hotel_id) && $hotelId) {",
+        "104: $table->update(['hotel_id' => $hotelId]);",
+        "112: $q->where('hotel_id', $hotelId)->orWhereNull('hotel_id');",
+        "120: 'hotel_id' => $hotelId,",
+        "134: 'hotel_id' => $hotelId,",
+        "147: 'hotel_id' => $hotelId,",
+        "318: $hotelId = $payment->hotel_id",
+        "319: ?? $table?->hotel_id",
+        "320: ?? ($metadata['hotel_id'] ?? null)",
+        "324: if ($table && empty($table->hotel_id) && $hotelId) {",
+        "325: $table->update(['hotel_id' => $hotelId]);",
+        "333: 'hotel_id' => $hotelId,",
+        "419: $targetHotelId = $result['order']->hotel_id;",
+        "423: $sub->whereHas('hotelMemberships', fn ($hq) => $hq->where('hotel_id', $targetHotelId))",
+        "424: ->orDoesntHave('hotelMemberships');",
+        "661: $hotelId = $order->hotel_id ?? TenantContext::id();",
+        "665: 'hotel_id' => $hotelId,",
+        "679: 'hotel_id' => $hotelId,"
+    ]
+}

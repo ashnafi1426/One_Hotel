@@ -17,7 +17,6 @@ class WaiterFloorAssignment extends Model
 
     protected $fillable = [
         'id',
-        'hotel_id',
         'waiter_id',
         'floor_id',
         'is_active',

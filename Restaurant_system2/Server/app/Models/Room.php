@@ -149,9 +149,7 @@ class Room extends Model
 
         $floorNum = $this->getAttribute('floor');
         if ($floorNum !== null) {
-            return Floor::where('floor_number', $floorNum)
-                ->when($this->hotel_id, fn($q) => $q->where('hotel_id', $this->hotel_id))
-                ->value('id');
+            return Floor::where('floor_number', $floorNum)->value('id');
         }
 
         return null;

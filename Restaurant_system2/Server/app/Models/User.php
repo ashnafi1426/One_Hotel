@@ -59,7 +59,7 @@ class User extends Authenticatable
     }
     public function isPlatformAdmin(): bool
     {
-        return false;
+        return $this->isAdmin();
     }
     public function isAdmin()
     {
