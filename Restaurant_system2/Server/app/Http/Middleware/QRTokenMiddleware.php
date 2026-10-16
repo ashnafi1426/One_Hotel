@@ -12,11 +12,8 @@ use Illuminate\Support\Facades\Log;
 
 class QRTokenMiddleware
 {
-    protected TenantContext $tenantContext;
-
-    public function __construct(TenantContext $tenantContext)
+    public function __construct()
     {
-        $this->tenantContext = $tenantContext;
     }
 
     /**
@@ -79,16 +76,11 @@ class QRTokenMiddleware
             ], 403);
         }
 
-        $hotelId = $hotel->id;
-        $this->tenantContext->setHotel($hotel, null);
-
         $request->attributes->set('qr_resolution', $resolution);
         $request->attributes->set('qr_token', $qrToken);
-        $request->attributes->set('guest_hotel_id', $hotelId);
 
         Log::info('QR token validated successfully', [
             'qr_token' => $qrToken,
-            'hotel_id' => $hotelId,
             'context' => $resolution['context'],
             'path' => $request->path(),
             'ip' => $request->ip(),

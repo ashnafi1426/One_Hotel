@@ -83,26 +83,11 @@ class WaiterTableAssignmentController extends Controller
         }
     }
 
-    protected function getHotelId(): ?string
-    {
-        $hotelId = request()->header('X-Hotel-ID')
-            ?: app(\App\Services\TenantContext::class)->getHotelId()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null);
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if ($hotelId) {
-            app(\App\Services\TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
+    
 
     public function store(Request $request): JsonResponse
     {
-        $hotelId = $this->getHotelId();
+        
 
         $assignments = [];
 
@@ -184,12 +169,7 @@ class WaiterTableAssignmentController extends Controller
                     'message' => 'The selected restaurant table was not found.',
                 ], 422);
             }
-            if ($hotelId && $tbl->hotel_id && $tbl->hotel_id !== $hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'The selected table belongs to another hotel.',
-                ], 422);
-            }
+            
         }
 
         $waiters = \App\Models\Waiter::with('user')->whereIn('id', $waiterIds)->get()->keyBy('id');
@@ -205,13 +185,7 @@ class WaiterTableAssignmentController extends Controller
             if (strtolower($waiter->status ?? 'active') !== 'active') {
                 return response()->json([
                     'success' => false,
-                    'message' => "Waiter {$waiterName} is inactive. Only active waiters from the current hotel can be assigned.",
-                ], 422);
-            }
-            if ($hotelId && $waiter->hotel_id && $waiter->hotel_id !== $hotelId) {
-                return response()->json([
-                    'success' => false,
-                    'message' => "Waiter {$waiterName} belongs to another hotel. Only active waiters from the current hotel can be assigned.",
+                    'message' => "Waiter {$waiterName} is inactive. Only active waiters can be assigned.",
                 ], 422);
             }
         }
@@ -251,7 +225,7 @@ class WaiterTableAssignmentController extends Controller
 
     public function update(Request $request, string $id): JsonResponse
     {
-        $hotelId = $this->getHotelId();
+        
 
         $validator = Validator::make($request->all(), [
             'waiter_id' => 'nullable|integer|exists:waiters,id',
@@ -277,13 +251,7 @@ class WaiterTableAssignmentController extends Controller
                 if (strtolower($waiter->status ?? 'active') !== 'active') {
                     return response()->json([
                         'success' => false,
-                        'message' => "Waiter {$waiterName} is inactive. Only active waiters from the current hotel can be assigned.",
-                    ], 422);
-                }
-                if ($hotelId && $waiter->hotel_id && $waiter->hotel_id !== $hotelId) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => "Waiter {$waiterName} belongs to another hotel.",
+                        'message' => "Waiter {$waiterName} is inactive. Only active waiters can be assigned.",
                     ], 422);
                 }
             }

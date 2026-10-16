@@ -16,29 +16,14 @@ use Illuminate\Support\Str;
 
 class CashierDashboardController extends Controller
 {
-    protected function getHotelId(): ?string
-    {
-        $hotelId = request()->header('X-Hotel-ID')
-            ?: TenantContext::id()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null);
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
+    
 
     public function index(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
-            $baseQuery = Payment::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));
+            $baseQuery = Payment::query();
 
             $counts = (clone $baseQuery)->selectRaw("
                 COUNT(*) as total_transactions,
@@ -101,10 +86,10 @@ class CashierDashboardController extends Controller
     public function recentPayments(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $payments = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->latest()
                 ->limit(10)
                 ->get()
@@ -144,10 +129,10 @@ class CashierDashboardController extends Controller
     public function pendingPayments(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $payments = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereIn('status', [Payment::STATUS_PENDING, Payment::STATUS_INITIALIZED])
                 ->latest()
                 ->limit(10)
@@ -182,10 +167,10 @@ class CashierDashboardController extends Controller
     public function recentTransactions(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $transactions = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])
                 ->latest('paid_at')
                 ->limit(10)
@@ -223,10 +208,10 @@ class CashierDashboardController extends Controller
     public function revenueChart(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $revenues = Payment::whereBetween('paid_at', [now()->subDays(6)->startOfDay(), now()->endOfDay()])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])
                 ->selectRaw('DATE(paid_at) as date, SUM(amount) as total')
                 ->groupBy('date')
@@ -261,10 +246,10 @@ class CashierDashboardController extends Controller
     public function paymentMethodChart(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $methods = Payment::whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereNotNull('payment_method')
                 ->select('payment_method', DB::raw('count(*) as count'))
                 ->groupBy('payment_method')
@@ -292,10 +277,10 @@ class CashierDashboardController extends Controller
     public function refundRequests(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $refunds = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->where('status', Payment::STATUS_REFUNDED)
                 ->latest()
                 ->limit(10)
@@ -331,7 +316,7 @@ class CashierDashboardController extends Controller
     public function activeOrders(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $filter = $request->query('filter', 'all');
             $search = $request->query('search', '');
 
@@ -342,7 +327,7 @@ class CashierDashboardController extends Controller
                 'orderItems.menuItem',
                 'payments'
             ])
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));
+            ;
 
             if ($search) {
                 $query->where(function ($q) use ($search) {
@@ -449,17 +434,17 @@ class CashierDashboardController extends Controller
             });
 
             $counts = [
-                'total_active' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                'total_active' => Order::query()
                     ->whereIn('status', [Order::STATUS_PENDING, Order::STATUS_PREPARING, Order::STATUS_READY])
                     ->count(),
-                'paid_orders' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                'paid_orders' => Order::query()
                     ->whereHas('payments', fn($pq) => $pq->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED]))
                     ->count(),
-                'unpaid_orders' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                'unpaid_orders' => Order::query()
                     ->whereIn('status', [Order::STATUS_PENDING, Order::STATUS_PREPARING, Order::STATUS_READY])
                     ->whereDoesntHave('payments', fn($pq) => $pq->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED]))
                     ->count(),
-                'cleared_today' => Order::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                'cleared_today' => Order::query()
                     ->where('status', Order::STATUS_SERVED)
                     ->whereDate('served_at', today())
                     ->count(),
@@ -516,7 +501,6 @@ class CashierDashboardController extends Controller
                         ]);
                     } else {
                         Payment::create([
-                            'hotel_id' => $order->hotel_id,
                             'tx_ref' => 'TX-' . strtoupper(Str::random(10)),
                             'order_id' => $order->id,
                             'guest_id' => $order->guest_id,

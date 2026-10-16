@@ -40,10 +40,8 @@ class NotifyWaiterListener implements ShouldQueue
 
             $waiter = $event->waiter ?? \App\Models\Waiter::with('user')->find($event->waiterId);
             $userId = $waiter?->user_id ?? $order->user_id ?? null;
-            $hotelId = $order->hotel_id ?? $waiter?->hotel_id;
 
             $notification = WaiterNotification::create([
-                'hotel_id' => $hotelId,
                 'user_id' => $userId,
                 'waiter_id' => $event->waiterId,
                 'delivery_task_id' => $event->deliveryId,
@@ -95,10 +93,8 @@ class NotifyWaiterListener implements ShouldQueue
 
             $newWaiter = \App\Models\Waiter::find($event->newWaiterId);
             $newUserId = $newWaiter?->user_id;
-            $hotelId = $newWaiter?->hotel_id;
 
             $newNotification = WaiterNotification::create([
-                'hotel_id' => $hotelId,
                 'user_id' => $newUserId,
                 'waiter_id' => $event->newWaiterId,
                 'delivery_task_id' => $event->deliveryId,
@@ -122,7 +118,6 @@ class NotifyWaiterListener implements ShouldQueue
                 $prevUserId = $prevWaiter?->user_id;
 
                 $previousNotification = WaiterNotification::create([
-                    'hotel_id' => $hotelId ?? $prevWaiter?->hotel_id,
                     'user_id' => $prevUserId,
                     'waiter_id' => $event->previousWaiterId,
                     'delivery_task_id' => $event->deliveryId,

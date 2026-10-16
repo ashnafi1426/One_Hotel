@@ -13,30 +13,15 @@ use Illuminate\Support\Facades\Log;
 
 class CashierPaymentController extends Controller
 {
-    protected function getHotelId(): ?string
-    {
-        $hotelId = request()->header('X-Hotel-ID')
-            ?: TenantContext::id()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null);
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
+    
 
     public function index(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $query = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));
+                ;
 
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -160,10 +145,10 @@ class CashierPaymentController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $payment = Payment::with(['guest', 'reservation.room', 'order.orderItems.menuItem'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->findOrFail($id);
 
             $data = [
@@ -236,9 +221,9 @@ class CashierPaymentController extends Controller
     public function refund(string $id, Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
-            $payment = Payment::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+            $payment = Payment::query()
                 ->findOrFail($id);
 
             if (!in_array($payment->status, [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])) {

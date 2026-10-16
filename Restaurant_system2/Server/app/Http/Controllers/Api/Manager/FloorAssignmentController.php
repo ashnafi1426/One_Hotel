@@ -19,27 +19,7 @@ use Illuminate\Support\Facades\Log;
 
 class FloorAssignmentController extends Controller
 {
-    protected function getHotelId(): ?string
-    {
-        $hotelId = request()->input('hotel_id')
-            ?: request()->query('hotel_id')
-            ?: request()->header('X-Hotel-ID');
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotel_id
-                ?: auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if (!$hotelId) {
-            $hotelId = app(TenantContext::class)->getHotelId();
-        }
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
+    
 
     /**
      * Get today's waiter-floor assignments.
@@ -47,10 +27,10 @@ class FloorAssignmentController extends Controller
     public function today(): JsonResponse
     {
         $today = now()->format('Y-m-d');
-        $hotelId = $this->getHotelId();
+        
 
         $assignments = WaiterFloorAssignment::where('assignment_date', $today)
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+            
             ->with(['waiter.user', 'floor', 'shift', 'assignedBy'])
             ->orderBy('priority')
             ->get();
@@ -68,7 +48,7 @@ class FloorAssignmentController extends Controller
      */
     public function store(AssignFloorRequest $request): JsonResponse
     {
-        $hotelId = $this->getHotelId();
+        
         $assignmentsData = $request->getAssignments();
         $savedAssignments = [];
 
@@ -85,7 +65,7 @@ class FloorAssignmentController extends Controller
                     'waiter_id' => $data['waiter_id'],
                     'floor_id' => $data['floor_id'],
                     'assignment_date' => $assignmentDate,
-                ])->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));
+                ]);
 
                 if ($shiftId) {
                     $query->where('shift_id', $shiftId);
@@ -106,7 +86,7 @@ class FloorAssignmentController extends Controller
                 } else {
                     $savedAssignments[] = WaiterFloorAssignment::create([
                         'id' => (string) Str::uuid(),
-                        'hotel_id' => $hotelId,
+                        
                         'waiter_id' => $data['waiter_id'],
                         'floor_id' => $data['floor_id'],
                         'shift_id' => $shiftId,
@@ -147,12 +127,10 @@ class FloorAssignmentController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $hotelId = $this->getHotelId();
+        
         $query = WaiterFloorAssignment::with(['waiter.user', 'floor', 'shift', 'assignedBy']);
 
-        if ($hotelId) {
-            $query->where('hotel_id', $hotelId);
-        }
+        
 
         if ($request->filled('date')) {
             $query->whereDate('assignment_date', $request->input('date'));
@@ -289,12 +267,12 @@ class FloorAssignmentController extends Controller
     public function stats(Request $request): JsonResponse
     {
         $date = $request->input('date', now()->format('Y-m-d'));
-        $hotelId = $this->getHotelId();
+        
 
         $baseQuery = WaiterFloorAssignment::whereDate('assignment_date', $date)
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId));
+            ;
 
-        $totalWaitersCount = Waiter::when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+        $totalWaitersCount = Waiter::query()
             ->where('status', 'active')
             ->count();
 

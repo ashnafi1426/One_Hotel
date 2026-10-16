@@ -14,33 +14,18 @@ use Illuminate\Support\Facades\Log;
 
 class CashierReportController extends Controller
 {
-    protected function getHotelId(): ?string
-    {
-        $hotelId = request()->header('X-Hotel-ID')
-            ?: TenantContext::id()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null);
-
-        if (!$hotelId && auth()->check()) {
-            $hotelId = auth()->user()->hotelMemberships()->where('is_active', true)->value('hotel_id');
-        }
-
-        if ($hotelId) {
-            app(TenantContext::class)->setHotelId($hotelId);
-        }
-
-        return $hotelId;
-    }
+    
 
     public function revenueReport(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $period = $request->get('period', 'daily');
             $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateTimeString());
             $dateTo = $request->get('date_to', now()->endOfMonth()->toDateTimeString());
 
             $query = Payment::whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereBetween('paid_at', [$dateFrom, $dateTo]);
 
             $summary = (clone $query)->selectRaw("
@@ -99,12 +84,12 @@ class CashierReportController extends Controller
     public function paymentReport(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateTimeString());
             $dateTo = $request->get('date_to', now()->endOfMonth()->toDateTimeString());
 
             $statusBreakdown = Payment::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->select('status', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
                 ->groupBy('status')
                 ->get()
@@ -115,7 +100,7 @@ class CashierReportController extends Controller
                 ]);
 
             $providerBreakdown = Payment::whereBetween('created_at', [$dateFrom, $dateTo])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->whereNotNull('payment_provider')
                 ->select('payment_provider', DB::raw('COUNT(*) as count'), DB::raw('SUM(amount) as total'))
                 ->groupBy('payment_provider')
@@ -149,12 +134,12 @@ class CashierReportController extends Controller
     public function refundReport(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $dateFrom = $request->get('date_from', now()->startOfMonth()->toDateTimeString());
             $dateTo = $request->get('date_to', now()->endOfMonth()->toDateTimeString());
 
             $refunds = Payment::with(['guest', 'reservation', 'order'])
-                ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                
                 ->where('status', Payment::STATUS_REFUNDED)
                 ->whereBetween('updated_at', [$dateFrom, $dateTo])
                 ->get();
@@ -202,7 +187,7 @@ class CashierReportController extends Controller
     private function getDailyBreakdown($dateFrom, $dateTo, ?string $hotelId = null): array
     {
         $dailyStats = Payment::whereBetween('paid_at', [$dateFrom, $dateTo])
-            ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+            
             ->whereIn('status', [Payment::STATUS_PAID, Payment::STATUS_VERIFIED])
             ->selectRaw('DATE(paid_at) as date, SUM(amount) as revenue, COUNT(*) as transactions')
             ->groupBy('date')

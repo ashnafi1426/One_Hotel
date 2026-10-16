@@ -12,15 +12,12 @@ use Illuminate\Support\Facades\Log;
 
 class WaiterManagementController extends Controller
 {
-    protected function getHotelId(): ?string
-    {
-        return \App\Services\TenantContext::id();
-    }
+    
 
     public function index(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             try {
                 $waiterUsers = User::where(function ($q) {
@@ -50,18 +47,13 @@ class WaiterManagementController extends Controller
                 'floorAssignments' => function ($q) use ($hotelId) {
                     $q->where('assignment_date', '>=', today())
                       ->where('status', 'active')
-                      ->when($hotelId, fn($sub) => $sub->where('hotel_id', $hotelId))
+                      
                       ->with(['floor', 'shift'])
                       ->orderBy('priority');
                 }
             ]);
 
-            if ($hotelId) {
-                $waitersQuery->where(function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId)
-                      ->orWhereNull('hotel_id');
-                });
-            }
+            
 
             $waiters = $waitersQuery
                 ->orderBy('section')
@@ -114,7 +106,7 @@ class WaiterManagementController extends Controller
 
             Log::info('Waiters fetched successfully', [
                 'count' => $waiters->count(),
-                'hotel_id' => $hotelId,
+                
             ]);
 
             return response()->json([
@@ -136,17 +128,12 @@ class WaiterManagementController extends Controller
     public function available(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $waitersQuery = Waiter::with(['user'])
                 ->where('status', 'active');
 
-            if ($hotelId) {
-                $waitersQuery->where(function ($q) use ($hotelId) {
-                    $q->where('hotel_id', $hotelId)
-                      ->orWhereNull('hotel_id');
-                });
-            }
+            
 
             $waiters = $waitersQuery
                 ->orderBy('section')
@@ -198,7 +185,7 @@ class WaiterManagementController extends Controller
     public function availableUsers(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
 
             $existingUserIds = Waiter::pluck('user_id')->filter();
 
@@ -383,10 +370,10 @@ class WaiterManagementController extends Controller
             }
 
             try {
-                $hotelId = $this->getHotelId();
+                
 
                 $existingWaiter = Waiter::where('user_id', $validated['user_id'])
-                    ->when($hotelId, fn($q) => $q->where('hotel_id', $hotelId))
+                    
                     ->first();
 
                 if ($existingWaiter) {
@@ -794,7 +781,7 @@ class WaiterManagementController extends Controller
     {
         \App\Models\WaiterFloorAssignment::where('waiter_id', $waiter->id)->delete();
 
-        $hotelId = $waiter->hotel_id ?? $this->getHotelId();
+        
 
         foreach ($assignments as $assignment) {
             if (empty($assignment['floor_id'])) {
@@ -802,7 +789,7 @@ class WaiterManagementController extends Controller
             }
             \App\Models\WaiterFloorAssignment::create([
                 'id' => (string) \Illuminate\Support\Str::uuid(),
-                'hotel_id' => $hotelId,
+                
                 'waiter_id' => $waiter->id,
                 'floor_id' => $assignment['floor_id'],
                 'shift_id' => !empty($assignment['shift_id']) ? $assignment['shift_id'] : null,

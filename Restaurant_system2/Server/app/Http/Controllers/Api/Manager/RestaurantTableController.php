@@ -21,12 +21,7 @@ class RestaurantTableController extends Controller
         protected TenantContext $tenantContext
     ) {}
 
-    protected function getHotelId(): ?string
-    {
-        return $this->tenantContext->getHotelId()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null)
-            ?: request()->header('X-Hotel-ID');
-    }
+    
 
     /**
      * Display a listing of tables for the current tenant.
@@ -34,10 +29,10 @@ class RestaurantTableController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $perPage = $request->integer('per_page', 15);
 
-            $tables = $this->tableService->getTables($request->all(), $perPage, $hotelId);
+            $tables = $this->tableService->getTables($request->all(), $perPage);
 
             return response()->json([
                 'success' => true,
@@ -60,8 +55,8 @@ class RestaurantTableController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->getTable($id, $hotelId);
+            
+            $table = $this->tableService->getTable($id);
 
             return response()->json([
                 'success' => true,
@@ -90,8 +85,8 @@ class RestaurantTableController extends Controller
     public function store(StoreRestaurantTableRequest $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->createTable($request->validated(), $hotelId);
+            
+            $table = $this->tableService->createTable($request->validated());
 
             return response()->json([
                 'success' => true,
@@ -122,9 +117,9 @@ class RestaurantTableController extends Controller
     public function update(UpdateRestaurantTableRequest $request, string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->getTable($id, $hotelId);
-            $updated = $this->tableService->updateTable($table, $request->validated(), $hotelId);
+            
+            $table = $this->tableService->getTable($id);
+            $updated = $this->tableService->updateTable($table, $request->validated());
 
             return response()->json([
                 'success' => true,
@@ -161,8 +156,8 @@ class RestaurantTableController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->getTable($id, $hotelId);
+            
+            $table = $this->tableService->getTable($id);
             $this->tableService->deleteTable($table);
 
             return response()->json([
@@ -188,8 +183,8 @@ class RestaurantTableController extends Controller
     public function regenerateQR(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->getTable($id, $hotelId);
+            
+            $table = $this->tableService->getTable($id);
             $newPath = $this->tableService->regenerateQR($table);
 
             return response()->json([
@@ -218,8 +213,8 @@ class RestaurantTableController extends Controller
     public function statistics(): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $stats = $this->tableService->getStatistics($hotelId);
+            
+            $stats = $this->tableService->getStatistics();
 
             return response()->json([
                 'success' => true,
@@ -239,8 +234,8 @@ class RestaurantTableController extends Controller
     public function downloadQR(string $id)
     {
         try {
-            $hotelId = $this->getHotelId();
-            $table = $this->tableService->getTable($id, $hotelId);
+            
+            $table = $this->tableService->getTable($id);
 
             if (!$table->qr_image_path) {
                 $this->tableService->regenerateQR($table);

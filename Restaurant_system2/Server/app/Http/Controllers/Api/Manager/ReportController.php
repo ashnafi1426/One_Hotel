@@ -124,9 +124,7 @@ class ReportController extends Controller
                 ->join('orders', 'order_items.order_id', '=', 'orders.id')
                 ->whereBetween('orders.created_at', [$startDate, $endDate]);
 
-            if ($hotelId) {
-                $popularItemsQuery->where('orders.hotel_id', $hotelId);
-            }
+            
 
             $popularItems = $popularItemsQuery
                 ->select(

@@ -20,12 +20,7 @@ class RestaurantSectionController extends Controller
         protected TenantContext $tenantContext
     ) {}
 
-    protected function getHotelId(): ?string
-    {
-        return $this->tenantContext->getHotelId()
-            ?: (auth()->check() ? auth()->user()->hotel_id : null)
-            ?: request()->header('X-Hotel-ID');
-    }
+    
 
     /**
      * Display a listing of restaurant sections.
@@ -33,10 +28,10 @@ class RestaurantSectionController extends Controller
     public function index(Request $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
+            
             $activeOnly = $request->boolean('active_only', false);
 
-            $sections = $this->sectionService->getSections($hotelId, $activeOnly);
+            $sections = $this->sectionService->getSections(null, $activeOnly);
 
             return response()->json([
                 'success' => true,
@@ -59,8 +54,8 @@ class RestaurantSectionController extends Controller
     public function show(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $section = $this->sectionService->getSection($id, $hotelId);
+            
+            $section = $this->sectionService->getSection($id);
 
             return response()->json([
                 'success' => true,
@@ -89,8 +84,8 @@ class RestaurantSectionController extends Controller
     public function store(StoreRestaurantSectionRequest $request): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $section = $this->sectionService->createSection($request->validated(), $hotelId);
+            
+            $section = $this->sectionService->createSection($request->validated());
 
             return response()->json([
                 'success' => true,
@@ -121,9 +116,9 @@ class RestaurantSectionController extends Controller
     public function update(StoreRestaurantSectionRequest $request, string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $section = $this->sectionService->getSection($id, $hotelId);
-            $updated = $this->sectionService->updateSection($section, $request->validated(), $hotelId);
+            
+            $section = $this->sectionService->getSection($id);
+            $updated = $this->sectionService->updateSection($section, $request->validated());
 
             return response()->json([
                 'success' => true,
@@ -160,8 +155,8 @@ class RestaurantSectionController extends Controller
     public function destroy(string $id): JsonResponse
     {
         try {
-            $hotelId = $this->getHotelId();
-            $section = $this->sectionService->getSection($id, $hotelId);
+            
+            $section = $this->sectionService->getSection($id);
             $this->sectionService->deleteSection($section);
 
             return response()->json([

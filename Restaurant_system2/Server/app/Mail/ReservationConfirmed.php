@@ -32,10 +32,7 @@ class ReservationConfirmed extends Mailable
 
     protected function getHotel(): ?Hotel
     {
-        if ($this->reservation->hotel_id) {
-            return Hotel::find($this->reservation->hotel_id);
-        }
-        return $this->reservation->room?->hotel ?? null;
+        return Hotel::first();
     }
 
     public function content(): Content

@@ -8,7 +8,6 @@ use App\Models\Floor;
 use App\Models\Order;
 use App\Models\Reservation;
 use App\Models\Room;
-use App\Services\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -60,9 +59,8 @@ class RoomService
     /**
      * Create a new room with synchronized floor attributes.
      */
-    public function createRoom(array $data, ?string $hotelId = null): Room
+    public function createRoom(array $data): Room
     {
-        unset($data['hotel_id']);
         $data = $this->syncFloorData($data);
 
         return DB::transaction(function () use ($data) {
@@ -77,7 +75,6 @@ class RoomService
      */
     public function updateRoom(Room $room, array $data): Room
     {
-        unset($data['hotel_id']);
         $data = $this->syncFloorData($data);
 
         return DB::transaction(function () use ($room, $data) {
