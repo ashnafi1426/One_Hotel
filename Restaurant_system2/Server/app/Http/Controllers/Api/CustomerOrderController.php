@@ -7,7 +7,6 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\RestaurantTable;
 use App\Models\Room;
-use App\Services\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -17,15 +16,9 @@ use Illuminate\Support\Facades\Log;
  *
  * Public API for customers to track their order status in real-time.
  * Used by OrderStatusPage.vue for initial data load before WebSocket subscription.
- *
- * Multi-tenant security: Validates hotel_id to prevent cross-tenant access.
  */
 class CustomerOrderController extends Controller
 {
-    public function __construct(
-        protected TenantContext $tenantContext
-    ) {}
-
     /**
      * Get order status for customer tracking.
      *
@@ -38,19 +31,17 @@ class CustomerOrderController extends Controller
     public function getOrderStatus(Request $request, string $orderId): JsonResponse
     {
         try {
-            \Log::info('[CustomerOrder] Request received', [
+            Log::info('[CustomerOrder] Request received', [
                 'order_id' => $orderId,
                 'qr_token' => $request->query('qr_token') ? 'present' : 'missing',
-                'headers' => $request->headers->all(),
                 'ip' => $request->ip()
             ]);
 
-            $order = Order::withoutGlobalScopes()
-                ->with([
-                    'room' => fn($q) => $q->withoutGlobalScopes(),
-                    'table' => fn($q) => $q->withoutGlobalScopes(),
-                    'orderItems.menuItem' => fn($q) => $q->withoutGlobalScopes(),
-                    'guest' => fn($q) => $q->withoutGlobalScopes(),
+            $order = Order::with([
+                    'room',
+                    'table',
+                    'orderItems.menuItem',
+                    'guest',
                     'chef',
                 ])
                 ->where(function ($q) use ($orderId) {
@@ -59,9 +50,9 @@ class CustomerOrderController extends Controller
                 })
                 ->first();
 
-            \Log::info('[CustomerOrder] Order lookup result', [
+            Log::info('[CustomerOrder] Order lookup result', [
                 'order_id' => $orderId,
-                'found' => !!$order,
+                'found' => (bool)$order,
                 'actual_order_id' => $order?->id
             ]);
 
@@ -77,23 +68,22 @@ class CustomerOrderController extends Controller
             $isGuestRequest = !empty($qrToken);
 
             if ($isGuestRequest) {
-
                 $isValidToken = false;
 
                 if ($order->room && $order->room->qr_token === $qrToken) {
                     $isValidToken = true;
                 } elseif ($order->table && $order->table->qr_token === $qrToken) {
                     $isValidToken = true;
-                } elseif ($order->hotel_id && RestaurantTable::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {
+                } elseif (RestaurantTable::where('qr_token', $qrToken)->exists()) {
                     $isValidToken = true;
-                } elseif ($order->hotel_id && Room::withoutGlobalScopes()->where('hotel_id', $order->hotel_id)->where('qr_token', $qrToken)->exists()) {
+                } elseif (Room::where('qr_token', $qrToken)->exists()) {
                     $isValidToken = true;
-                } elseif (Payment::withoutGlobalScopes()->where('order_id', $order->id)->where('metadata->qr_token', $qrToken)->exists()) {
+                } elseif (Payment::where('order_id', $order->id)->where('metadata->qr_token', $qrToken)->exists()) {
                     $isValidToken = true;
                 }
 
                 if (!$isValidToken) {
-                    \Log::warning('[CustomerOrder] Invalid QR token for guest order', [
+                    Log::warning('[CustomerOrder] Invalid QR token for guest order', [
                         'order_id' => $orderId,
                         'qr_token' => substr($qrToken, 0, 4) . '****',
                         'ip' => $request->ip()
@@ -106,33 +96,13 @@ class CustomerOrderController extends Controller
                     ], 403);
                 }
 
-                \Log::info('[CustomerOrder] Guest access validated via QR token', [
+                Log::info('[CustomerOrder] Guest access validated via QR token', [
                     'order_id' => $orderId,
-                    'hotel_id' => $order->hotel_id
                 ]);
-            } else {
-
-                $requestHotelId = $this->extractHotelId($request, $order);
-
-                if ($requestHotelId && $order->hotel_id !== $requestHotelId) {
-                    Log::warning('[CustomerOrder] Hotel ID mismatch - potential unauthorized access attempt', [
-                        'order_id' => $orderId,
-                        'order_hotel_id' => $order->hotel_id,
-                        'request_hotel_id' => $requestHotelId,
-                        'ip' => $request->ip()
-                    ]);
-
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'Unauthorized access to order.',
-                        'error' => 'UNAUTHORIZED'
-                    ], 403);
-                }
             }
 
             // Fetch verified or latest payment for this order
-            $payment = Payment::withoutGlobalScopes()
-                ->where(function ($q) use ($order) {
+            $payment = Payment::where(function ($q) use ($order) {
                     $q->where('order_id', $order->id)
                       ->orWhereJsonContains('metadata->order_id', $order->id);
                 })
@@ -144,8 +114,7 @@ class CustomerOrderController extends Controller
                 ->first();
 
             if (!$payment) {
-                $payment = Payment::withoutGlobalScopes()
-                    ->where(function ($q) use ($order) {
+                $payment = Payment::where(function ($q) use ($order) {
                         $q->where('order_id', $order->id)
                           ->orWhereJsonContains('metadata->order_id', $order->id);
                     })
@@ -203,7 +172,7 @@ class CustomerOrderController extends Controller
                 'order_id' => $order->id,
                 'id' => $order->id,
                 'order_number' => $order->order_number,
-                'hotel_id' => $order->hotel_id,
+                'hotel_id' => null,
                 'status' => $order->status,
                 'is_cleared' => $order->status === Order::STATUS_SERVED,
                 'status_label' => $order->status === Order::STATUS_SERVED ? 'Cleared & Completed' : ucfirst($order->status),
@@ -263,34 +232,6 @@ class CustomerOrderController extends Controller
     }
 
     /**
-     * Extract hotel_id from request context for validation.
-     *
-     * Priority:
-     * 1. Authenticated user's hotel_id
-     * 2. QR token's hotel context (from session/header)
-     * 3. Order's hotel_id (fallback for guest access)
-     */
-    protected function extractHotelId(Request $request, Order $order): ?string
-    {
-        $user = $request->user();
-        if ($user && method_exists($user, 'hotel_id')) {
-            return $user->hotel_id;
-        }
-
-        $contextHotelId = $this->tenantContext->getHotelId();
-        if ($contextHotelId) {
-            return $contextHotelId;
-        }
-
-        $headerHotelId = $request->header('X-Hotel-ID');
-        if ($headerHotelId) {
-            return $headerHotelId;
-        }
-
-        return $order->hotel_id;
-    }
-
-    /**
      * Get customer name from order relationships.
      */
     protected function getCustomerName(Order $order): ?string
@@ -312,8 +253,7 @@ class CustomerOrderController extends Controller
     protected function hasVerifiedPayment(Order $order): bool
     {
         try {
-            return Payment::withoutGlobalScopes()
-                ->where(function ($q) use ($order) {
+            return Payment::where(function ($q) use ($order) {
                     $q->where('order_id', $order->id)
                       ->orWhereJsonContains('metadata->order_id', $order->id);
                 })
@@ -356,4 +296,3 @@ class CustomerOrderController extends Controller
         return 'pending';
     }
 }
-

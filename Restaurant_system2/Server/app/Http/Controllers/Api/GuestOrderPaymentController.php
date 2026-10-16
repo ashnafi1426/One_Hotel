@@ -67,7 +67,6 @@ class GuestOrderPaymentController extends Controller
             }
 
             $payment = $this->paymentService->createOrderPayment([
-                'hotel_id' => $room->hotel_id,
                 'amount' => $orderCalculation['total'],
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -77,7 +76,6 @@ class GuestOrderPaymentController extends Controller
                 'room_id' => $validated['room_id'],
                 'metadata' => [
                     'type' => 'order',
-                    'hotel_id' => $room->hotel_id,
                     'room_id' => $validated['room_id'],
                     'items' => $orderItemsWithPrices,
                     'notes' => $validated['notes'] ?? null,
@@ -248,7 +246,6 @@ class GuestOrderPaymentController extends Controller
             $result = $this->paymentService->handleOrderPaymentSuccess(
                 $payment,
                 [
-                    'hotel_id' => $payment->hotel_id ?? ($metadata['hotel_id'] ?? null),
                     'guest_id' => $payment->guest_id,
                     'room_id' => $metadata['room_id'] ?? null,
                     'subtotal' => $calculation['subtotal'],
@@ -442,7 +439,6 @@ class GuestOrderPaymentController extends Controller
             $totalAmount = (float)$order->total + $tipAmount;
 
             $payment = $this->paymentService->createOrderPayment([
-                'hotel_id' => $order->hotel_id,
                 'amount' => $totalAmount,
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
@@ -452,7 +448,6 @@ class GuestOrderPaymentController extends Controller
                 'room_id' => $order->room_id,
                 'metadata' => [
                     'type' => 'order',
-                    'hotel_id' => $order->hotel_id,
                     'guest_id' => $order->guest_id,
                     'room_id' => $order->room_id,
                     'order_id' => $order->id,

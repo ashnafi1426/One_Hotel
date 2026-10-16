@@ -96,28 +96,13 @@ class WalkInOrderPaymentController extends Controller
                 ];
             }
 
-            $hotelId = $table->hotel_id
-                ?? TenantContext::id()
-                ?? Hotel::value('id');
-
-            if ($table && empty($table->hotel_id) && $hotelId) {
-                $table->update(['hotel_id' => $hotelId]);
-            }
-
             $guestId = null;
             try {
-                $guestQuery = Guest::withoutGlobalScopes()->where('email', $validated['email']);
-                if ($hotelId) {
-                    $guestQuery->where(function ($q) use ($hotelId) {
-                        $q->where('hotel_id', $hotelId)->orWhereNull('hotel_id');
-                    });
-                }
-                $guest = $guestQuery->first();
+                $guest = Guest::where('email', $validated['email'])->first();
 
                 if (!$guest) {
                     $guest = Guest::create([
                         'id' => (string) Str::uuid(),
-                        'hotel_id' => $hotelId,
                         'first_name' => $validated['first_name'] ?: 'Walk-in',
                         'last_name' => $validated['last_name'] ?: 'Guest',
                         'email' => $validated['email'],
@@ -131,7 +116,6 @@ class WalkInOrderPaymentController extends Controller
 
             $payment = Payment::create([
                 'id' => (string) Str::uuid(),
-                'hotel_id' => $hotelId,
                 'guest_id' => $guestId,
                 'tx_ref' => 'WALKIN-' . strtoupper(Str::random(12)),
                 'amount' => $finalTotal,
@@ -315,23 +299,9 @@ class WalkInOrderPaymentController extends Controller
                 $calculation = $metadata['calculation'];
                 $tableId = $metadata['table_id'] ?? null;
                 $table = $tableId ? RestaurantTable::withoutGlobalScopes()->find($tableId) : null;
-                $hotelId = $payment->hotel_id
-                    ?? $table?->hotel_id
-                    ?? ($metadata['hotel_id'] ?? null)
-                    ?? TenantContext::id()
-                    ?? Hotel::value('id');
-
-                if ($table && empty($table->hotel_id) && $hotelId) {
-                    $table->update(['hotel_id' => $hotelId]);
-                }
-
-                if ($hotelId) {
-                    app(TenantContext::class)->setHotelId($hotelId);
-                }
 
                 $order = Order::create([
-                    'hotel_id' => $hotelId,
-                    'order_number' => Order::generateOrderNumber($hotelId),
+                    'order_number' => Order::generateOrderNumber(),
                     'room_id' => null,
                     'guest_id' => $payment->guest_id ?? ($metadata['guest_id'] ?? null),
                     'reservation_id' => null,
@@ -416,15 +386,7 @@ class WalkInOrderPaymentController extends Controller
             event(new \App\Events\OrderStatusUpdated($result['order'], $result['order']->status, 'paid'));
 
             try {
-                $targetHotelId = $result['order']->hotel_id;
-                $chefs = User::where('role', 'chef')
-                    ->when($targetHotelId, function ($q) use ($targetHotelId) {
-                        $q->where(function ($sub) use ($targetHotelId) {
-                            $sub->whereHas('hotelMemberships', fn ($hq) => $hq->where('hotel_id', $targetHotelId))
-                                ->orDoesntHave('hotelMemberships');
-                        });
-                    })
-                    ->get();
+                $chefs = User::where('role', 'chef')->get();
 
                 foreach ($chefs as $chef) {
                     Notification::create([
@@ -658,11 +620,8 @@ class WalkInOrderPaymentController extends Controller
                 $pendingPayment->delete();
             }
 
-            $hotelId = $order->hotel_id ?? TenantContext::id();
-
             $payment = Payment::create([
                 'id' => (string) Str::uuid(),
-                'hotel_id' => $hotelId,
                 'guest_id' => $order->guest_id,
                 'order_id' => $order->id,
                 'tx_ref' => 'WALKIN-' . strtoupper(Str::random(12)),
@@ -676,7 +635,6 @@ class WalkInOrderPaymentController extends Controller
                 'payment_method' => 'chapa',
                 'metadata' => [
                     'type' => 'walk_in_order',
-                    'hotel_id' => $hotelId,
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'table_id' => $order->table_id,
