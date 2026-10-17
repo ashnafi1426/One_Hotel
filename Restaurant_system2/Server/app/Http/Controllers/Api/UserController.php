@@ -183,20 +183,24 @@ class UserController extends Controller
 
             $this->invalidateUserCaches();
 
-            // Send email synchronously — SMTP now works correctly (smtps/465).
-            // Completes in ~2s, no queue or jobs table needed.
+            // Send welcome email — errors shown in response so admin can see if it fails
+            $mailStatus = 'sent';
+            $mailError  = null;
             try {
                 Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
                 Log::info('[UserController] Welcome email sent to: ' . $user->email);
             } catch (Throwable $mailException) {
-                // Email failed but user IS created — log and continue, don't fail the request
+                $mailStatus = 'failed';
+                $mailError  = $mailException->getMessage();
                 Log::error('[UserController] Welcome email failed: ' . $mailException->getMessage());
             }
 
             return response()->json([
-                'success' => true,
-                'message' => 'User created successfully. Login credentials have been sent to ' . $user->email,
-                'data'    => new UserResource($user),
+                'success'     => true,
+                'message'     => 'User created successfully. Login credentials have been sent to ' . $user->email,
+                'data'        => new UserResource($user),
+                'mail_status' => $mailStatus,   // 'sent' or 'failed'
+                'mail_error'  => $mailError,    // null on success, error message on failure
             ], 201);
         } catch (Throwable $exception) {
             DB::rollBack();
