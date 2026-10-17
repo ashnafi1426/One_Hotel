@@ -183,17 +183,15 @@ class UserController extends Controller
 
             $this->invalidateUserCaches();
 
+            // Queue the welcome email — queue worker (supervisord) sends it in background.
+            // This returns INSTANTLY without blocking the HTTP response.
             try {
-                // Try sync send first (fast SMTP) — fallback to queue if it fails or takes too long
-                Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
+                Mail::to($user->email)->queue(new NewUserCreated($user, $plainPassword));
+                Log::info('Welcome email queued for: ' . $user->email);
             } catch (Throwable $mailException) {
-                // Sync failed — push to queue as fallback
-                Log::warning('Sync email failed, queuing: ' . $mailException->getMessage());
-                try {
-                    Mail::to($user->email)->later(now()->addSeconds(10), new NewUserCreated($user, $plainPassword));
-                } catch (Throwable $queueErr) {
-                    Log::error('Email queue also failed: ' . $queueErr->getMessage());
-                }
+                // Queue failed (e.g. jobs table missing) — log and continue.
+                // User is already created, don't fail the whole request.
+                Log::warning('Could not queue welcome email: ' . $mailException->getMessage());
             }
 
             return response()->json([

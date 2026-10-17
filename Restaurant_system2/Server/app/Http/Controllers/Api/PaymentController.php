@@ -372,7 +372,7 @@ class PaymentController extends Controller
             $guestEmail = $reservation->guest?->email ?? ($payment->metadata['email'] ?? null);
             if ($guestEmail) {
                 try {
-                    Mail::to($guestEmail)->later(now()->addSeconds(3), new ReservationConfirmed($reservation));
+                    Mail::to($guestEmail)->queue(new ReservationConfirmed($reservation));
                 } catch (Throwable $mailEx) {
                     Log::error('Failed to send confirmation email after payment: ' . $mailEx->getMessage());
                 }

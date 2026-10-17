@@ -216,7 +216,7 @@ class CheckInService
         try {
             $email = $reservation->guest?->email;
             if ($email) {
-                Mail::to($email)->later(now()->addSeconds(3), new CheckInConfirmed($reservation));
+                Mail::to($email)->queue(new CheckInConfirmed($reservation));
             }
         } catch (\Throwable $e) {
             Log::warning("Failed to send check-in confirmation email for reservation #{$reservation->id}: {$e->getMessage()}");
@@ -228,7 +228,7 @@ class CheckInService
         try {
             $email = $reservation->guest?->email;
             if ($email) {
-                Mail::to($email)->later(now()->addSeconds(3), new CheckOutNotification($reservation));
+                Mail::to($email)->queue(new CheckOutNotification($reservation));
             }
         } catch (\Throwable $e) {
             Log::warning("Failed to send check-out notification email for reservation #{$reservation->id}: {$e->getMessage()}");

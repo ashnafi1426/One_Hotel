@@ -172,7 +172,7 @@ class ActivationService
     private function sendActivationEmail(User $user, string $token): void
     {
         try {
-            Mail::to($user->email)->later(now()->addSeconds(3), new ActivationMail($user, $token));
+            Mail::to($user->email)->queue(new ActivationMail($user, $token));
 
             Log::info('Activation email sent', [
                 'user_id' => $user->id,
