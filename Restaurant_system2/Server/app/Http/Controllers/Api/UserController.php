@@ -204,14 +204,20 @@ class UserController extends Controller
             $mailWarning = null;
             
             // Diagnostic logging for mail configuration
-            Log::info('[UserController.store] Mail configuration diagnostic', [
+            $diagnosticData = [
                 'mail_mailer_env' => env('MAIL_MAILER', 'NOT SET'),
                 'mail_mailer_config' => $currentMailer,
                 'app_env' => $appEnv,
                 'mail_host' => config('mail.mailers.smtp.host', 'not configured'),
                 'mail_port' => config('mail.mailers.smtp.port', 'not configured'),
-                'mail_username_partial' => substr((string)config('mail.mailers.smtp.username', ''), 0, 5) . '****'
-            ]);
+                'mail_username_partial' => substr((string)config('mail.mailers.smtp.username', ''), 0, 5) . '****',
+                'timestamp' => now()->toIso8601String(),
+            ];
+            
+            Log::info('[UserController.store] Mail configuration diagnostic', $diagnosticData);
+            
+            // Also output to stderr for Render visibility
+            error_log('[UserController.store] Mail config: ' . json_encode($diagnosticData));
 
             if ($currentMailer === 'log' && $appEnv !== 'local') {
                 $mailWarning = "Mail mailer is set to LOG mode (for development) but APP_ENV is '{$appEnv}'. Emails will NOT be sent to users!";
@@ -233,12 +239,25 @@ class UserController extends Controller
             ]);
 
             try {
+                // ⚠️ DEBUG: Test SMTP connection before sending
+                $mailer = config('mail.mailers.smtp');
+                \Log::warning('[UserController.store] DEBUG - About to send email with mailer config', [
+                    'mailer_type' => $currentMailer,
+                    'smtp_host' => $mailer['host'] ?? 'NOT SET',
+                    'smtp_port' => $mailer['port'] ?? 'NOT SET',
+                    'smtp_username_length' => strlen((string)($mailer['username'] ?? '')),
+                    'smtp_password_length' => strlen((string)($mailer['password'] ?? '')),
+                    'recipient_email' => $user->email,
+                ]);
+                
                 Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
                 Log::info('[UserController.store] Welcome email sent successfully', [
                     'user_id' => $user->id,
                     'user_email' => $user->email,
                     'mailer' => $currentMailer,
+                    'timestamp' => now()->toIso8601String(),
                 ]);
+                $mailStatus = 'sent';
             } catch (Throwable $mailException) {
                 $mailStatus = 'failed';
                 $mailError  = $mailException->getMessage();
@@ -248,6 +267,8 @@ class UserController extends Controller
                     'mailer' => $currentMailer,
                     'error' => $mailException->getMessage(),
                     'exception_class' => get_class($mailException),
+                    'error_code' => $mailException->getCode(),
+                    'trace_snippet' => substr($mailException->getTraceAsString(), 0, 500),
                 ]);
             }
 
