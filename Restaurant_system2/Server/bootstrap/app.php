@@ -123,7 +123,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->json([
                     'success' => false,
-                    'message' => config('app.debug') ? $e->getMessage() : 'An unexpected server error occurred. Please try again later.',
+                    'message' => $e->getMessage(),
+                    'file'    => basename($e->getFile()) . ':' . $e->getLine(),
+                    'class'   => get_class($e),
                 ], 500);
             }
         });
