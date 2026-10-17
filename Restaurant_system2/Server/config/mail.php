@@ -39,13 +39,13 @@ return [
 
         'smtp' => [
             'transport'    => 'smtp',
-            'scheme'       => env('MAIL_SCHEME', 'smtps'), // 'smtp'=port587 STARTTLS, 'smtps'=port465 SSL
+            'scheme'       => env('MAIL_SCHEME', 'smtp'), // 'smtp'=port587 STARTTLS (Render allows 587, blocks 465)
             'url'          => env('MAIL_URL'),
             'host'         => env('MAIL_HOST', '127.0.0.1'),
-            'port'         => env('MAIL_PORT', 465),
+            'port'         => env('MAIL_PORT', 587),
             'username'     => env('MAIL_USERNAME'),
             'password'     => env('MAIL_PASSWORD'),
-            'timeout'      => 15,
+            'timeout'      => 30,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
         ],
 
