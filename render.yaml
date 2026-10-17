@@ -1,0 +1,62 @@
+services:
+  - type: web
+    name: one-hotel-backend
+    env: docker
+    plan: free
+    rootDir: Restaurant_system2/Server
+    dockerfilePath: Dockerfile
+    dockerContext: .
+    healthCheckPath: /healthz
+    envVars:
+      - key: APP_NAME
+        value: "Executive Hotel"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: false
+      - key: APP_KEY
+        generateValue: true
+      - key: APP_URL
+        sync: false
+      - key: APP_FRONTEND_URL
+        value: https://one-hotel-lemon.vercel.app
+      - key: FRONTEND_URL
+        value: https://one-hotel-lemon.vercel.app
+      - key: SANCTUM_STATEFUL_DOMAINS
+        value: one-hotel-lemon.vercel.app
+      - key: DB_CONNECTION
+        value: mysql
+      - key: DB_HOST
+        value: hoteldb0-9-weyneashu7-f9e1.h.aivencloud.com
+      - key: DB_PORT
+        value: "20269"
+      - key: DB_DATABASE
+        value: defaultdb
+      - key: DB_USERNAME
+        value: avnadmin
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSL_VERIFY
+        value: "false"
+      - key: SESSION_DRIVER
+        value: array
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: BROADCAST_CONNECTION
+        value: reverb
+      - key: REVERB_APP_ID
+        value: restaurant-app
+      - key: REVERB_APP_KEY
+        value: m3k5j8h9n2p4q7r1t6w0
+      - key: REVERB_APP_SECRET
+        value: s8f3d9g4h7j2k5l1n6p9q2r5t8w0
+      - key: REVERB_HOST
+        sync: false
+      - key: REVERB_PORT
+        value: "443"
+      - key: REVERB_SCHEME
+        value: https
+      - key: REVERB_SERVER_HOST
+        value: 127.0.0.1
+      - key: REVERB_SERVER_PORT
+        value: "8080"

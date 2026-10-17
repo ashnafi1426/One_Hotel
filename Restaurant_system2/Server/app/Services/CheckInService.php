@@ -15,9 +15,6 @@ use Illuminate\Validation\ValidationException;
 
 class CheckInService
 {
-    /**
-     * Get paginated check-ins.
-     */
     public function getCheckIns(array $filters = [], int $perPage = 10, ?string $hotelId = null): LengthAwarePaginator
     {
         $query = CheckIn::with([
