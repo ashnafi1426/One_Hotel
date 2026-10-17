@@ -11,7 +11,7 @@ class DiagnosticsController extends Controller
 {
     /**
      * Get mail configuration diagnostics
-     * Only accessible to authenticated users for security
+     * Public endpoint for troubleshooting - no auth required
      */
     public function mailConfig(): JsonResponse
     {

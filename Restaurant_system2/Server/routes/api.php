@@ -798,7 +798,8 @@ Route::middleware('auth:sanctum')->prefix('diagnostics')->group(function () {
 
 
 // Diagnostic Routes (for troubleshooting email and configuration issues)
-Route::middleware('auth:sanctum')->prefix('diagnostics')->group(function () {
-    Route::get('/mail-config', [DiagnosticsController::class, 'mailConfig'])->name('diagnostics.mail-config');
-    Route::post('/test-email', [DiagnosticsController::class, 'testEmail'])->name('diagnostics.test-email');
-});
+// Mail config is public (no auth) for easy troubleshooting
+Route::get('/diagnostics/mail-config', [DiagnosticsController::class, 'mailConfig'])->name('diagnostics.mail-config');
+
+// Test email requires authentication
+Route::middleware('auth:sanctum')->post('/diagnostics/test-email', [DiagnosticsController::class, 'testEmail'])->name('diagnostics.test-email');
