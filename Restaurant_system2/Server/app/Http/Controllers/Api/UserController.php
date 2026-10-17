@@ -130,13 +130,13 @@ class UserController extends Controller
             $plainPassword = $request->password ?: Str::random(12);
 
             $user = User::create([
-                'first_name' => $request->first_name,
-                'last_name' => $request->last_name,
-                'email' => $request->email,
-                'phone' => $request->phone,
-                'password' => Hash::make($plainPassword),
-                'role' => $request->role,
-                'is_active' => $request->boolean('is_active', true),
+                'first_name'        => $request->first_name,
+                'last_name'         => $request->last_name,
+                'email'             => $request->email,
+                'phone'             => $request->phone,
+                'password_hash'     => Hash::make($plainPassword),  // MUST use password_hash — that's the actual DB column
+                'role'              => $request->role,
+                'is_active'         => $request->boolean('is_active', true),
                 'activation_status' => 'activated',
                 'email_verified_at' => now(),
             ]);
@@ -246,7 +246,7 @@ class UserController extends Controller
             }
 
             if ($request->filled('password')) {
-                $user->password = Hash::make($request->password);
+                $user->password_hash = Hash::make($request->password);
             }
 
             $user->save();

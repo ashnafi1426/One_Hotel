@@ -37,13 +37,7 @@ class PasswordResetController extends Controller
         try {
             $user = User::where('email', $request->email)->first();
 
-            if ($user->needsActivation()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Account not activated yet. Please check your email for the activation link.',
-                    'needs_activation' => true
-                ], 400);
-            }
+            // Allow password reset for any user (active or not) — don't block based on activation status
 
             $token = Str::random(60);
             DB::table('password_reset_tokens')
