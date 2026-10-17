@@ -16,13 +16,21 @@ chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 echo "==> Running Laravel setup..."
 php artisan storage:link --force || true
 
-# Optimize cache
+# Clear cached config so fresh env vars are used
+php artisan config:clear || true
+php artisan cache:clear || true
+
+echo "==> Applying database migrations..."
+php artisan migrate --force 2>&1
+MIGRATE_EXIT=$?
+if [ $MIGRATE_EXIT -ne 0 ]; then
+    echo "WARNING: Some migrations failed (exit code $MIGRATE_EXIT). Attempting to continue..."
+fi
+
+# Optimize after successful migration
 php artisan config:cache || true
 php artisan route:cache || true
 php artisan view:cache || true
-
-echo "==> Applying database migrations..."
-php artisan migrate --force || echo "Migration skipped or failed, continuing..."
 
 echo "==> Starting Supervisord (Nginx + PHP-FPM + Reverb + Queue Worker)..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf

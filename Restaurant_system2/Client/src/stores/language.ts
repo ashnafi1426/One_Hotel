@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { translations } from '@/translations'
 import axios from 'axios'
+import { apiUrl } from '@/utils/urlHelpers'
 
 export type LanguageCode = 'en' | 'am'
 
@@ -35,7 +36,7 @@ export const useLanguageStore = defineStore('language', () => {
 
   const fetchServerTranslations = async (lang: LanguageCode) => {
     try {
-      const res = await axios.get(`/api/translations?lang=${lang}`)
+      const res = await axios.get(`${apiUrl}/translations?lang=${lang}`)
       if (res.data?.translations) {
         serverTranslations.value[lang] = {
           ...(res.data.translations.all || {}),
