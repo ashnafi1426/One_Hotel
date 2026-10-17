@@ -54,7 +54,7 @@ class PasswordResetController extends Controller
                 'token' => Hash::make($token),
                 'created_at' => now()
             ]);
-            Mail::to($user->email)->send(new PasswordResetMail($user, $token));
+            Mail::to($user->email)->later(now()->addSeconds(3), new PasswordResetMail($user, $token));
 
             Log::info('Password reset email sent', [
                 'email' => $request->email,

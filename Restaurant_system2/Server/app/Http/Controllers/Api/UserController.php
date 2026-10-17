@@ -184,14 +184,16 @@ class UserController extends Controller
             $this->invalidateUserCaches();
 
             try {
-                Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
+                // Use later() to send async via queue — prevents 60s SMTP timeout on Render free plan
+                Mail::to($user->email)->later(now()->addSeconds(5), new NewUserCreated($user, $plainPassword));
             } catch (Throwable $mailException) {
-                Log::warning('User created successfully, but welcome email could not be sent', [
+                Log::warning('User created successfully, but welcome email could not be queued', [
                     'user_id' => $user->id,
                     'email' => $user->email,
                     'error' => $mailException->getMessage(),
                 ]);
             }
+
 
             return response()->json([
                 'success' => true,

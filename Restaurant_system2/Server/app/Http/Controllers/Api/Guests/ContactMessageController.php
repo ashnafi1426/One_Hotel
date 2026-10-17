@@ -53,7 +53,7 @@ class ContactMessageController extends Controller
         $emailSent = false;
         if ($recipientEmail && $hotel) {
             try {
-                Mail::to($recipientEmail)->send(new ContactMessageReceivedMail($contactMessage, $hotel));
+                Mail::to($recipientEmail)->later(now()->addSeconds(3), new ContactMessageReceivedMail($contactMessage, $hotel));
                 $emailSent = true;
             } catch (Throwable $e) {
                 Log::error("[ContactMessage] Failed to send email to {$recipientEmail}: " . $e->getMessage(), [

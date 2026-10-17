@@ -178,7 +178,7 @@ class PaymentService
                 $guestEmail = $reservation->guest?->email;
                 if ($guestEmail) {
                     try {
-                        Mail::to($guestEmail)->send(new ReservationConfirmed($reservation));
+                        Mail::to($guestEmail)->later(now()->addSeconds(3), new ReservationConfirmed($reservation));
                         Log::info('Automatic confirmation email sent to guest in PaymentService', [
                             'reservation_id' => $reservation->id,
                             'guest_email'    => $guestEmail,

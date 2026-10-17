@@ -329,7 +329,7 @@ class WaiterManagementController extends Controller
                         ]);
 
                         try {
-                            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\NewUserCreated($user, $temporaryPassword));
+                            \Illuminate\Support\Facades\Mail::to($user->email)->later(now()->addSeconds(3), new \App\Mail\NewUserCreated($user, $temporaryPassword));
 
                             Log::info('Waiter user created with auto-generated password', [
                                 'user_id' => $user->id,

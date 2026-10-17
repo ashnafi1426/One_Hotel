@@ -339,7 +339,7 @@ class ReservationService
         try {
             $email = $reservation->guest?->email;
             if ($email) {
-                Mail::to($email)->send(new ReservationConfirmed($reservation));
+                Mail::to($email)->later(now()->addSeconds(3), new ReservationConfirmed($reservation));
             }
         } catch (\Throwable $e) {
             Log::warning("Failed to send reservation confirmation email for #{$reservation->id}: {$e->getMessage()}");
