@@ -49,17 +49,13 @@ class PasswordResetController extends Controller
                 'token' => Hash::make($token),
                 'created_at' => now()
             ]);
-            // Send reset email after HTTP response — browser sees success immediately
-            $resetUser  = $user;
-            $resetToken = $token;
-            dispatch(function () use ($resetUser, $resetToken) {
-                try {
-                    Mail::to($resetUser->email)->send(new PasswordResetMail($resetUser, $resetToken));
-                    Log::info('Password reset email sent to: ' . $resetUser->email);
-                } catch (Throwable $e) {
-                    Log::error('Failed to send password reset email: ' . $e->getMessage());
-                }
-            })->afterResponse();
+            // Send synchronously — SMTP works correctly now with smtps/465
+            try {
+                Mail::to($user->email)->send(new PasswordResetMail($user, $token));
+                Log::info('Password reset email sent to: ' . $user->email);
+            } catch (Throwable $e) {
+                Log::error('Password reset email failed: ' . $e->getMessage());
+            }
 
             return response()->json([
                 'success' => true,

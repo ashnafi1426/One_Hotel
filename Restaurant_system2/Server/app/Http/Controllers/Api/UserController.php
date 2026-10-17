@@ -183,19 +183,16 @@ class UserController extends Controller
 
             $this->invalidateUserCaches();
 
-            // Send email AFTER HTTP response is returned — no queue table or worker needed.
-            // dispatch()->afterResponse() runs the closure in the same PHP-FPM process
-            // after the response has been flushed to the browser.
-            $emailUser      = $user;
-            $emailPassword  = $plainPassword;
-            dispatch(function () use ($emailUser, $emailPassword) {
-                try {
-                    Mail::to($emailUser->email)->send(new NewUserCreated($emailUser, $emailPassword));
-                    Log::info('Welcome email sent to: ' . $emailUser->email);
-                } catch (Throwable $e) {
-                    Log::error('Failed to send welcome email: ' . $e->getMessage());
-                }
-            })->afterResponse();
+            // Send email synchronously — SMTP now works correctly (smtps/465).
+            // Completes in ~2s, no queue or jobs table needed.
+            try {
+                Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
+                Log::info('[UserController] Welcome email sent to: ' . $user->email);
+            } catch (Throwable $mailException) {
+                // Email failed but user IS created — log and continue, don't fail the request
+                Log::error('[UserController] Welcome email failed: ' . $mailException->getMessage());
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully. Login credentials have been sent to ' . $user->email,
