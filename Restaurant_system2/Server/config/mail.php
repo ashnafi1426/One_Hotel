@@ -14,7 +14,7 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'log'),
+    'default' => env('MAIL_MAILER', 'smtp'), // Default to SMTP for production; 'log' is for local development only
 
     /*
     |--------------------------------------------------------------------------

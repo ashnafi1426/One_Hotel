@@ -202,10 +202,20 @@ class UserController extends Controller
             $currentMailer = config('mail.default');
             $appEnv = config('app.env', 'local');
             $mailWarning = null;
+            
+            // Diagnostic logging for mail configuration
+            Log::info('[UserController.store] Mail configuration diagnostic', [
+                'mail_mailer_env' => env('MAIL_MAILER', 'NOT SET'),
+                'mail_mailer_config' => $currentMailer,
+                'app_env' => $appEnv,
+                'mail_host' => config('mail.mailers.smtp.host', 'not configured'),
+                'mail_port' => config('mail.mailers.smtp.port', 'not configured'),
+                'mail_username_partial' => substr((string)config('mail.mailers.smtp.username', ''), 0, 5) . '****'
+            ]);
 
             if ($currentMailer === 'log' && $appEnv !== 'local') {
                 $mailWarning = "Mail mailer is set to LOG mode (for development) but APP_ENV is '{$appEnv}'. Emails will NOT be sent to users!";
-                Log::warning('[UserController.store] Mail configuration issue', [
+                Log::warning('[UserController.store] CRITICAL: Mail configuration issue', [
                     'warning' => $mailWarning,
                     'mail_mailer' => $currentMailer,
                     'app_env' => $appEnv,
