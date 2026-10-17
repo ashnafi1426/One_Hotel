@@ -795,3 +795,10 @@ Route::middleware('auth:sanctum')->prefix('diagnostics')->group(function () {
     Route::get('/mail-config', [DiagnosticsController::class, 'mailConfig'])->name('diagnostics.mail-config');
     Route::post('/test-email', [DiagnosticsController::class, 'testEmail'])->name('diagnostics.test-email');
 });
+
+
+// Diagnostic Routes (for troubleshooting email and configuration issues)
+Route::middleware('auth:sanctum')->prefix('diagnostics')->group(function () {
+    Route::get('/mail-config', [DiagnosticsController::class, 'mailConfig'])->name('diagnostics.mail-config');
+    Route::post('/test-email', [DiagnosticsController::class, 'testEmail'])->name('diagnostics.test-email');
+});
