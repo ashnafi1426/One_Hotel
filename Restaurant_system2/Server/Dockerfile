@@ -50,7 +50,13 @@ RUN rm -f /etc/nginx/sites-enabled/default
 COPY composer.json composer.lock ./
 
 # Install Composer dependencies (no scripts, no dev)
-RUN composer install --no-dev --no-interaction --no-plugins --no-scripts --prefer-dist --optimize-autoloader
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
+    --no-dev \
+    --no-interaction \
+    --no-plugins \
+    --no-scripts \
+    --prefer-dist \
+    --optimize-autoloader
 
 # Copy application files
 COPY . .
