@@ -22,6 +22,12 @@ class NewUserCreated extends Mailable
     {
         return new Envelope(
             subject: 'Your Account Has Been Created - ' . config('app.name', 'HMS'),
+            replyTo: [
+                new \Illuminate\Mail\Mailables\Address(
+                    config('mail.from.address', 'ashenafisileshi7@gmail.com'),
+                    config('mail.from.name', 'HMS')
+                ),
+            ],
         );
     }
 

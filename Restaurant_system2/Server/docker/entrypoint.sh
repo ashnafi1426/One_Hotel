@@ -12,7 +12,9 @@ export CACHE_STORE=array
 # Use Resend HTTP API (port 443) which is always open.
 # RESEND_KEY must be set in Render's Environment Variables dashboard.
 export MAIL_MAILER=resend
-export MAIL_FROM_ADDRESS="${MAIL_FROM_ADDRESS:-ashenafisileshi7@gmail.com}"
+# Use Resend's pre-verified sender — gmail.com domain cannot be verified (not owned by you)
+# Recipients can still reply to your Gmail via Reply-To header in the mailable
+export MAIL_FROM_ADDRESS="onboarding@resend.dev"
 export MAIL_FROM_NAME="${MAIL_FROM_NAME:-HMS}"
 
 echo "==> Configuring Nginx on port: ${PORT}"
