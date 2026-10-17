@@ -4,6 +4,7 @@ import { RouterLink } from 'vue-router'
 import { MapPin, Phone, Mail, LogIn, Sparkles } from 'lucide-vue-next'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
+import { storageUrl } from '@/utils/urlHelpers'
 
 const languageStore = useLanguageStore()
 const guestHotelStore = useGuestHotelStore()
@@ -30,19 +31,13 @@ const hotelLogoUrl = computed(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/')) {
-      return `http://127.0.0.1:8000${trimmed}`
-    }
-    if (trimmed.startsWith('storage/')) {
-      return `http://127.0.0.1:8000/${trimmed}`
-    }
-    if (trimmed.startsWith('hotels/')) {
-      return `http://127.0.0.1:8000/storage/${trimmed}`
+    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+      return storageUrl(trimmed)
     }
     if (trimmed.startsWith('images/')) {
       return `/${trimmed}`
     }
-    return `http://127.0.0.1:8000/storage/${trimmed}`
+    return storageUrl(trimmed)
   }
 
   const name = (guestHotelStore.hotelName || '').toLowerCase()

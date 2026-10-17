@@ -6,6 +6,7 @@ import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import { useLanguageStore, type LanguageCode } from '@/stores/language'
 import { useAuthStore } from '@/stores/auth'
 import LanguageSelector from '@/components/common/LanguageSelector.vue'
+import { storageUrl } from '@/utils/urlHelpers'
 import {
   Sun,
   Moon,
@@ -34,16 +35,10 @@ const currentHotelLogo = computed(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/')) {
-      return `http://127.0.0.1:8000${trimmed}`
+    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+      return storageUrl(trimmed)
     }
-    if (trimmed.startsWith('storage/')) {
-      return `http://127.0.0.1:8000/${trimmed}`
-    }
-    if (trimmed.startsWith('hotels/')) {
-      return `http://127.0.0.1:8000/storage/${trimmed}`
-    }
-    return `http://127.0.0.1:8000/storage/${trimmed}`
+    return storageUrl(trimmed)
   }
 
   const name = (guestHotelStore.hotelName || '').toLowerCase()

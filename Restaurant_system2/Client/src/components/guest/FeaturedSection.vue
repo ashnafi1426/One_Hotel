@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { storageUrl } from '@/utils/urlHelpers'
 
 interface MenuItem {
   id: string | number
@@ -34,7 +35,7 @@ const featuredItems = computed(() => {
 const getImageUrl = (imagePath?: string | null) => {
   if (!imagePath) return '/placeholder-food.jpg'
   if (imagePath.startsWith('http')) return imagePath
-  return `http://127.0.0.1:8000/storage/${imagePath}`
+  return storageUrl(imagePath)
 }
 </script>
 
