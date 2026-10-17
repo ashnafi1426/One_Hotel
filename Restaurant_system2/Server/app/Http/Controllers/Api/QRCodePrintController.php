@@ -43,33 +43,28 @@ class QRCodePrintController extends Controller
 
     /**
      * Download PNG file of a room's QR code.
+     * Fetches from external QR API instead of local disk (Render ephemeral storage).
      */
     public function downloadQRCode(string $roomId): Response|JsonResponse
     {
         $room = Room::find($roomId);
 
-        if (!$room || !$room->qr_image_path) {
+        if (!$room || !$room->qr_token) {
             return response()->json([
                 'success' => false,
                 'message' => 'QR code not found for this room',
             ], 404);
         }
 
-        $filePath = "public/{$room->qr_image_path}";
-        if (!Storage::exists($filePath)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'QR code file not found on disk',
-            ], 404);
-        }
-
         try {
-            $fileContent = Storage::get($filePath);
+            // Generate QR dynamically from external API — no disk storage needed
+            $frontendUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
+            $orderUrl = urlencode("{$frontendUrl}/order/{$room->qr_token}");
+            $qrApiUrl = "https://api.qrserver.com/v1/create-qr-code/?size=300x300&ecc=H&data={$orderUrl}";
+
+            $fileContent = @file_get_contents($qrApiUrl);
             if (empty($fileContent)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'QR code file is empty',
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Could not generate QR code'], 500);
             }
 
             return response($fileContent, 200)

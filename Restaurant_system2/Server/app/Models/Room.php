@@ -156,11 +156,20 @@ class Room extends Model
 
     public function getQRCodeUrlAttribute(): ?string
     {
-        if (!$this->qr_image_path) {
-            return null;
+        // Always generate a dynamic QR URL from qr_token — no file storage needed.
+        // This works even on Render free plan (ephemeral storage).
+        if ($this->qr_token) {
+            $frontendUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
+            $orderUrl = urlencode("{$frontendUrl}/order/{$this->qr_token}");
+            return "https://api.qrserver.com/v1/create-qr-code/?size=300x300&ecc=H&data={$orderUrl}";
         }
 
-        return url("storage/{$this->qr_image_path}");
+        // Fallback to stored file if no token
+        if ($this->qr_image_path) {
+            return url("storage/{$this->qr_image_path}");
+        }
+
+        return null;
     }
 
     public function resolveRouteBinding($value, $field = null)
