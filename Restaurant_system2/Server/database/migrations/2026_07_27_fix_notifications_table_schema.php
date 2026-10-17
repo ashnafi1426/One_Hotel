@@ -12,8 +12,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Create a backup of the old notifications table
-        DB::statement('CREATE TABLE IF NOT EXISTS notifications_backup_old AS SELECT * FROM notifications');
+        // Create a backup of the old notifications table if it exists and has rows
+        if (Schema::hasTable('notifications') && DB::table('notifications')->count() > 0) {
+            DB::statement('CREATE TABLE IF NOT EXISTS notifications_backup_old (backup_id BIGINT AUTO_INCREMENT PRIMARY KEY) AS SELECT * FROM notifications');
+        }
         
         // Disable foreign key checks
         DB::statement('SET FOREIGN_KEY_CHECKS=0');

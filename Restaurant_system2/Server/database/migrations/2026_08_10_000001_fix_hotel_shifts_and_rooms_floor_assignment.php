@@ -28,7 +28,8 @@ return new class extends Migration
         echo "\n=== Fixing Rooms Floor Assignments ===\n";
         
         // Get all floors
-        $floors = HotelFloor::all()->keyBy('floor_number');
+        $floorsTable = Schema::hasTable('floors') ? 'floors' : (Schema::hasTable('hotel_floors') ? 'hotel_floors' : null);
+        $floors = $floorsTable ? DB::table($floorsTable)->get()->keyBy('floor_number') : collect();
         
         // Get all rooms without floor_id
         $roomsWithoutFloorId = DB::table('rooms')

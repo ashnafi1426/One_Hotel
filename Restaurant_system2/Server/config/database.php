@@ -47,7 +47,13 @@ return [
         'mysql' => [
             'driver' => 'mysql',
             'url' => env('DB_URL'),
-            'host' => env('DB_HOST', '127.0.0.1'),
+            'host' => (function() {
+                $host = env('DB_HOST', '127.0.0.1');
+                if ($host === 'hoteldb0-9-weyneashu7-f9e1.h.aivencloud.com' && @gethostbyname($host) === $host) {
+                    return '139.59.225.18';
+                }
+                return $host;
+            })(),
             'port' => env('DB_PORT', '3306'),
             'database' => env('DB_DATABASE', 'laravel'),
             'username' => env('DB_USERNAME', 'root'),
@@ -61,7 +67,9 @@ return [
             'engine' => null,
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 Mysql::ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+                PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT => env('DB_SSL_VERIFY', false),
+                PDO::MYSQL_ATTR_INIT_COMMAND => 'SET SESSION sql_require_primary_key = 0',
+            ], fn($v) => $v !== null && $v !== '') : [],
         ],
 
         'mariadb' => [

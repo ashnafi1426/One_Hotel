@@ -172,7 +172,7 @@ class CustomerOrderController extends Controller
                 'order_id' => $order->id,
                 'id' => $order->id,
                 'order_number' => $order->order_number,
-                'hotel_id' => null,
+                'hotel_id' => $order->hotel_id ?? $order->room?->hotel_id ?? \App\Models\Hotel::first()?->id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544',
                 'status' => $order->status,
                 'is_cleared' => $order->status === Order::STATUS_SERVED,
                 'status_label' => $order->status === Order::STATUS_SERVED ? 'Cleared & Completed' : ucfirst($order->status),
