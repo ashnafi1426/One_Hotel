@@ -37,10 +37,8 @@ if [ $MIGRATE_EXIT -ne 0 ]; then
     echo "WARNING: Some migrations failed (exit code $MIGRATE_EXIT). Continuing..."
 fi
 
-# Re-cache config and views only
-# NOTE: route:cache is INTENTIONALLY skipped — closure routes cannot be serialized
+# Cache config only (speeds up app). Do NOT cache views — if any Blade has error it silently breaks.
 php artisan config:cache || true
-php artisan view:cache || true
 
 echo "==> Starting Supervisord (Nginx + PHP-FPM + Reverb + Queue Worker)..."
 exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
