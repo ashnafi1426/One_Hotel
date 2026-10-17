@@ -182,26 +182,40 @@ class DeployController extends \App\Http\Controllers\Controller
             'mail_host'       => env('MAIL_HOST'),
             'mail_port'       => env('MAIL_PORT'),
             'mail_scheme'     => env('MAIL_SCHEME'),
-            'mail_encryption' => env('MAIL_ENCRYPTION'),
             'mail_username'   => env('MAIL_USERNAME'),
             'mail_from'       => env('MAIL_FROM_ADDRESS'),
             'sending_to'      => $to,
         ];
 
+        // Test 1: Raw text email
         try {
             \Illuminate\Support\Facades\Mail::raw(
                 'Test email from HMS at ' . now() . '. If you see this, SMTP is working correctly!',
                 function ($message) use ($to) {
-                    $message->to($to)
-                            ->subject('HMS SMTP Test — ' . now()->format('H:i:s'));
+                    $message->to($to)->subject('HMS SMTP Test — ' . now()->format('H:i:s'));
                 }
             );
-            $result['success'] = true;
-            $result['message'] = 'Test email sent successfully to ' . $to;
+            $result['test1_raw_email'] = 'SUCCESS';
         } catch (\Throwable $e) {
-            $result['success'] = false;
-            $result['error']   = $e->getMessage();
-            $result['class']   = get_class($e);
+            $result['test1_raw_email'] = 'FAILED: ' . $e->getMessage();
+        }
+
+        // Test 2: Full NewUserCreated mailable (the actual welcome email template)
+        try {
+            $fakeUser = new \App\Models\User([
+                'first_name' => 'Test',
+                'last_name'  => 'User',
+                'email'      => $to,
+                'role'       => 'staff',
+            ]);
+            \Illuminate\Support\Facades\Mail::to($to)->send(
+                new \App\Mail\NewUserCreated($fakeUser, 'TestPass123!')
+            );
+            $result['test2_new_user_mailable'] = 'SUCCESS - welcome email template works!';
+        } catch (\Throwable $e) {
+            $result['test2_new_user_mailable'] = 'FAILED: ' . $e->getMessage();
+            $result['test2_error_class']       = get_class($e);
+            $result['test2_error_file']        = $e->getFile() . ':' . $e->getLine();
         }
 
         return response()->json($result, 200, [], JSON_PRETTY_PRINT);
