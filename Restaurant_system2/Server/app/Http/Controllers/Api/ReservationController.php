@@ -27,12 +27,24 @@ class ReservationController extends Controller
     /**
      * List reservations for the hotel.
      */
-    public function index(Request $request): ReservationCollection
+    public function index(Request $request): ReservationCollection|JsonResponse
     {
-        $perPage = $request->integer('per_page', 10);
-        $reservations = $this->reservationService->getReservations($request->all(), $perPage);
-
-        return new ReservationCollection($reservations);
+        try {
+            $perPage = $request->integer('per_page', 10);
+            $reservations = $this->reservationService->getReservations($request->all(), $perPage);
+            return new ReservationCollection($reservations);
+        } catch (\Throwable $e) {
+            Log::error('[ReservationController] index failed: ' . $e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'filters' => $request->all(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to load reservations.',
+                'error'   => config('app.debug') ? $e->getMessage() : 'Server error',
+            ], 500);
+        }
     }
 
     /**
