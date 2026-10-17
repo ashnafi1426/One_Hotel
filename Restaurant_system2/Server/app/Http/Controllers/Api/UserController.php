@@ -142,6 +142,7 @@ class UserController extends Controller
                 'email' => $request->email,
                 'role' => $request->role,
                 'timestamp' => now()->toIso8601String(),
+                'request_all' => $request->all(), // Log full request for debugging
             ]);
 
             $user = User::create([

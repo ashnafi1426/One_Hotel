@@ -57,10 +57,33 @@ class DiagnosticsController extends Controller
     }
 
     /**
-     * Test email sending
-     * Sends a test email to the authenticated user
+     * Get available roles for user creation
+     * Public endpoint for diagnostics
      */
-    public function testEmail(): JsonResponse
+    public function availableRoles(): JsonResponse
+    {
+        try {
+            $roles = \App\Models\Role::withoutTenant()
+                ->select('id', 'name', 'slug')
+                ->get();
+
+            return response()->json([
+                'success' => true,
+                'data' => $roles,
+                'count' => $roles->count(),
+                'message' => 'Available roles for user creation',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[DiagnosticsController.availableRoles] Failed to fetch roles', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch roles: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
     {
         try {
             $user = auth()->user();
