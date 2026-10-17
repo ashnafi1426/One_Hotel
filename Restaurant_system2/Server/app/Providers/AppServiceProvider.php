@@ -61,6 +61,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Clear config cache on every boot to ensure env vars are fresh
+        // This fixes issues where config is cached but env vars changed
+        if (file_exists(base_path('bootstrap/cache/config.php'))) {
+            @unlink(base_path('bootstrap/cache/config.php'));
+        }
 
         require_once app_path('Translations/helpers.php');
 
