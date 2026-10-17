@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Throwable;
 
 class PasswordResetController extends Controller
 {
@@ -48,12 +49,17 @@ class PasswordResetController extends Controller
                 'token' => Hash::make($token),
                 'created_at' => now()
             ]);
-            Mail::to($user->email)->queue(new PasswordResetMail($user, $token));
-
-            Log::info('Password reset email sent', [
-                'email' => $request->email,
-                'user_id' => $user->id
-            ]);
+            // Send reset email after HTTP response — browser sees success immediately
+            $resetUser  = $user;
+            $resetToken = $token;
+            dispatch(function () use ($resetUser, $resetToken) {
+                try {
+                    Mail::to($resetUser->email)->send(new PasswordResetMail($resetUser, $resetToken));
+                    Log::info('Password reset email sent to: ' . $resetUser->email);
+                } catch (Throwable $e) {
+                    Log::error('Failed to send password reset email: ' . $e->getMessage());
+                }
+            })->afterResponse();
 
             return response()->json([
                 'success' => true,

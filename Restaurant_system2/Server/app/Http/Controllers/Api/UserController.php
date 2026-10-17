@@ -183,17 +183,19 @@ class UserController extends Controller
 
             $this->invalidateUserCaches();
 
-            // Queue the welcome email — queue worker (supervisord) sends it in background.
-            // This returns INSTANTLY without blocking the HTTP response.
-            try {
-                Mail::to($user->email)->queue(new NewUserCreated($user, $plainPassword));
-                Log::info('Welcome email queued for: ' . $user->email);
-            } catch (Throwable $mailException) {
-                // Queue failed (e.g. jobs table missing) — log and continue.
-                // User is already created, don't fail the whole request.
-                Log::warning('Could not queue welcome email: ' . $mailException->getMessage());
-            }
-
+            // Send email AFTER HTTP response is returned — no queue table or worker needed.
+            // dispatch()->afterResponse() runs the closure in the same PHP-FPM process
+            // after the response has been flushed to the browser.
+            $emailUser      = $user;
+            $emailPassword  = $plainPassword;
+            dispatch(function () use ($emailUser, $emailPassword) {
+                try {
+                    Mail::to($emailUser->email)->send(new NewUserCreated($emailUser, $emailPassword));
+                    Log::info('Welcome email sent to: ' . $emailUser->email);
+                } catch (Throwable $e) {
+                    Log::error('Failed to send welcome email: ' . $e->getMessage());
+                }
+            })->afterResponse();
             return response()->json([
                 'success' => true,
                 'message' => 'User created successfully. Login credentials have been sent to ' . $user->email,
