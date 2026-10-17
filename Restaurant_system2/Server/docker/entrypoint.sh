@@ -5,6 +5,9 @@ set -e
 PORT="${PORT:-10000}"
 export PORT
 
+# Force array cache on Render — avoids CACHE_STORE=database 500 errors when cache table missing
+export CACHE_STORE=array
+
 echo "==> Configuring Nginx on port: ${PORT}"
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/sites-available/default
 ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default

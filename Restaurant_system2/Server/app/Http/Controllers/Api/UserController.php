@@ -52,48 +52,60 @@ class UserController extends Controller
             Cache::forget($cacheKey);
         }
 
-        $result = Cache::remember($cacheKey, 120, function () use ($request, $perPage) {
-            $query = User::select([
-                'id',
-                'first_name',
-                'last_name',
-                'email',
-                'phone',
-                'role',
-                'is_active',
-                'last_login',
-                'created_at',
-                'updated_at',
-            ]);
+        try {
+            $result = Cache::remember($cacheKey, 120, function () use ($request, $perPage) {
+                $query = User::select([
+                    'id',
+                    'first_name',
+                    'last_name',
+                    'email',
+                    'phone',
+                    'role',
+                    'is_active',
+                    'last_login',
+                    'created_at',
+                    'updated_at',
+                ]);
 
-            if ($request->filled('search')) {
-                $search = trim($request->search);
-                $query->where(function ($q) use ($search) {
-                    $q->where('first_name', 'like', "%{$search}%")
-                      ->orWhere('last_name', 'like', "%{$search}%")
-                      ->orWhere('email', 'like', "%{$search}%")
-                      ->orWhere('role', 'like', "%{$search}%");
-                });
-            }
-
-            if ($request->filled('role')) {
-                $query->where('role', $request->role);
-            }
-
-            if ($request->has('status') && $request->status !== null && $request->status !== '') {
-                $isActive = filter_var($request->status, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-                if ($isActive !== null) {
-                    $query->where('is_active', $isActive);
+                if ($request->filled('search')) {
+                    $search = trim($request->search);
+                    $query->where(function ($q) use ($search) {
+                        $q->where('first_name', 'like', "%{$search}%")
+                          ->orWhere('last_name', 'like', "%{$search}%")
+                          ->orWhere('email', 'like', "%{$search}%")
+                          ->orWhere('role', 'like', "%{$search}%");
+                    });
                 }
+
+                if ($request->filled('role')) {
+                    $query->where('role', $request->role);
+                }
+
+                if ($request->has('status') && $request->status !== null && $request->status !== '') {
+                    $isActive = filter_var($request->status, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                    if ($isActive !== null) {
+                        $query->where('is_active', $isActive);
+                    }
+                }
+
+                $sortBy = in_array($request->input('sort_by'), ['created_at', 'first_name', 'email', 'role'])
+                    ? $request->input('sort_by')
+                    : 'created_at';
+                $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+                return $query->orderBy($sortBy, $sortDir)->paginate($perPage);
+            });
+        } catch (\Throwable $cacheErr) {
+            // Cache table may not exist (e.g. fresh Render deploy) — run query directly
+            Log::warning('[UserController] Cache failed, running direct query: ' . $cacheErr->getMessage());
+            $query = User::select(['id','first_name','last_name','email','phone','role','is_active','last_login','created_at','updated_at']);
+            if ($request->filled('search')) {
+                $s = trim($request->search);
+                $query->where(fn($q) => $q->where('first_name','like',"%{$s}%")->orWhere('last_name','like',"%{$s}%")->orWhere('email','like',"%{$s}%")->orWhere('role','like',"%{$s}%"));
             }
-
-            $sortBy = in_array($request->input('sort_by'), ['created_at', 'first_name', 'email', 'role'])
-                ? $request->input('sort_by')
-                : 'created_at';
-            $sortDir = strtolower($request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
-
-            return $query->orderBy($sortBy, $sortDir)->paginate($perPage);
-        });
+            if ($request->filled('role')) { $query->where('role', $request->role); }
+            $result = $query->orderBy('created_at','desc')->paginate($perPage);
+        }
 
         return response()->json([
             'success' => true,
