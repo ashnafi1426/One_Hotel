@@ -25,8 +25,9 @@ export default defineConfig({
     },
   },
   build: {
-    target: 'esnext',
+    target: 'es2020',
     minify: 'esbuild',
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         manualChunks: (id) => {
@@ -39,6 +40,10 @@ export default defineConfig({
             }
           }
         },
+        // Ensure all chunks output as .js not .ts
+        entryFileNames: 'assets/[name]-[hash].js',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        assetFileNames: 'assets/[name]-[hash].[ext]',
       },
     },
     chunkSizeWarningLimit: 1200,
