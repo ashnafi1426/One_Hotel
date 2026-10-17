@@ -8,10 +8,10 @@ export PORT
 # Force array cache on Render — avoids CACHE_STORE=database 500 errors when cache table missing
 export CACHE_STORE=array
 
-# Force correct Gmail SMTP settings — MAIL_SCHEME=smtp was wrong (must be 'tls' for port 587)
-export MAIL_SCHEME=tls
-export MAIL_ENCRYPTION=tls
-export MAIL_PORT=587
+# Force correct Gmail SMTP settings — use smtps (port 465 SSL) which is valid for Symfony Mailer
+# Symfony Mailer only accepts 'smtp' (port 587 STARTTLS) or 'smtps' (port 465 SSL)
+export MAIL_SCHEME=smtps
+export MAIL_PORT=465
 
 echo "==> Configuring Nginx on port: ${PORT}"
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/sites-available/default
