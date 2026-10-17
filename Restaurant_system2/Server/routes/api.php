@@ -204,6 +204,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
+    // Platform-level statistics for super admin / platform admin dashboard
+    Route::get('/platform/statistics', function () {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_hotels'  => \App\Models\Hotel::count() ?? 1,
+                'active_hotels' => \App\Models\Hotel::where('is_active', true)->count() ?? 1,
+                'total_users'   => \App\Models\User::count(),
+                'total_rooms'   => \App\Models\Room::count(),
+                'total_reservations' => \App\Models\Reservation::count(),
+            ],
+        ]);
+    });
     Route::middleware('permission:roles.view|roles.create|roles.update|roles.delete|roles.assign_permissions|permissions.view|permissions.create|permissions.update|permissions.delete')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
         Route::post('/roles', [RoleController::class, 'store']);
