@@ -122,8 +122,89 @@ class DeployController extends \App\Http\Controllers\Controller
             $results['platform_stats_error'] = $e->getMessage();
         }
 
+        // 12. Check roles & permissions tables (RBAC)
+        try {
+            $results['db_has_roles'] = Schema::hasTable('roles');
+            $results['db_has_permissions'] = Schema::hasTable('permissions');
+            $results['db_has_role_permissions'] = Schema::hasTable('role_permissions');
+            $results['db_has_user_roles'] = Schema::hasTable('user_roles');
+        } catch (\Throwable $e) {
+            $results['rbac_tables_error'] = $e->getMessage();
+        }
+
+        // 13. Try the EXACT user query that UserController runs (with permission middleware context)
+        try {
+            $query = \App\Models\User::select([
+                'id','first_name','last_name','email','phone','role','is_active','last_login','created_at','updated_at'
+            ])->paginate(5);
+            $results['users_paginate_ok'] = true;
+            $results['users_count'] = $query->total();
+        } catch (\Throwable $e) {
+            $results['users_paginate_ok'] = false;
+            $results['users_paginate_error'] = $e->getMessage();
+        }
+
+        // 14. Try roles query
+        try {
+            \App\Models\Role::where('is_active', true)->limit(1)->get();
+            $results['roles_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['roles_query_ok'] = false;
+            $results['roles_error'] = $e->getMessage();
+        }
+
+        // 15. Try permissions query
+        try {
+            \App\Models\Permission::where('is_active', true)->limit(1)->get();
+            $results['permissions_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['permissions_query_ok'] = false;
+            $results['permissions_error'] = $e->getMessage();
+        }
 
         return response()->json($results, 200, [], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Test email sending — helps diagnose SMTP config issues.
+     * Usage: GET /api/deploy/test-email?to=youremail@gmail.com&secret=YOUR_DEPLOY_SECRET
+     */
+    public function testEmail(Request $request): JsonResponse
+    {
+        $secret = env('DEPLOY_SECRET', '');
+        if (empty($secret) || $request->query('secret') !== $secret) {
+            return response()->json(['error' => 'Unauthorized'], 401);
+        }
+
+        $to = $request->query('to', env('MAIL_FROM_ADDRESS'));
+
+        $result = [
+            'mail_host'       => env('MAIL_HOST'),
+            'mail_port'       => env('MAIL_PORT'),
+            'mail_scheme'     => env('MAIL_SCHEME'),
+            'mail_encryption' => env('MAIL_ENCRYPTION'),
+            'mail_username'   => env('MAIL_USERNAME'),
+            'mail_from'       => env('MAIL_FROM_ADDRESS'),
+            'sending_to'      => $to,
+        ];
+
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                'Test email from HMS at ' . now() . '. If you see this, SMTP is working correctly!',
+                function ($message) use ($to) {
+                    $message->to($to)
+                            ->subject('HMS SMTP Test — ' . now()->format('H:i:s'));
+                }
+            );
+            $result['success'] = true;
+            $result['message'] = 'Test email sent successfully to ' . $to;
+        } catch (\Throwable $e) {
+            $result['success'] = false;
+            $result['error']   = $e->getMessage();
+            $result['class']   = get_class($e);
+        }
+
+        return response()->json($result, 200, [], JSON_PRETTY_PRINT);
     }
 
     /**
@@ -132,15 +213,17 @@ class DeployController extends \App\Http\Controllers\Controller
      */
     public function platformStatistics(): JsonResponse
     {
+        $data = [];
+
+        try { $data['total_hotels']       = \App\Models\Hotel::count(); } catch (\Throwable $e) { $data['total_hotels'] = 0; }
+        try { $data['active_hotels']      = \App\Models\Hotel::where('is_active', true)->count(); } catch (\Throwable $e) { $data['active_hotels'] = $data['total_hotels'] ?? 0; }
+        try { $data['total_users']        = \App\Models\User::count(); } catch (\Throwable $e) { $data['total_users'] = 0; }
+        try { $data['total_rooms']        = \App\Models\Room::count(); } catch (\Throwable $e) { $data['total_rooms'] = 0; }
+        try { $data['total_reservations'] = \App\Models\Reservation::count(); } catch (\Throwable $e) { $data['total_reservations'] = 0; }
+
         return response()->json([
             'success' => true,
-            'data' => [
-                'total_hotels'       => \App\Models\Hotel::count(),
-                'active_hotels'      => \App\Models\Hotel::where('is_active', true)->count(),
-                'total_users'        => \App\Models\User::count(),
-                'total_rooms'        => \App\Models\Room::count(),
-                'total_reservations' => \App\Models\Reservation::count(),
-            ],
+            'data'    => $data,
         ]);
     }
 

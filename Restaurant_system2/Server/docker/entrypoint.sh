@@ -8,6 +8,11 @@ export PORT
 # Force array cache on Render — avoids CACHE_STORE=database 500 errors when cache table missing
 export CACHE_STORE=array
 
+# Force correct Gmail SMTP settings — MAIL_SCHEME=smtp was wrong (must be 'tls' for port 587)
+export MAIL_SCHEME=tls
+export MAIL_ENCRYPTION=tls
+export MAIL_PORT=587
+
 echo "==> Configuring Nginx on port: ${PORT}"
 envsubst '${PORT}' < /etc/nginx/templates/default.conf.template > /etc/nginx/sites-available/default
 ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default

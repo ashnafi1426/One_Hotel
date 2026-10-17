@@ -89,9 +89,10 @@ Route::get('/tax-rates', [TaxRateController::class, 'index']);
 
 // Protected deploy/migration endpoint (no auth required, uses DEPLOY_SECRET instead)
 Route::prefix('deploy')->group(function () {
-    Route::get('/diagnose', [\App\Http\Controllers\Api\DeployController::class, 'diagnose']); // public
-    Route::get('/migrate', [\App\Http\Controllers\Api\DeployController::class, 'migrate']);
-    Route::get('/status',  [\App\Http\Controllers\Api\DeployController::class, 'status']);
+    Route::get('/diagnose',   [\App\Http\Controllers\Api\DeployController::class, 'diagnose']); // public
+    Route::get('/migrate',    [\App\Http\Controllers\Api\DeployController::class, 'migrate']);
+    Route::get('/status',     [\App\Http\Controllers\Api\DeployController::class, 'status']);
+    Route::get('/test-email', [\App\Http\Controllers\Api\DeployController::class, 'testEmail']); // ?to=email&secret=...
 });
 
 Route::post('/auth/login', [AuthController::class, 'login'])->name('login');
