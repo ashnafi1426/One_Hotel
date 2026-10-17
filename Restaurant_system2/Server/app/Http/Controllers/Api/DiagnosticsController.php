@@ -84,6 +84,12 @@ class DiagnosticsController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Test email sending
+     * Sends a test email to the authenticated user
+     */
+    public function testEmail(): JsonResponse
     {
         try {
             $user = auth()->user();
