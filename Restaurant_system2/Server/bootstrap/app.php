@@ -107,7 +107,9 @@ return Application::configure(basePath: dirname(__DIR__))
 
                 return response()->json([
                     'success' => false,
-                    'message' => 'A database error occurred. Please try again later.',
+                    'message' => $e->getMessage(),
+                    'sql'     => $e->getSql(),
+                    'class'   => 'QueryException',
                 ], 500);
             }
         });
