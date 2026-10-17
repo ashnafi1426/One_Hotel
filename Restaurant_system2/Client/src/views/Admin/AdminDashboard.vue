@@ -27,12 +27,6 @@ import { useAuthStore } from '@/stores/auth'
 import { useHotelStore } from '@/stores/hotelStore'
 import axios from '@/services/axios'
 
-interface PlatformStatistics {
-  total_hotels?: number
-  active_hotels?: number
-  total_users?: number
-  total_rooms?: number
-}
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -41,7 +35,8 @@ const hotelStore = useHotelStore()
 const dashboard = ref<DashboardData | null>(null)
 const loading = ref<boolean>(true)
 const refreshing = ref<boolean>(false)
-const platformStats = ref<PlatformStatistics>({})
+const platformStats = ref<Record<string, never>>({})
+
 
 const getCacheKey = () => `admin_dashboard_cache_${hotelStore.hotelId || 'platform'}`
 
@@ -76,15 +71,7 @@ const restoreCachedData = () => {
   }
 }
 
-const loadPlatformStats = async () => {
-  if (!auth.isPlatformAdmin) return
-  try {
-    const statsRes = await axios.get('/platform/statistics')
-    platformStats.value = statsRes.data.data || {}
-  } catch (err) {
-    console.error('[AdminDashboard] Failed to load platform stats:', err)
-  }
-}
+
 
 const loadDashboard = async (isManualRefresh = false) => {
   try {
@@ -100,9 +87,7 @@ const loadDashboard = async (isManualRefresh = false) => {
       localStorage.setItem(getCacheKey(), JSON.stringify(freshData))
     } catch (e) {}
 
-    if (auth.isPlatformAdmin) {
-      await loadPlatformStats()
-    }
+
   } catch (error) {
     console.error('[AdminDashboard] Failed to load dashboard:', error)
   } finally {
@@ -379,66 +364,7 @@ watch(() => hotelStore.hotelId, initializeDashboard)
           </div>
         </div>
 
-        <div
-          v-if="auth.isPlatformAdmin"
-          class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-4"
-        >
-          <div
-            class="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4"
-          >
-            <div>
-              <h3 class="text-lg font-black text-slate-900 dark:text-white">
-                Platform Multi-Hotel Overview
-              </h3>
-              <p class="text-xs text-slate-500">Total hotels enrolled and system-wide stats</p>
-            </div>
-            <button
-              @click="router.push('/admin/hotels')"
-              class="px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-bold text-slate-700 dark:text-slate-200 transition cursor-pointer"
-            >
-              Manage Hotels
-            </button>
-          </div>
 
-          <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-2">
-            <div
-              class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
-            >
-              <p class="text-[11px] font-extrabold uppercase text-slate-400">Total Hotels</p>
-              <h4 class="text-xl font-black text-slate-900 dark:text-white mt-1">
-                {{ platformStats?.total_hotels ?? 0 }}
-              </h4>
-            </div>
-            <div
-              class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
-            >
-              <p class="text-[11px] font-extrabold uppercase text-slate-400">Active Hotels</p>
-              <h4 class="text-xl font-black text-emerald-500 mt-1">
-                {{ platformStats?.active_hotels ?? 0 }}
-              </h4>
-            </div>
-            <div
-              class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
-            >
-              <p class="text-[11px] font-extrabold uppercase text-slate-400">
-                Total Platform Users
-              </p>
-              <h4 class="text-xl font-black text-indigo-500 mt-1">
-                {{ platformStats?.total_users ?? 0 }}
-              </h4>
-            </div>
-            <div
-              class="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800"
-            >
-              <p class="text-[11px] font-extrabold uppercase text-slate-400">
-                Total Rooms Enrolled
-              </p>
-              <h4 class="text-xl font-black text-amber-500 mt-1">
-                {{ platformStats?.total_rooms ?? 0 }}
-              </h4>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   </DashboardLayout>

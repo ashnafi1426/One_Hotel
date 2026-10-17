@@ -211,8 +211,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/me', [AuthController::class, 'me']);
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/dashboard', [DashboardController::class, 'index']);
-    // Platform-level statistics for super admin / platform admin dashboard
-    Route::get('/platform/statistics', [\App\Http\Controllers\Api\DeployController::class, 'platformStatistics']);
 
     Route::middleware('permission:roles.view|roles.create|roles.update|roles.delete|roles.assign_permissions|permissions.view|permissions.create|permissions.update|permissions.delete')->group(function () {
         Route::get('/roles', [RoleController::class, 'index']);
