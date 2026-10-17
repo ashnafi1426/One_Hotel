@@ -79,6 +79,50 @@ class DeployController extends \App\Http\Controllers\Controller
             $results['hotel_error'] = $e->getMessage();
         }
 
+        // 7. Check users table columns
+        try {
+            $cols = DB::select('SHOW COLUMNS FROM users');
+            $results['user_columns'] = array_map(fn($c) => $c->Field, $cols);
+        } catch (\Throwable $e) {
+            $results['user_columns_error'] = $e->getMessage();
+        }
+
+        // 8. Try users query
+        try {
+            \App\Models\User::select(['id','first_name','last_name','email','role','is_active','last_login','created_at'])->limit(1)->get();
+            $results['users_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['users_query_ok'] = false;
+            $results['users_error'] = $e->getMessage();
+        }
+
+        // 9. Check orders table columns
+        try {
+            $cols = DB::select('SHOW COLUMNS FROM orders');
+            $results['order_columns'] = array_map(fn($c) => $c->Field, $cols);
+        } catch (\Throwable $e) {
+            $results['order_columns_error'] = $e->getMessage();
+        }
+
+        // 10. Try orders query
+        try {
+            DB::table('orders')->limit(1)->get();
+            $results['orders_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['orders_query_ok'] = false;
+            $results['orders_error'] = $e->getMessage();
+        }
+
+        // 11. Try Hotel::where('is_active') for platform/statistics
+        try {
+            \App\Models\Hotel::where('is_active', true)->count();
+            $results['platform_stats_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['platform_stats_query_ok'] = false;
+            $results['platform_stats_error'] = $e->getMessage();
+        }
+
+
         return response()->json($results, 200, [], JSON_PRETTY_PRINT);
     }
 
