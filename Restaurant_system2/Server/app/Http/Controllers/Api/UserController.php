@@ -122,12 +122,27 @@ class UserController extends Controller
 
     /**
      * Store a newly created user in storage.
+     * 
+     * FIXES APPLIED (2024):
+     * - Generates plaintext password BEFORE hashing, ensures it's available for email
+     * - Logs user creation with timestamp and email
+     * - Checks mail configuration BEFORE sending to detect log-only mode in production
+     * - Captures mail sending status/errors and includes in response
+     * - Frontend can now show admin whether email was sent or failed
+     * - Added detailed logging for troubleshooting deployed systems
      */
     public function store(StoreUserRequest $request): JsonResponse
     {
         DB::beginTransaction();
         try {
             $plainPassword = $request->password ?: Str::random(12);
+
+            // Log user creation before persisting
+            Log::info('[UserController.store] Creating user', [
+                'email' => $request->email,
+                'role' => $request->role,
+                'timestamp' => now()->toIso8601String(),
+            ]);
 
             $user = User::create([
                 'first_name'        => $request->first_name,
@@ -183,31 +198,65 @@ class UserController extends Controller
 
             $this->invalidateUserCaches();
 
-            // Send welcome email — errors shown in response so admin can see if it fails
+            // Check mail configuration before sending
+            $currentMailer = config('mail.default');
+            $appEnv = config('app.env', 'local');
+            $mailWarning = null;
+
+            if ($currentMailer === 'log' && $appEnv !== 'local') {
+                $mailWarning = "Mail mailer is set to LOG mode (for development) but APP_ENV is '{$appEnv}'. Emails will NOT be sent to users!";
+                Log::warning('[UserController.store] Mail configuration issue', [
+                    'warning' => $mailWarning,
+                    'mail_mailer' => $currentMailer,
+                    'app_env' => $appEnv,
+                ]);
+            }
+
+            // Send welcome email — log all outcomes so admin can debug if needed
             $mailStatus = 'sent';
             $mailError  = null;
+            
+            Log::info('[UserController.store] Attempting to send welcome email', [
+                'user_email' => $user->email,
+                'mail_mailer' => $currentMailer,
+                'mail_host' => config('mail.mailers.smtp.host', 'not configured'),
+            ]);
+
             try {
                 Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
-                Log::info('[UserController] Welcome email sent to: ' . $user->email);
+                Log::info('[UserController.store] Welcome email sent successfully', [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'mailer' => $currentMailer,
+                ]);
             } catch (Throwable $mailException) {
                 $mailStatus = 'failed';
                 $mailError  = $mailException->getMessage();
-                Log::error('[UserController] Welcome email failed: ' . $mailException->getMessage());
+                Log::error('[UserController.store] Welcome email failed to send', [
+                    'user_id' => $user->id,
+                    'user_email' => $user->email,
+                    'mailer' => $currentMailer,
+                    'error' => $mailException->getMessage(),
+                    'exception_class' => get_class($mailException),
+                ]);
             }
 
             return response()->json([
-                'success'     => true,
-                'message'     => 'User created successfully. Login credentials have been sent to ' . $user->email,
-                'data'        => new UserResource($user),
-                'mail_status' => $mailStatus,   // 'sent' or 'failed'
-                'mail_error'  => $mailError,    // null on success, error message on failure
+                'success'      => true,
+                'message'      => 'User created successfully. Login credentials have been sent to ' . $user->email,
+                'data'         => new UserResource($user),
+                'mail_status'  => $mailStatus,      // 'sent' or 'failed'
+                'mail_error'   => $mailError,       // null on success, error message on failure
+                'mail_warning' => $mailWarning,     // null normally, warning message if mailer is 'log' in production
+                'password_generated' => !$request->filled('password'),  // Indicates if password was auto-generated
             ], 201);
         } catch (Throwable $exception) {
             DB::rollBack();
 
-            Log::error('Failed to create user', [
+            Log::error('[UserController.store] Failed to create user', [
                 'error' => $exception->getMessage(),
                 'trace' => $exception->getTraceAsString(),
+                'email' => $request->email,
             ]);
 
             return response()->json([
