@@ -12,6 +12,7 @@
         "laravel/sanctum": "^4.3",
         "laravel/tinker": "^3.0",
         "pusher/pusher-php-server": "^7.3",
+        "resend/resend-laravel": "^1.6",
         "simplesoftwareio/simple-qrcode": "^4.2"
     },
     "require-dev": {
