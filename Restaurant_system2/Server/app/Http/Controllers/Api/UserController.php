@@ -184,21 +184,25 @@ class UserController extends Controller
             $this->invalidateUserCaches();
 
             try {
-                // Use later() to send async via queue — prevents 60s SMTP timeout on Render free plan
-                Mail::to($user->email)->later(now()->addSeconds(5), new NewUserCreated($user, $plainPassword));
+                // Try sync send first (fast SMTP) — fallback to queue if it fails or takes too long
+                Mail::to($user->email)->send(new NewUserCreated($user, $plainPassword));
             } catch (Throwable $mailException) {
-                Log::warning('User created successfully, but welcome email could not be queued', [
-                    'user_id' => $user->id,
-                    'email' => $user->email,
-                    'error' => $mailException->getMessage(),
-                ]);
+                // Sync failed — push to queue as fallback
+                Log::warning('Sync email failed, queuing: ' . $mailException->getMessage());
+                try {
+                    Mail::to($user->email)->later(now()->addSeconds(10), new NewUserCreated($user, $plainPassword));
+                } catch (Throwable $queueErr) {
+                    Log::error('Email queue also failed: ' . $queueErr->getMessage());
+                }
             }
 
-
             return response()->json([
-                'success' => true,
-                'message' => 'User created successfully.',
-                'data' => new UserResource($user),
+                'success'            => true,
+                'message'            => 'User created successfully.',
+                'data'               => new UserResource($user),
+                // Return the generated password so admin can share it immediately
+                // (even if email delivery is delayed or fails)
+                'generated_password' => $plainPassword,
             ], 201);
         } catch (Throwable $exception) {
             DB::rollBack();
