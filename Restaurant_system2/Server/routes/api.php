@@ -2,6 +2,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\DiagnosticsController;
 use App\Http\Controllers\Api\RoomTypeController;
 use App\Http\Controllers\Api\RoomController;
 use App\Http\Controllers\Api\DashboardController;
@@ -787,3 +788,10 @@ Route::middleware(['auth:sanctum', 'role:staff'])->prefix('cancellation-policies
     Route::post('/{policyId}/calculate-refund', [CancellationPolicyController::class, 'calculateRefund']);
 });
 
+
+
+// Diagnostic Routes (for troubleshooting email and configuration issues)
+Route::middleware('auth:sanctum')->prefix('diagnostics')->group(function () {
+    Route::get('/mail-config', [DiagnosticsController::class, 'mailConfig'])->name('diagnostics.mail-config');
+    Route::post('/test-email', [DiagnosticsController::class, 'testEmail'])->name('diagnostics.test-email');
+});
