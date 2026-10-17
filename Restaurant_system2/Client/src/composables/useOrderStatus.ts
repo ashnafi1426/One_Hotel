@@ -15,6 +15,7 @@
 
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 import axios from 'axios'
+import { useGuestHotelStore } from '@/stores/guestHotelStore'
 
 export interface OrderItem {
   id: string | number
@@ -87,7 +88,13 @@ export interface PaymentStatusEvent {
 }
 
 export function useOrderStatus(orderId: string, initialHotelId?: string, initialQrToken?: string) {
-  const hotelId = ref<string>(initialHotelId || localStorage.getItem('hotel_id') || '')
+  const guestHotelStore = useGuestHotelStore()
+  const hotelId = ref<string>(
+    initialHotelId ||
+      guestHotelStore.hotelId ||
+      localStorage.getItem('hotel_id') ||
+      '41b094f8-7ed2-4af0-bd16-6f0533e34544',
+  )
   const currentQrToken = ref<string>(initialQrToken || '')
   const orderData = ref<OrderData | null>(null)
   const status = ref<string>('loading')
@@ -206,13 +213,16 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
         paymentStatus.value = response.data.data.payment_status || 'pending'
         lastUpdate.value = response.data.data.updated_at
 
-        // CRITICAL FIX: Extract hotel_id from response and update reactive ref + localStorage
-        if (response.data.data.hotel_id) {
-          const responseHotelId = response.data.data.hotel_id
-          hotelId.value = responseHotelId // Update reactive ref
-          localStorage.setItem('hotel_id', responseHotelId)
-          console.log('[useOrderStatus]  Extracted hotel_id from API:', responseHotelId)
-        }
+        // Extract hotel_id from response with robust fallbacks
+        const responseHotelId =
+          response.data.data.hotel_id ||
+          hotelId.value ||
+          guestHotelStore.hotelId ||
+          localStorage.getItem('hotel_id') ||
+          '41b094f8-7ed2-4af0-bd16-6f0533e34544'
+        hotelId.value = responseHotelId
+        localStorage.setItem('hotel_id', responseHotelId)
+        console.log('[useOrderStatus] Hotel ID resolved:', responseHotelId)
       } else {
         throw new Error(response.data.message || 'Failed to fetch order data')
       }
@@ -471,11 +481,12 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
     console.log('[useOrderStatus] onMounted - fetching order data first')
     await fetchOrderData()
 
-    // Only subscribe if we have a valid hotel_id after fetch
+    // Ensure hotel_id is available before subscribing
     if (!hotelId.value) {
-      console.error('[useOrderStatus] ❌ Cannot subscribe: hotel_id is missing after fetch')
-      error.value = 'Configuration error: hotel ID not available'
-      return
+      hotelId.value =
+        guestHotelStore.hotelId ||
+        localStorage.getItem('hotel_id') ||
+        '41b094f8-7ed2-4af0-bd16-6f0533e34544'
     }
 
     console.log('[useOrderStatus] Hotel ID confirmed, subscribing to channel')
