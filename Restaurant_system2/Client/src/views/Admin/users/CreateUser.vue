@@ -10,44 +10,20 @@ const router = useRouter()
 const userStore = useUserStore()
 
 const successMessage = ref('')
-const generatedPassword = ref('')
 const createdUserEmail = ref('')
-const passwordCopied = ref(false)
 const hasErrors = computed(() => Object.keys(userStore.errors).length > 0)
 
 const createUser = async (data: User) => {
   successMessage.value = ''
-  generatedPassword.value = ''
   try {
-    const result = await userStore.createUser(data)
+    await userStore.createUser(data)
     createdUserEmail.value = data.email
-    generatedPassword.value = result.generated_password || ''
     successMessage.value = `User created successfully!`
-    // Navigate after longer delay so admin can copy the password
     setTimeout(() => {
       router.push('/users')
-    }, 15000)
+    }, 3000)
   } catch (error: any) {
     console.error('[CreateUser] Error creating user:', error)
-  }
-}
-
-const copyPassword = async () => {
-  if (!generatedPassword.value) return
-  try {
-    await navigator.clipboard.writeText(generatedPassword.value)
-    passwordCopied.value = true
-    setTimeout(() => { passwordCopied.value = false }, 2000)
-  } catch {
-    // fallback
-    const el = document.createElement('textarea')
-    el.value = generatedPassword.value
-    document.body.appendChild(el)
-    el.select()
-    document.execCommand('copy')
-    document.body.removeChild(el)
-    passwordCopied.value = true
-    setTimeout(() => { passwordCopied.value = false }, 2000)
   }
 }
 </script>
@@ -73,40 +49,26 @@ const copyPassword = async () => {
 
       <div class="bg-white rounded-xl shadow overflow-hidden">
         <div class="p-4 sm:p-6 lg:p-8">
-          <!-- Success + Generated Password Box -->
-          <div v-if="successMessage" class="mb-6 space-y-4">
-            <div class="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p class="text-green-800 font-semibold text-sm sm:text-base">✓ {{ successMessage }}</p>
-              <p class="text-green-600 text-xs mt-1">Redirecting to users list in 15 seconds...</p>
-            </div>
-
-            <!-- Generated Password Panel -->
-            <div v-if="generatedPassword" class="p-5 bg-amber-50 border-2 border-amber-400 rounded-xl">
-              <div class="flex items-center gap-2 mb-3">
-                <span class="text-xl">🔑</span>
-                <h3 class="font-bold text-amber-800 text-base">Generated Password — Save This Now!</h3>
+          <!-- Success: Email Sent Confirmation -->
+          <div v-if="successMessage" class="mb-6">
+            <div class="p-6 bg-green-50 border border-green-200 rounded-xl text-center">
+              <div class="flex justify-center mb-3">
+                <div class="w-14 h-14 bg-green-100 rounded-full flex items-center justify-center">
+                  <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                  </svg>
+                </div>
               </div>
-              <p class="text-amber-700 text-sm mb-3">
-                An email was sent to <strong>{{ createdUserEmail }}</strong> with these credentials.
-                Copy the password below in case the email is delayed.
+              <h3 class="text-green-800 font-bold text-lg mb-1">✓ {{ successMessage }}</h3>
+              <p class="text-green-700 text-sm">
+                Login credentials have been automatically sent to
+                <strong class="font-semibold">{{ createdUserEmail }}</strong>
               </p>
-              <div class="flex items-center gap-3 bg-white border-2 border-amber-300 rounded-lg p-3">
-                <code class="flex-1 text-lg font-mono font-bold text-slate-800 tracking-wider select-all">
-                  {{ generatedPassword }}
-                </code>
-                <button
-                  @click="copyPassword"
-                  class="px-4 py-2 rounded-lg text-sm font-bold transition-all cursor-pointer"
-                  :class="passwordCopied
-                    ? 'bg-green-500 text-white'
-                    : 'bg-amber-500 hover:bg-amber-600 text-white'"
-                >
-                  {{ passwordCopied ? '✓ Copied!' : 'Copy' }}
-                </button>
-              </div>
-              <p class="text-amber-600 text-xs mt-2 font-medium">
-                ⚠️ This password won't be shown again after you leave this page.
+              <p class="text-green-600 text-xs mt-2">
+                The user will receive their email and temporary password shortly.
               </p>
+              <p class="text-slate-400 text-xs mt-3">Redirecting to users list...</p>
             </div>
           </div>
 

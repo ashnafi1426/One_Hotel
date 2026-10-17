@@ -197,12 +197,9 @@ class UserController extends Controller
             }
 
             return response()->json([
-                'success'            => true,
-                'message'            => 'User created successfully.',
-                'data'               => new UserResource($user),
-                // Return the generated password so admin can share it immediately
-                // (even if email delivery is delayed or fails)
-                'generated_password' => $plainPassword,
+                'success' => true,
+                'message' => 'User created successfully. Login credentials have been sent to ' . $user->email,
+                'data'    => new UserResource($user),
             ], 201);
         } catch (Throwable $exception) {
             DB::rollBack();
