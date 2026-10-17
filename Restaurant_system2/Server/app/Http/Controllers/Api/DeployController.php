@@ -11,14 +11,102 @@ use Illuminate\Support\Facades\Log;
 class DeployController extends \App\Http\Controllers\Controller
 {
     /**
+     * Public diagnostic - no secret needed, safe to expose (read-only).
+     * Usage: GET /api/deploy/diagnose
+     */
+    public function diagnose(Request $request): JsonResponse
+    {
+        $results = [];
+
+        // 1. DB connection
+        try {
+            $tables = DB::select('SHOW TABLES');
+            $tableNames = array_map(fn($t) => array_values((array)$t)[0], $tables);
+            $results['db_connected'] = true;
+            $results['db_tables_count'] = count($tables);
+            $results['db_has_reservations'] = in_array('reservations', $tableNames);
+            $results['db_has_check_ins'] = in_array('check_ins', $tableNames);
+            $results['db_has_guests'] = in_array('guests', $tableNames);
+            $results['db_has_rooms'] = in_array('rooms', $tableNames);
+            $results['db_has_hotels'] = in_array('hotels', $tableNames);
+        } catch (\Throwable $e) {
+            $results['db_connected'] = false;
+            $results['db_error'] = $e->getMessage();
+            return response()->json($results);
+        }
+
+        // 2. Try reservation query
+        try {
+            $count = DB::table('reservations')->count();
+            $results['reservations_count'] = $count;
+            $results['reservations_query_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['reservations_query_ok'] = false;
+            $results['reservations_error'] = $e->getMessage();
+        }
+
+        // 3. Try reservation with relations
+        try {
+            \App\Models\Reservation::with(['guest', 'room', 'checkIn'])->limit(1)->get();
+            $results['reservation_with_relations_ok'] = true;
+        } catch (\Throwable $e) {
+            $results['reservation_with_relations_ok'] = false;
+            $results['reservation_with_relations_error'] = $e->getMessage();
+        }
+
+        // 4. Check columns in reservations table
+        try {
+            $cols = DB::select('SHOW COLUMNS FROM reservations');
+            $results['reservation_columns'] = array_map(fn($c) => $c->Field, $cols);
+        } catch (\Throwable $e) {
+            $results['reservation_columns_error'] = $e->getMessage();
+        }
+
+        // 5. Check columns in check_ins table
+        try {
+            $cols = DB::select('SHOW COLUMNS FROM check_ins');
+            $results['check_in_columns'] = array_map(fn($c) => $c->Field, $cols);
+        } catch (\Throwable $e) {
+            $results['check_in_columns_error'] = $e->getMessage();
+        }
+
+        // 6. Hotel model check (for platform/statistics)
+        try {
+            $hotel = \App\Models\Hotel::first();
+            $results['hotel_found'] = !!$hotel;
+            $results['hotel_id'] = $hotel?->id;
+        } catch (\Throwable $e) {
+            $results['hotel_error'] = $e->getMessage();
+        }
+
+        return response()->json($results, 200, [], JSON_PRETTY_PRINT);
+    }
+
+    /**
+     * Platform statistics for Admin dashboard.
+     * Usage: GET /api/platform/statistics (requires auth:sanctum)
+     */
+    public function platformStatistics(): JsonResponse
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'total_hotels'       => \App\Models\Hotel::count(),
+                'active_hotels'      => \App\Models\Hotel::where('is_active', true)->count(),
+                'total_users'        => \App\Models\User::count(),
+                'total_rooms'        => \App\Models\Room::count(),
+                'total_reservations' => \App\Models\Reservation::count(),
+            ],
+        ]);
+    }
+
+    /**
      * Protected endpoint to run migrations and other deploy tasks.
      * Requires DEPLOY_SECRET env variable to match the ?secret= query param.
-     * 
      * Usage: GET /api/deploy/migrate?secret=YOUR_DEPLOY_SECRET
      */
     public function migrate(Request $request): JsonResponse
     {
-        // Verify secret
         $secret = env('DEPLOY_SECRET', '');
         if (empty($secret) || $request->query('secret') !== $secret) {
             return response()->json(['error' => 'Unauthorized'], 401);
@@ -27,37 +115,33 @@ class DeployController extends \App\Http\Controllers\Controller
         $output = [];
         $errors = [];
 
-        // 1. Clear caches
         try {
             Artisan::call('config:clear');
             Artisan::call('cache:clear');
+            Artisan::call('route:clear');
             $output[] = '✅ Caches cleared';
         } catch (\Throwable $e) {
             $errors[] = 'Cache clear failed: ' . $e->getMessage();
         }
 
-        // 2. Run migrations
         try {
             Artisan::call('migrate', ['--force' => true]);
-            $migrationOutput = Artisan::output();
             $output[] = '✅ Migrations ran';
-            $output[] = $migrationOutput;
+            $output[] = Artisan::output();
         } catch (\Throwable $e) {
             $errors[] = 'Migration failed: ' . $e->getMessage();
             Log::error('[Deploy] Migration failed: ' . $e->getMessage());
         }
 
-        // 3. Re-cache
         try {
             Artisan::call('config:cache');
-            Artisan::call('route:cache');
             Artisan::call('view:cache');
-            $output[] = '✅ Config/route/view cached';
+            // NOTE: route:cache intentionally skipped — closure routes cannot be serialized
+            $output[] = '✅ Config/view cached';
         } catch (\Throwable $e) {
             $errors[] = 'Cache rebuild failed: ' . $e->getMessage();
         }
 
-        // 4. DB connectivity check
         try {
             $tables = DB::select('SHOW TABLES');
             $output[] = '✅ DB connected — ' . count($tables) . ' tables found';
@@ -66,9 +150,9 @@ class DeployController extends \App\Http\Controllers\Controller
         }
 
         return response()->json([
-            'status'  => empty($errors) ? 'success' : 'partial',
-            'output'  => $output,
-            'errors'  => $errors,
+            'status' => empty($errors) ? 'success' : 'partial',
+            'output' => $output,
+            'errors' => $errors,
         ]);
     }
 
