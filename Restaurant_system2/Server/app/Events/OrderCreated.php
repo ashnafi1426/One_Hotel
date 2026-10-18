@@ -54,16 +54,54 @@ class OrderCreated implements ShouldBroadcastNow
             'created_at' => $this->order->created_at,
             'guest_name' => $guestName,
             'room_number' => $this->order->room?->room_number,
+            // Send complete order object with all relations (matching OrderStatusUpdated format)
             'order' => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
-                'status' => $this->order->status,
                 'order_type' => $this->order->order_type,
-                'total' => $this->order->total,
-                'created_at' => $this->order->created_at,
-                'updated_at' => $this->order->updated_at,
-                'guest_name' => $guestName,
-                'room_number' => $this->order->room?->room_number,
+                'status' => $this->order->status,
+                'previous_status' => null,
+                'order_time' => $this->order->created_at?->toISOString(),
+                'guest' => $this->order->guest ? [
+                    'id' => $this->order->guest->id,
+                    'first_name' => $this->order->guest->first_name ?? '',
+                    'last_name' => $this->order->guest->last_name ?? '',
+                    'full_name' => $guestName ?: 'Guest',
+                ] : null,
+                'room' => $this->order->room ? [
+                    'id' => $this->order->room->id,
+                    'room_number' => $this->order->room->room_number,
+                ] : null,
+                'table' => $this->order->table ? [
+                    'id' => $this->order->table->id,
+                    'table_number' => $this->order->table->table_number,
+                    'table_name' => $this->order->table->table_name ?? null,
+                ] : null,
+                'reservation' => $this->order->reservation ? [
+                    'id' => $this->order->reservation->id,
+                    'booking_reference' => $this->order->reservation->booking_reference,
+                ] : null,
+                'items' => $this->order->orderItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'menu_item_id' => $item->menu_item_id,
+                        'name' => $item->menu_item?->name ?? 'Unknown Item',
+                        'category' => $item->menu_item?->category ?? 'Other',
+                        'quantity' => (int) $item->quantity,
+                        'unit_price' => (float) $item->unit_price,
+                        'line_total' => (float) $item->line_total,
+                        'notes' => $item->notes,
+                        'note' => $item->notes,
+                        'image' => $item->menu_item?->image ?? null,
+                    ];
+                })->toArray(),
+                'subtotal' => (float) ($this->order->subtotal ?? 0),
+                'tax' => (float) ($this->order->tax ?? 0),
+                'discount' => (float) ($this->order->discount ?? 0),
+                'total' => (float) ($this->order->total ?? 0),
+                'notes' => $this->order->notes,
+                'created_at' => $this->order->created_at?->toISOString(),
+                'updated_at' => $this->order->updated_at?->toISOString(),
             ],
         ];
     }
