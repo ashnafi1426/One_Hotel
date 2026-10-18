@@ -399,7 +399,7 @@ function getStatusBgRow(status: string): string {
                 <button
                   v-if="order.status === 'pending'"
                   @click.stop="handleStartPreparing(order)"
-                  :disabled="isProcessing(order.id) || processing"
+                  :disabled="isProcessing(order.id)"
                   class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 disabled:opacity-50 text-slate-950 font-black rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-amber-500/20"
                 >
                   <Loader v-if="isProcessing(order.id)" class="w-3.5 h-3.5 animate-spin" />
@@ -409,7 +409,7 @@ function getStatusBgRow(status: string): string {
                 <button
                   v-else-if="order.status === 'preparing'"
                   @click.stop="handleMarkReady(order)"
-                  :disabled="isProcessing(order.id) || processing"
+                  :disabled="isProcessing(order.id)"
                   class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-blue-600/20"
                 >
                   <Loader v-if="isProcessing(order.id)" class="w-3.5 h-3.5 animate-spin" />
@@ -419,7 +419,7 @@ function getStatusBgRow(status: string): string {
                 <button
                   v-else-if="order.status === 'ready'"
                   @click.stop="handleMarkServed(order)"
-                  :disabled="isProcessing(order.id) || processing"
+                  :disabled="isProcessing(order.id)"
                   class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white font-bold rounded-xl text-xs transition cursor-pointer flex items-center gap-1.5 shadow-md shadow-emerald-600/20"
                 >
                   <Loader v-if="isProcessing(order.id)" class="w-3.5 h-3.5 animate-spin" />
@@ -581,3 +581,4 @@ function getStatusBgRow(status: string): string {
     </div>
   </div>
 </template>
+
