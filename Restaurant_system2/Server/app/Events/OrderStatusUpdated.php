@@ -6,8 +6,7 @@ use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -16,13 +15,11 @@ use Illuminate\Queue\SerializesModels;
  *
  * Broadcast when an order's status changes (pending → preparing → ready → served).
  *
- * Broadcasts to TWO channels:
- * 1. orders.{hotel_id}.{order_id} - Customer tracking their specific order
- * 2. hotel.{hotel_id}.kitchen - Kitchen dashboard for real-time order management
+ * Broadcasts to the kitchen.orders.update channel for real-time kitchen dashboard updates.
  *
- * Implements ShouldQueue for async broadcasting (doesn't block HTTP response).
+ * Uses ShouldBroadcastNow to broadcast immediately without queuing (required for real-time response).
  */
-class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
+class OrderStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
