@@ -9,6 +9,7 @@ use App\Models\OrderItem;
 use App\Models\RestaurantTable;
 use App\Models\Room;
 use App\Models\User;
+use App\Events\OrderCreated;
 use App\Services\QRResolutionService;
 use App\Services\TenantContext;
 use App\Services\Waiter\AutomaticWaiterAssignmentService;
@@ -108,6 +109,14 @@ class GuestOrderService
             ]);
 
             $this->createOrderItems($order->id, $orderItems);
+
+            // Broadcast order creation for real-time kitchen updates
+            try {
+                OrderCreated::dispatch($order);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to broadcast room order creation: {$e->getMessage()}");
+            }
+
             $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
 
             try {
@@ -166,6 +175,14 @@ class GuestOrderService
             ]);
 
             $this->createOrderItems($order->id, $orderItems);
+
+            // Broadcast order creation for real-time kitchen updates
+            try {
+                OrderCreated::dispatch($order);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to broadcast table order creation: {$e->getMessage()}");
+            }
+
             $table->update(['status' => RestaurantTable::STATUS_OCCUPIED]);
 
             $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
@@ -309,4 +326,8 @@ class GuestOrderService
         }
     }
 }
+
+
+
+
 
