@@ -93,6 +93,8 @@ export interface KitchenStatistics {
   ready_orders: number
 
   served_orders: number
+  
+  cancelled_orders?: number
 
   total_orders: number
 

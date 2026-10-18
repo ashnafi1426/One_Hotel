@@ -6,7 +6,40 @@ import type { KitchenOrder, KitchenStatistics } from '@/types/kitchen'
 
 export const useKitchenStore = defineStore('kitchen', () => {
   const orders = ref<KitchenOrder[]>([])
-  const statistics = ref<KitchenStatistics | null>(null)
+  const statisticsFromApi = ref<KitchenStatistics | null>(null)
+  
+  // Compute statistics in real-time from orders array for instant updates
+  const statistics = computed<KitchenStatistics | null>(() => {
+    if (orders.value.length === 0 && !statisticsFromApi.value) {
+      return null
+    }
+    
+    // Count orders by status from the live orders array
+    const pending = orders.value.filter(o => o.status === 'pending').length
+    const preparing = orders.value.filter(o => o.status === 'preparing').length
+    const ready = orders.value.filter(o => o.status === 'ready').length
+    const served = orders.value.filter(o => o.status === 'served').length
+    const cancelled = orders.value.filter(o => o.status === 'cancelled').length
+    const total = orders.value.length
+    
+    // Use API stats as base for today's counts, or compute if not available
+    const apiStats = statisticsFromApi.value
+    
+    return {
+      pending_orders: pending,
+      preparing_orders: preparing,
+      ready_orders: ready,
+      served_orders: served,
+      cancelled_orders: cancelled,
+      total_orders: total,
+      today_orders: apiStats?.today_orders ?? total,
+      today_pending: apiStats?.today_pending ?? pending,
+      today_preparing: apiStats?.today_preparing ?? preparing,
+      today_ready: apiStats?.today_ready ?? ready,
+      today_served: apiStats?.today_served ?? served,
+      avg_prep_time_minutes: apiStats?.avg_prep_time_minutes ?? 0,
+    }
+  })
   const loading = ref(false)
   const actionLoading = ref<string | null>(null)
   const error = ref<string | null>(null)
@@ -32,7 +65,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
       const served = Array.isArray(ordersObj.served) ? ordersObj.served : []
 
       orders.value = [...pending, ...preparing, ...ready, ...served]
-      statistics.value = data?.statistics || null
+      statisticsFromApi.value = data?.statistics || null
     } catch (err: any) {
       console.error('[kitchenStore] Failed to load kitchen dashboard:', err)
       error.value =
@@ -186,7 +219,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
   function clearStore() {
     orders.value = []
 
-    statistics.value = null
+    statisticsFromApi.value = null
 
     error.value = null
 
