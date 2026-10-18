@@ -43,6 +43,10 @@ class BroadcastAuthController extends Controller
                 return $this->authorizeOrderChannel($request, $channelName, $socketId);
             }
 
+            if (str_starts_with($channelName, 'private-kitchen.')) {
+                return $this->authorizeKitchenChannel($request, $channelName, $socketId);
+            }
+
             if (str_starts_with($channelName, 'private-hotel.')) {
                 return $this->authorizeHotelChannel($request, $channelName, $socketId);
             }
@@ -143,6 +147,47 @@ class BroadcastAuthController extends Controller
                 'user_id' => $user->id
             ]);
         }
+
+        $auth = $this->generateChannelAuth($channelName, $socketId);
+
+        return response()->json([
+            'auth' => $auth,
+            'channel_data' => null
+        ]);
+    }
+
+    /**
+     * Authorize access to kitchen channels: private-kitchen.orders.update
+     */
+    protected function authorizeKitchenChannel(Request $request, string $channelName, string $socketId): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            Log::warning('[BroadcastAuth] Kitchen channel access denied - no authentication', [
+                'channel' => $channelName,
+                'ip' => $request->ip()
+            ]);
+            return response()->json(['error' => 'Authentication required'], 401);
+        }
+
+        // Check if user has kitchen role
+        $kitchenRoles = ['chef', 'cook', 'kitchen_staff', 'manager', 'admin', 'administrator', 'super_admin'];
+        $userRole = strtolower($user->role ?? '');
+        
+        if (!in_array($userRole, $kitchenRoles)) {
+            Log::warning('[BroadcastAuth] Kitchen channel access denied - insufficient role', [
+                'channel' => $channelName,
+                'user_id' => $user->id,
+                'user_role' => $userRole
+            ]);
+            return response()->json(['error' => 'Insufficient permissions for kitchen channel'], 403);
+        }
+
+        Log::info('[BroadcastAuth] Kitchen channel authorized', [
+            'channel' => $channelName,
+            'user_id' => $user->id,
+            'user_role' => $userRole
+        ]);
 
         $auth = $this->generateChannelAuth($channelName, $socketId);
 
