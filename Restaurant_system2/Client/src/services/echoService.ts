@@ -91,6 +91,43 @@ export function subscribeToOrderUpdates(
 }
 
 /**
+ * Subscribe to all manager order updates
+ * Fired when any order status changes or new orders arrive
+ */
+export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
+  try {
+    const echo = getEcho()
+
+    const channel = echo
+      .channel('manager.orders.update')
+      .listen('order.status.changed', (data: any) => {
+        console.log('[Echo] Manager order status update:', data)
+        onUpdate(data)
+      })
+      .listen('order.created', (data: any) => {
+        console.log('[Echo] New order for manager:', data)
+        onUpdate(data)
+      })
+      .error((error: any) => {
+        console.error('[Echo] Error on manager.orders.update:', error)
+        onError?.(error)
+      })
+
+    console.log('[Echo] Subscribed to manager order updates')
+
+    // Return unsubscribe function
+    return () => {
+      echo.leave('manager.orders.update')
+      console.log('[Echo] Unsubscribed from manager order updates')
+    }
+  } catch (error: any) {
+    console.error('[Echo] Failed to subscribe to manager updates:', error)
+    onError?.(error)
+    return () => {} // Return no-op function if subscription fails
+  }
+}
+
+/**
  * Subscribe to all kitchen order updates
  * Fired when any order status changes in the kitchen
  */
@@ -177,6 +214,7 @@ export default {
   initializeEcho,
   getEcho,
   subscribeToOrderUpdates,
+  subscribeToManagerOrderUpdates,
   subscribeToKitchenOrderUpdates,
   subscribeToWaiterOrderUpdates,
   unsubscribeFromOrder,

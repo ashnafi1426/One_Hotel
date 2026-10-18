@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useManagerStore } from '@/stores/managerStore'
 import { useManagerOperationsStore } from '@/stores/manager/operationsStore'
 import { useLanguageStore } from '@/stores/language'
+import echoService from '@/services/echoService'
 import RestaurantMonitor from '@/components/manager/RestaurantMonitor.vue'
 import DashboardLayout from '../../Layouts/DashboardLayout.vue'
 import { ChefHat, UtensilsCrossed } from 'lucide-vue-next'
@@ -11,12 +12,40 @@ const manager = useManagerStore()
 const operationsStore = useManagerOperationsStore()
 const languageStore = useLanguageStore()
 
+let unsubscribeWebSocket: (() => void) | undefined
+
 onMounted(async () => {
   if (!manager.orders || manager.orders.length === 0) {
     await manager.loadOrders()
   }
   await operationsStore.loadOrders()
+  
+  // Subscribe to real-time order updates via WebSocket
+  subscribeToOrderUpdates()
 })
+
+onUnmounted(() => {
+  // Cleanup WebSocket subscription
+  if (unsubscribeWebSocket) {
+    unsubscribeWebSocket()
+  }
+})
+
+function subscribeToOrderUpdates() {
+  console.log('[ManagerOrders] Subscribing to real-time order updates')
+  unsubscribeWebSocket = echoService.subscribeToManagerOrderUpdates(
+    (data: any) => {
+      console.log('[ManagerOrders] Received order update:', data)
+      // Reload orders to reflect the update
+      operationsStore.loadOrders().catch(err => 
+        console.error('[ManagerOrders] Failed to reload orders:', err)
+      )
+    },
+    (error: any) => {
+      console.error('[ManagerOrders] WebSocket error:', error)
+    }
+  )
+}
 </script>
 
 <template>
