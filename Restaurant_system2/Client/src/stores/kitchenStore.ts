@@ -109,35 +109,39 @@ export const useKitchenStore = defineStore('kitchen', () => {
   }
 
   function receiveOrderUpdate(data: any) {
-    console.log('[kitchenStore] ✨ Received order update via WebSocket:', data)
+    console.log('[kitchenStore] ? Received order update via WebSocket:', data)
     
-    // Extract order ID - backend sends 'id' field in OrderStatusChanged event
+    // Extract order ID - backend sends 'id' field in broadcast
     const orderId = data.id || data.order_id
     if (!orderId) {
-      console.warn('[kitchenStore] ❌ No order id in WebSocket data, doing full refresh')
+      console.warn('[kitchenStore] ? No order id in WebSocket data, doing full refresh')
       console.log('[kitchenStore] Data received:', data)
       fetchDashboard()
       return
     }
     
-    console.log('[kitchenStore] Looking for order:', orderId, 'in local state')
+    console.log('[kitchenStore] Processing update for order:', orderId)
     
-    // Try to find and update existing order incrementally (without full dashboard refresh)
-    const existingIndex = orders.value.findIndex((o) => o.id === orderId)
-    if (existingIndex !== -1) {
-      // Order found - update incrementally
-      const updatedOrder = orders.value[existingIndex]
-      updatedOrder.status = data.status || data.newStatus || updatedOrder.status
-      updatedOrder.previous_status = data.old_status || data.previous_status
-      updatedOrder.updated_at = data.updated_at
+    // If backend sends full order data in 'order' field, use it
+    // Otherwise, we need to fetch full data to avoid partial updates
+    if (data.order && typeof data.order === 'object') {
+      // Use the full order object from backend
+      const fullOrder = data.order as KitchenOrder
+      console.log('[kitchenStore] ? Full order data received from WebSocket')
       
-      // Trigger Vue reactivity by reassigning the array element
-      orders.value[existingIndex] = { ...updatedOrder }
-      
-      console.log('[kitchenStore] ✨ Incremental update - Order', orderId, '→', updatedOrder.status)
+      const existingIndex = orders.value.findIndex((o) => o.id === orderId)
+      if (existingIndex !== -1) {
+        // Replace the entire order to ensure all fields are updated
+        orders.value[existingIndex] = fullOrder
+        console.log('[kitchenStore] ? Order updated:', orderId, '?', fullOrder.status)
+      } else {
+        // New order - add it to the list
+        orders.value.unshift(fullOrder)
+        console.log('[kitchenStore] ? New order added:', orderId, '?', fullOrder.status)
+      }
     } else {
-      // Order not found locally - could be a new order or not in current view
-      console.log('[kitchenStore] ⚠️ Order not in local state, doing full refresh to sync')
+      // Backend only sent partial data (status change) - do full refresh to be safe
+      console.log('[kitchenStore] ?? Partial data received, doing full refresh')
       fetchDashboard()
       return
     }

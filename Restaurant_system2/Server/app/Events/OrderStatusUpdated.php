@@ -96,17 +96,53 @@ class OrderStatusUpdated implements ShouldBroadcastNow
             'message' => $this->message,
             'estimated_completion_minutes' => $this->estimatedCompletionMinutes,
             'updated_at' => now()->toISOString(),
-            // Include full order data so frontend can display it
+            // Include full order data with all relations for frontend display
             'order' => [
-                'id' => $this->orderId,
-                'order_number' => $this->orderNumber,
+                'id' => $this->order->id,
+                'order_number' => $this->order->order_number,
+                'order_type' => $this->order->order_type,
                 'status' => $this->status,
                 'previous_status' => $this->previousStatus,
-                'room_number' => $this->roomNumber,
-                'table_number' => $this->tableNumber,
-                'guest_name' => $guestName,
-                'chef_id' => $this->chefId,
-                'created_at' => $this->order->created_at,
+                'order_time' => $this->order->created_at?->toISOString(),
+                'guest' => $this->order->guest ? [
+                    'id' => $this->order->guest->id,
+                    'first_name' => $this->order->guest->first_name ?? '',
+                    'last_name' => $this->order->guest->last_name ?? '',
+                    'full_name' => trim(($this->order->guest->first_name ?? '') . ' ' . ($this->order->guest->last_name ?? '')) ?: 'Guest',
+                ] : null,
+                'room' => $this->order->room ? [
+                    'id' => $this->order->room->id,
+                    'room_number' => $this->order->room->room_number,
+                ] : null,
+                'table' => $this->order->table ? [
+                    'id' => $this->order->table->id,
+                    'table_number' => $this->order->table->table_number,
+                    'table_name' => $this->order->table->table_name ?? null,
+                ] : null,
+                'reservation' => $this->order->reservation ? [
+                    'id' => $this->order->reservation->id,
+                    'booking_reference' => $this->order->reservation->booking_reference,
+                ] : null,
+                'items' => $this->order->orderItems->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'menu_item_id' => $item->menu_item_id,
+                        'name' => $item->menu_item?->name ?? 'Unknown Item',
+                        'category' => $item->menu_item?->category ?? 'Other',
+                        'quantity' => $item->quantity,
+                        'unit_price' => $item->unit_price,
+                        'line_total' => $item->line_total,
+                        'notes' => $item->notes,
+                        'note' => $item->notes,
+                        'image' => $item->menu_item?->image ?? null,
+                    ];
+                })->toArray(),
+                'subtotal' => $this->order->subtotal ?? 0,
+                'tax' => $this->order->tax ?? 0,
+                'discount' => $this->order->discount ?? 0,
+                'total' => $this->order->total ?? 0,
+                'notes' => $this->order->notes,
+                'created_at' => $this->order->created_at?->toISOString(),
                 'updated_at' => now()->toISOString(),
             ],
         ];
