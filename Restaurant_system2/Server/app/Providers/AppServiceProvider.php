@@ -61,6 +61,21 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // PRODUCTION FIX: Force SMTP mailer on production
+        // Render environment variables may not update properly, so enforce in code
+        if (config('app.env') === 'production') {
+            config([
+                'mail.default' => 'smtp',
+                'mail.mailers.smtp.host' => 'smtp.gmail.com',
+                'mail.mailers.smtp.port' => 587,
+                'mail.mailers.smtp.encryption' => 'tls',
+                'mail.mailers.smtp.username' => env('MAIL_USERNAME', 'ashenafisileshi7@gmail.com'),
+                'mail.mailers.smtp.password' => env('MAIL_PASSWORD', 'wqkxacketqwetpas'),
+                'mail.from.address' => env('MAIL_FROM_ADDRESS', 'ashenafisileshi7@gmail.com'),
+                'mail.from.name' => env('MAIL_FROM_NAME', 'HMS'),
+            ]);
+        }
+
         require_once app_path('Translations/helpers.php');
 
         view()->addNamespace('mail', resource_path('views/emails'));
