@@ -68,7 +68,8 @@ class AppServiceProvider extends ServiceProvider
                 'mail.default' => 'smtp',
                 'mail.mailers.smtp.host' => 'smtp.gmail.com',
                 'mail.mailers.smtp.port' => 587,
-                'mail.mailers.smtp.scheme' => 'smtp',  // FIX: use 'smtp' (port 587) not 'tls' or 'smtps'
+                'mail.mailers.smtp.scheme' => 'smtp',           // Transport type for port 587
+                'mail.mailers.smtp.encryption' => 'tls',        // Upgrade to TLS after connecting (STARTTLS)
                 'mail.mailers.smtp.username' => env('MAIL_USERNAME', 'ashenafisileshi7@gmail.com'),
                 'mail.mailers.smtp.password' => env('MAIL_PASSWORD', 'wqkxacketqwetpas'),
                 'mail.from.address' => env('MAIL_FROM_ADDRESS', 'ashenafisileshi7@gmail.com'),
