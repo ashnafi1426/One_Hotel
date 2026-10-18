@@ -96,7 +96,7 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
 
     const channel = echo
       .channel('manager.orders.update')
-      .listen('order.status.changed', (data: any) => {
+      .listen('OrderStatusUpdated', (data: any) => {
         console.log('[Echo] Manager order status update:', data)
         onUpdate(data)
       })
@@ -131,11 +131,11 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
   try {
     const echo = getEcho()
 
-    // Subscribe to kitchen.orders.update channel where OrderStatusChanged is broadcast
+    // Subscribe to kitchen.orders.update PUBLIC channel where OrderStatusUpdated and OrderCreated are broadcast
     const channel = echo
-      .private('private-kitchen.orders.update')
-      .listen('order.status.changed', (data: any) => {
-        console.log('[Echo] ✨ Kitchen order status changed:', data)
+      .channel('kitchen.orders.update')
+      .listen('OrderStatusUpdated', (data: any) => {
+        console.log('[Echo] ✨ Kitchen order status updated:', data)
         onUpdate(data)
       })
       .listen('order.created', (data: any) => {
@@ -143,15 +143,15 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
         onUpdate(data)
       })
       .error((error: any) => {
-        console.error('[Echo] Error on private-kitchen.orders.update:', error)
+        console.error('[Echo] Error on kitchen.orders.update:', error)
         onError?.(error)
       })
 
-    console.log('[Echo] ✅ Subscribed to kitchen order updates (private-kitchen.orders.update channel)')
+    console.log('[Echo] ✅ Subscribed to kitchen order updates (kitchen.orders.update channel)')
 
     // Return unsubscribe function
     return () => {
-      echo.leave('private-kitchen.orders.update')
+      echo.leave('kitchen.orders.update')
       console.log('[Echo] Unsubscribed from kitchen order updates')
     }
   } catch (error: any) {
@@ -171,8 +171,12 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
 
     echo
       .channel('waiter.orders.update')
-      .listen('order.status.changed', (data: any) => {
+      .listen('OrderStatusUpdated', (data: any) => {
         console.log('[Echo] Waiter order update:', data)
+        onUpdate(data)
+      })
+      .listen('order.created', (data: any) => {
+        console.log('[Echo] New order for waiter:', data)
         onUpdate(data)
       })
       .error((error: any) => {
