@@ -32,6 +32,7 @@ class OrderCreated implements ShouldBroadcast
             new Channel('orders.update.' . $this->order->id),
             new Channel('kitchen.orders.update'),
             new Channel('waiter.orders.update'),
+            new Channel('manager.orders.update'),
         ];
     }
 
@@ -42,11 +43,17 @@ class OrderCreated implements ShouldBroadcast
      */
     public function broadcastWith(): array
     {
+        $guestName = trim(
+            ($this->order->guest?->first_name ?? '') . ' ' . ($this->order->guest?->last_name ?? '')
+        ) ?: null;
+
         return [
             'id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'status' => $this->order->status,
             'created_at' => $this->order->created_at,
+            'guest_name' => $guestName,
+            'room_number' => $this->order->room?->room_number,
             'order' => [
                 'id' => $this->order->id,
                 'order_number' => $this->order->order_number,
@@ -55,6 +62,8 @@ class OrderCreated implements ShouldBroadcast
                 'total' => $this->order->total,
                 'created_at' => $this->order->created_at,
                 'updated_at' => $this->order->updated_at,
+                'guest_name' => $guestName,
+                'room_number' => $this->order->room?->room_number,
             ],
         ];
     }

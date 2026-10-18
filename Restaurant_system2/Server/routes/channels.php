@@ -50,6 +50,10 @@ Broadcast::channel('waiter.orders.update', function ($user) {
     return authorizeWaiterChannel($user);
 });
 
+Broadcast::channel('manager.orders.update', function ($user) {
+    return authorizeManagerChannel($user);
+});
+
 if (!function_exists('authorizeOrderChannel')) {
     function authorizeOrderChannel($user, string $orderId): bool {
         try {
@@ -169,6 +173,39 @@ if (!function_exists('authorizeWaiterChannel')) {
 }
 
 /**
+ * Manager Orders Update Channel
+ */
+if (!function_exists('authorizeManagerChannel')) {
+    function authorizeManagerChannel($user): bool {
+        if (!$user) {
+            return false;
+        }
+        
+        try {
+            $userRole = strtolower($user->role ?? '');
+            $managerRoles = ['manager', 'admin', 'administrator', 'super_admin'];
+            
+            if (in_array($userRole, $managerRoles)) {
+                return true;
+            }
+            
+            if (method_exists($user, 'hasRole')) {
+                foreach ($managerRoles as $role) {
+                    if ($user->hasRole($role)) {
+                        return true;
+                    }
+                }
+            }
+            
+            return false;
+        } catch (\Exception $e) {
+            Log::error("[WebSocket Auth] Manager orders channel error: " . $e->getMessage());
+            return false;
+        }
+    }
+}
+
+/**
  * Hotel Orders Channel (Dashboard)
  */
 Broadcast::channel('hotel.{hotelId}.orders', function ($user) {
@@ -276,34 +313,4 @@ Broadcast::channel('manager', function ($user) {
     }
     return in_array(strtolower($user->role ?? ''), ['admin', 'manager', 'administrator', 'super_admin'])
         || (method_exists($user, 'isPlatformAdmin') && $user->isPlatformAdmin());
-});
-
-/**
- * Order Status Update Channel
- *
- * Channel: orders.update.{orderId}
- * Used for broadcasting order status changes in real-time
- */
-Broadcast::channel('orders.update.{orderId}', function ($user, string $orderId) {
-    return authorizeOrderChannel($user, $orderId);
-});
-
-/**
- * Kitchen Orders Update Channel
- *
- * Channel: kitchen.orders.update
- * Broadcasts all order changes to kitchen staff
- */
-Broadcast::channel('kitchen.orders.update', function ($user) {
-    return authorizeKitchenChannel($user);
-});
-
-/**
- * Waiter Orders Update Channel
- *
- * Channel: waiter.orders.update
- * Broadcasts all order changes to waiters
- */
-Broadcast::channel('waiter.orders.update', function ($user) {
-    return authorizeWaiterChannel($user);
 });
