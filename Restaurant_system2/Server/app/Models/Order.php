@@ -62,18 +62,34 @@ class Order extends Model
 
     public static function generateOrderNumber(?string $hotelId = null): string
     {
-        $datePrefix = 'ORD-' . now()->format('Ymd');
-        $latest = static::withoutGlobalScopes()
-            ->where('order_number', 'like', "{$datePrefix}-%")
-            ->orderByDesc('order_number')
-            ->value('order_number');
+        // Use database-level locking to prevent race conditions when generating order numbers
+        return \DB::transaction(function () {
+            $datePrefix = 'ORD-' . now()->format('Ymd');
+            
+            // Use lockForUpdate() to prevent concurrent access
+            $latest = static::withoutGlobalScopes()
+                ->where('order_number', 'like', "{$datePrefix}-%")
+                ->orderByDesc('order_number')
+                ->lockForUpdate()
+                ->value('order_number');
 
-        $nextSeq = 1;
-        if ($latest && preg_match('/-(\d{4})$/', $latest, $matches)) {
-            $nextSeq = ((int) $matches[1]) + 1;
-        }
+            $nextSeq = 1;
+            if ($latest && preg_match('/-(\d{4})$/', $latest, $matches)) {
+                $nextSeq = ((int) $matches[1]) + 1;
+            }
 
-        return sprintf('%s-%04d', $datePrefix, $nextSeq);
+            $orderNumber = sprintf('%s-%04d', $datePrefix, $nextSeq);
+            
+            // Double-check uniqueness before returning
+            $retries = 0;
+            while (static::withoutGlobalScopes()->where('order_number', $orderNumber)->exists() && $retries < 5) {
+                $nextSeq++;
+                $orderNumber = sprintf('%s-%04d', $datePrefix, $nextSeq);
+                $retries++;
+            }
+            
+            return $orderNumber;
+        });
     }
 
     public function reservation()
