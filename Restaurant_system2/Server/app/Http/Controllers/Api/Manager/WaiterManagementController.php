@@ -44,7 +44,7 @@ class WaiterManagementController extends Controller
 
             $waitersQuery = Waiter::with([
                 'user',
-                'floorAssignments' => function ($q) use ($hotelId) {
+                'floorAssignments' => function ($q) {
                     $q->where('assignment_date', '>=', today())
                       ->where('status', 'active')
                       

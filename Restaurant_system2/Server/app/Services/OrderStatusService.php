@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\OrderReadyEvent;
+use App\Events\OrderStatusChanged;
 use App\Models\DeliveryTask;
 use App\Models\Notification;
 use App\Models\Order;
@@ -75,6 +76,8 @@ class OrderStatusService
      */
     public function transition(Order $order, string $newStatus, array $extra = [], ?User $actor = null): Order
     {
+        $oldStatus = $order->status;
+
         if (!in_array($newStatus, self::VALID_STATUSES, true)) {
             throw new InvalidArgumentException("Invalid order status: '{$newStatus}'.");
         }
@@ -89,7 +92,9 @@ class OrderStatusService
             );
         }
 
-        return DB::transaction(function () use ($order, $newStatus, $extra, $actor) {
+        $previousStatus = $order->status;
+
+        $result = DB::transaction(function () use ($order, $newStatus, $extra, $actor) {
             switch ($newStatus) {
                 case Order::STATUS_PREPARING:
                     return $this->handlePreparing($order, $actor);
@@ -107,6 +112,15 @@ class OrderStatusService
                     throw new InvalidArgumentException("Unhandled transition target '{$newStatus}'.");
             }
         });
+
+        // Broadcast the status change via WebSocket
+        try {
+            OrderStatusChanged::dispatch($result, $previousStatus, $newStatus);
+        } catch (\Throwable $e) {
+            Log::warning("Failed to broadcast order status change: {$e->getMessage()}");
+        }
+
+        return $result;
     }
 
     /**

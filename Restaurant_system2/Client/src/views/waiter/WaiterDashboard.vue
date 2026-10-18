@@ -454,8 +454,6 @@ const activeMenuId = ref<string | null>(null)
 const showDetailModal = ref(false)
 const selectedOrder = ref<any | null>(null)
 
-let autoRefreshTimer: ReturnType<typeof setInterval> | null = null
-
 const getItemCount = (items: any): number => {
   if (typeof items === 'number') return items
   if (Array.isArray(items)) return items.length
@@ -629,18 +627,9 @@ onMounted(() => {
   loadDashboard(true)
   setupWebSocket()
   window.addEventListener('click', handleOutsideClick)
-
-  // Auto-refresh poll every 15 seconds to ensure live consistency
-  autoRefreshTimer = setInterval(() => {
-    loadDashboard(true)
-  }, 15000)
 })
 
 onUnmounted(() => {
-  if (autoRefreshTimer) {
-    clearInterval(autoRefreshTimer)
-    autoRefreshTimer = null
-  }
   teardownWebSocket()
   window.removeEventListener('click', handleOutsideClick)
 })

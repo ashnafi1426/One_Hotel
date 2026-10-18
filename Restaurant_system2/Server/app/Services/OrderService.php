@@ -8,6 +8,8 @@ use App\Models\MenuItem;
 use App\Models\User;
 use App\Models\Notification;
 use App\Services\TenantContext;
+use App\Events\OrderStatusChanged;
+use App\Events\OrderCreated;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
@@ -429,7 +431,7 @@ class OrderService{
 
             DB::commit();
 
-            return $order->fresh()->load([
+            $freshOrder = $order->fresh()->load([
                 'reservation',
                 'guest',
                 'room',
@@ -438,6 +440,15 @@ class OrderService{
                 'orderItems.menuItem',
                 'orderItems.taxRate',
             ]);
+
+            // Broadcast order creation via WebSocket
+            try {
+                OrderCreated::dispatch($freshOrder);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning("Failed to broadcast order creation: {$e->getMessage()}");
+            }
+
+            return $freshOrder;
 
         } catch (\Throwable $exception) {
             DB::rollBack();

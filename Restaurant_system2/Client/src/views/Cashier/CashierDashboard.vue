@@ -280,23 +280,18 @@ function cleanupWebSocket() {
   isWsConnected.value = false
 }
 
-// Background polling fallback (every 30s)
-let refreshInterval: any = null
+// Background polling removed - now using WebSocket for real-time updates
 
 onMounted(() => {
   cashierStore.loadDashboard()
   triggerFetchOrders()
   setupWebSocket()
   window.addEventListener('keydown', handleKeydown)
-  refreshInterval = setInterval(() => {
-    triggerFetchOrders()
-  }, 30000)
 })
 
 onUnmounted(() => {
   cleanupWebSocket()
   window.removeEventListener('keydown', handleKeydown)
-  if (refreshInterval) clearInterval(refreshInterval)
   if (toastTimeout) clearTimeout(toastTimeout)
 })
 

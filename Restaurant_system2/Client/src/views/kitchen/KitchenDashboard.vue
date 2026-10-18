@@ -36,7 +36,7 @@ const {
 const detailsDialogRef = ref<InstanceType<typeof KitchenOrderDetailsDialog> | null>(null)
 const autoRefresh = ref(true)
 const refreshing = ref(false)
-let refreshTimer: number | undefined
+let unsubscribeWebSocket: (() => void) | undefined
 
 const allOrders = computed(() => [
   ...(pendingOrders.value || []),
@@ -84,34 +84,26 @@ function openOrder(order: KitchenOrder) {
   }
 }
 
-function startAutoRefresh() {
-  stopAutoRefresh()
-  refreshTimer = window.setInterval(async () => {
-    if (!autoRefresh.value) return
-    await kitchenStore.refreshDashboard()
-  }, 10000)
+function startWebSocketSubscription() {
+  console.log('[KitchenDashboard] Starting WebSocket subscription')
+  kitchenStore.subscribeToUpdates()
 }
 
-function stopAutoRefresh() {
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
-    refreshTimer = undefined
+function stopWebSocketSubscription() {
+  console.log('[KitchenDashboard] Stopping WebSocket subscription')
+  if (unsubscribeWebSocket) {
+    unsubscribeWebSocket()
+    unsubscribeWebSocket = undefined
   }
-}
-
-function handleVisibilityChange() {
-  if (document.hidden) {
-    stopAutoRefresh()
-  } else if (autoRefresh.value) {
-    startAutoRefresh()
-    refreshDashboard()
-  }
+  kitchenStore.unsubscribeFromUpdates()
 }
 
 onMounted(async () => {
+  // Load initial dashboard state
   await kitchenStore.refreshDashboard()
-  startAutoRefresh()
-  document.addEventListener('visibilitychange', handleVisibilityChange)
+  
+  // Subscribe to real-time WebSocket updates instead of polling
+  startWebSocketSubscription()
 })
 
 watch(
@@ -122,8 +114,8 @@ watch(
 )
 
 onBeforeUnmount(() => {
-  stopAutoRefresh()
-  document.removeEventListener('visibilitychange', handleVisibilityChange)
+  // Unsubscribe from WebSocket to prevent memory leaks
+  stopWebSocketSubscription()
 })
 </script>
 
@@ -173,7 +165,7 @@ onBeforeUnmount(() => {
           >
             <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
             <span class="hidden sm:inline">{{
-              languageStore.t('live_queue', 'Live Queue (10s sync)')
+              languageStore.t('live_queue', 'Live Queue (WebSocket)')
             }}</span>
             <span class="sm:hidden">{{ languageStore.t('live', 'Live') }}</span>
           </div>

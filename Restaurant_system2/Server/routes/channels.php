@@ -35,6 +35,21 @@ Broadcast::channel('orders.{orderId}', function ($user, string $orderId) {
     return authorizeOrderChannel($user, $orderId);
 });
 
+/**
+ * Order Status Update Channels (Real-time WebSocket broadcasts)
+ */
+Broadcast::channel('orders.update.{orderId}', function ($user, string $orderId) {
+    return authorizeOrderChannel($user, $orderId);
+});
+
+Broadcast::channel('kitchen.orders.update', function ($user) {
+    return authorizeKitchenChannel($user);
+});
+
+Broadcast::channel('waiter.orders.update', function ($user) {
+    return authorizeWaiterChannel($user);
+});
+
 if (!function_exists('authorizeOrderChannel')) {
     function authorizeOrderChannel($user, string $orderId): bool {
         try {
@@ -263,3 +278,32 @@ Broadcast::channel('manager', function ($user) {
         || (method_exists($user, 'isPlatformAdmin') && $user->isPlatformAdmin());
 });
 
+/**
+ * Order Status Update Channel
+ *
+ * Channel: orders.update.{orderId}
+ * Used for broadcasting order status changes in real-time
+ */
+Broadcast::channel('orders.update.{orderId}', function ($user, string $orderId) {
+    return authorizeOrderChannel($user, $orderId);
+});
+
+/**
+ * Kitchen Orders Update Channel
+ *
+ * Channel: kitchen.orders.update
+ * Broadcasts all order changes to kitchen staff
+ */
+Broadcast::channel('kitchen.orders.update', function ($user) {
+    return authorizeKitchenChannel($user);
+});
+
+/**
+ * Waiter Orders Update Channel
+ *
+ * Channel: waiter.orders.update
+ * Broadcasts all order changes to waiters
+ */
+Broadcast::channel('waiter.orders.update', function ($user) {
+    return authorizeWaiterChannel($user);
+});
