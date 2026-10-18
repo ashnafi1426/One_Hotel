@@ -31,6 +31,10 @@ const echo = new Echo({
   forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
   enabledTransports: ['ws', 'wss'],
   disableStats: true,
+  // Use the /app path for Render nginx reverse proxy
+  ...(import.meta.env.VITE_REVERB_PATH ? { path: import.meta.env.VITE_REVERB_PATH } : {}),
+  // Add polling transport as fallback in case WebSocket fails
+  fallbackTransport: 'polling',
 
   /**
    * Custom authorizer for private channel authentication.
