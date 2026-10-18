@@ -33,15 +33,15 @@ export function initializeEcho(): Echo {
 
   console.log('[Echo] Initialized with Pusher connection (cluster: ' + pusherCluster + ')')
 
-  echoInstance.connector.socket.on('connected', () => {
+  echoInstance.connector.pusher.connection.bind('connected', () => {
     console.log('[Echo] ✅ WebSocket connected to Pusher')
   })
 
-  echoInstance.connector.socket.on('error', (error: any) => {
+  echoInstance.connector.pusher.connection.bind('error', (error: any) => {
     console.error('[Echo] ⚠️ WebSocket error:', error)
   })
 
-  echoInstance.connector.socket.on('disconnected', () => {
+  echoInstance.connector.pusher.connection.bind('disconnected', () => {
     console.warn('[Echo] ❌ WebSocket disconnected from Pusher')
   })
 
@@ -133,7 +133,7 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
 
     // Subscribe to kitchen.orders.update channel where OrderStatusChanged is broadcast
     const channel = echo
-      .channel('kitchen.orders.update')
+      .private('private-kitchen.orders.update')
       .listen('order.status.changed', (data: any) => {
         console.log('[Echo] ✨ Kitchen order status changed:', data)
         onUpdate(data)
@@ -143,15 +143,15 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
         onUpdate(data)
       })
       .error((error: any) => {
-        console.error('[Echo] Error on kitchen.orders.update:', error)
+        console.error('[Echo] Error on private-kitchen.orders.update:', error)
         onError?.(error)
       })
 
-    console.log('[Echo] ✅ Subscribed to kitchen order updates (kitchen.orders.update channel)')
+    console.log('[Echo] ✅ Subscribed to kitchen order updates (private-kitchen.orders.update channel)')
 
     // Return unsubscribe function
     return () => {
-      echo.leave('kitchen.orders.update')
+      echo.leave('private-kitchen.orders.update')
       console.log('[Echo] Unsubscribed from kitchen order updates')
     }
   } catch (error: any) {

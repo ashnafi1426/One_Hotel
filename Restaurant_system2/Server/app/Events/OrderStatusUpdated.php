@@ -59,7 +59,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new Channel('kitchen.orders.update'),
+            new PrivateChannel('private-kitchen.orders.update'),
         ];
     }
 

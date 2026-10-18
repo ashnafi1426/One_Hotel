@@ -42,6 +42,10 @@ Broadcast::channel('orders.update.{orderId}', function ($user, string $orderId) 
     return authorizeOrderChannel($user, $orderId);
 });
 
+Broadcast::channel('private-kitchen.orders.update', function ($user) {
+    return authorizeKitchenChannel($user);
+});
+
 Broadcast::channel('kitchen.orders.update', function ($user) {
     return authorizeKitchenChannel($user);
 });
