@@ -11,42 +11,38 @@ declare global {
 let echoInstance: Echo | null = null
 
 /**
- * Initialize Laravel Echo with Reverb WebSocket connection
+ * Initialize Laravel Echo with Pusher WebSocket connection
  */
 export function initializeEcho(): Echo {
   if (echoInstance) {
     return echoInstance
   }
 
-  const reverebHost = import.meta.env.VITE_REVERB_HOST || 'localhost'
-  const reverbePort = import.meta.env.VITE_REVERB_PORT || 443
-  const reverbeScheme = import.meta.env.VITE_REVERB_SCHEME || 'https'
-  const reverbeAppKey = import.meta.env.VITE_REVERB_APP_KEY || 'm3k5j8h9n2p4q7r1t6w0'
+  const pusherAppKey = import.meta.env.VITE_PUSHER_APP_KEY || '5df8dcb92d20f713b1f2'
+  const pusherCluster = import.meta.env.VITE_PUSHER_APP_CLUSTER || 'ap2'
 
   window.Pusher = Pusher
 
   echoInstance = new Echo({
-    broadcaster: 'reverb',
-    key: reverbeAppKey,
-    wsHost: reverebHost,
-    wsPort: reverbePort,
-    wssPort: reverbePort,
-    forceTLS: reverbeScheme === 'https',
+    broadcaster: 'pusher',
+    key: pusherAppKey,
+    cluster: pusherCluster,
     enabledTransports: ['ws', 'wss'],
+    fallbackTransport: 'polling',
   })
 
-  console.log('[Echo] Initialized with Reverb connection')
+  console.log('[Echo] Initialized with Pusher connection (cluster: ' + pusherCluster + ')')
 
   echoInstance.connector.socket.on('connected', () => {
-    console.log('[Echo] WebSocket connected')
+    console.log('[Echo] ✅ WebSocket connected to Pusher')
   })
 
   echoInstance.connector.socket.on('error', (error: any) => {
-    console.error('[Echo] WebSocket error:', error)
+    console.error('[Echo] ⚠️ WebSocket error:', error)
   })
 
   echoInstance.connector.socket.on('disconnected', () => {
-    console.warn('[Echo] WebSocket disconnected')
+    console.warn('[Echo] ❌ WebSocket disconnected from Pusher')
   })
 
   return echoInstance

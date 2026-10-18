@@ -1,8 +1,8 @@
 /**
  * Laravel Echo WebSocket Plugin
  *
- * Configures Laravel Echo to connect to Laravel Reverb WebSocket server.
- * Uses Pusher protocol (pusher-js) but connects to self-hosted Reverb (not Pusher Cloud).
+ * Configures Laravel Echo to connect to Pusher Channels WebSocket service.
+ * Uses pusher-js SDK to communicate with Pusher's managed WebSocket infrastructure.
  *
  * This plugin is imported in main.ts to initialize WebSocket connection on app startup.
  */
@@ -23,17 +23,14 @@ window.Pusher = Pusher
  * Configure Laravel Echo instance
  */
 const echo = new Echo({
-  broadcaster: 'reverb',
-  key: import.meta.env.VITE_REVERB_APP_KEY,
-  wsHost: import.meta.env.VITE_REVERB_HOST,
-  wsPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-  wssPort: import.meta.env.VITE_REVERB_PORT ?? 8080,
-  forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? 'https') === 'https',
+  broadcaster: 'pusher',
+  key: import.meta.env.VITE_PUSHER_APP_KEY,
+  cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
+  forceTLS: true,
+  encrypted: true,
   enabledTransports: ['ws', 'wss'],
   disableStats: true,
-  // Use the /app path for Render nginx reverse proxy
-  ...(import.meta.env.VITE_REVERB_PATH ? { path: import.meta.env.VITE_REVERB_PATH } : {}),
-  // Add polling transport as fallback in case WebSocket fails
+  // Fallback to polling if WebSocket is blocked by firewall
   fallbackTransport: 'polling',
 
   /**
@@ -136,11 +133,11 @@ window.Echo = echo
 // Log connection status in development
 if (import.meta.env.DEV) {
   echo.connector.pusher.connection.bind('connected', () => {
-    console.log('[Echo]  Connected to Reverb WebSocket server')
+    console.log('[Echo] ✅ Connected to Pusher WebSocket server')
   })
 
   echo.connector.pusher.connection.bind('disconnected', () => {
-    console.log('[Echo] ❌ Disconnected from Reverb WebSocket server')
+    console.log('[Echo] ❌ Disconnected from Pusher WebSocket server')
   })
 
   echo.connector.pusher.connection.bind('error', (err: any) => {

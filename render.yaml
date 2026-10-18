@@ -43,23 +43,19 @@ services:
       - key: QUEUE_CONNECTION
         value: database
       - key: BROADCAST_CONNECTION
-        value: reverb
-      - key: REVERB_APP_ID
-        value: restaurant-app
-      - key: REVERB_APP_KEY
-        value: m3k5j8h9n2p4q7r1t6w0
-      - key: REVERB_APP_SECRET
-        value: s8f3d9g4h7j2k5l1n6p9q2r5t8w0
-      - key: REVERB_HOST
+        value: pusher
+      - key: PUSHER_APP_ID
+        value: "2203245"
+      - key: PUSHER_APP_KEY
+        value: 5df8dcb92d20f713b1f2
+      - key: PUSHER_APP_SECRET
         sync: false
-      - key: REVERB_PORT
-        value: "443"
-      - key: REVERB_SCHEME
+      - key: PUSHER_APP_CLUSTER
+        value: ap2
+      - key: PUSHER_SCHEME
         value: https
-      - key: REVERB_SERVER_HOST
-        value: 127.0.0.1
-      - key: REVERB_SERVER_PORT
-        value: "8080"
+      - key: PUSHER_PORT
+        value: "443"
       - key: MAIL_MAILER
         value: resend
       - key: RESEND_API_KEY
