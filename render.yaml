@@ -50,6 +50,7 @@ services:
         value: 5df8dcb92d20f713b1f2
       - key: PUSHER_APP_SECRET
         sync: false
+        value: ""
       - key: PUSHER_APP_CLUSTER
         value: ap2
       - key: PUSHER_SCHEME

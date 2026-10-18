@@ -71,7 +71,7 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
      */
     public function broadcastAs(): string
     {
-        return 'OrderStatusUpdated';
+        return 'order.status.changed';
     }
 
     /**

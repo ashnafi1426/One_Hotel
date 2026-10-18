@@ -20,7 +20,7 @@ declare global {
 window.Pusher = Pusher
 
 /**
- * Configure Laravel Echo instance
+ * Configure Laravel Echo instance with Pusher broadcaster
  */
 const echo = new Echo({
   broadcaster: 'pusher',
@@ -28,10 +28,6 @@ const echo = new Echo({
   cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
   forceTLS: true,
   encrypted: true,
-  enabledTransports: ['ws', 'wss'],
-  disableStats: true,
-  // Fallback to polling if WebSocket is blocked by firewall
-  fallbackTransport: 'polling',
 
   /**
    * Custom authorizer for private channel authentication.
