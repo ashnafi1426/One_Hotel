@@ -61,18 +61,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // PRODUCTION FIX: Force SMTP mailer on production
-        // Render environment variables may not update properly, so enforce in code
+        // CRITICAL FIX: On production, FORCE Resend mailer
+        // Render free tier blocks SMTP port 587 entirely
+        // This overrides any cached config and env variables
         if (config('app.env') === 'production') {
             config([
-                'mail.default' => 'smtp',
-                'mail.mailers.smtp.host' => 'smtp.gmail.com',
-                'mail.mailers.smtp.port' => 587,
-                'mail.mailers.smtp.scheme' => 'smtp',           // Transport type for port 587
-                'mail.mailers.smtp.encryption' => 'tls',        // Upgrade to TLS after connecting (STARTTLS)
-                'mail.mailers.smtp.username' => env('MAIL_USERNAME', 'ashenafisileshi7@gmail.com'),
-                'mail.mailers.smtp.password' => env('MAIL_PASSWORD', 'wqkxacketqwetpas'),
-                'mail.from.address' => env('MAIL_FROM_ADDRESS', 'ashenafisileshi7@gmail.com'),
+                'mail.default' => 'resend',
+                'mail.from.address' => env('MAIL_FROM_ADDRESS', 'noreply@one-hotel.com'),
                 'mail.from.name' => env('MAIL_FROM_NAME', 'HMS'),
             ]);
         }
