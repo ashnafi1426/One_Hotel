@@ -6,8 +6,7 @@ use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -18,9 +17,9 @@ use Illuminate\Queue\SerializesModels;
  *
  * Broadcasts to the kitchen.orders.update channel for real-time kitchen dashboard updates.
  *
- * Uses ShouldBroadcast with ShouldQueue for reliable async broadcasting.
+ * Uses ShouldBroadcastNow to broadcast immediately (no queue worker needed).
  */
-class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
+class OrderStatusUpdated implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -77,7 +76,13 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
      */
     public function broadcastWith(): array
     {
+        $guestName = trim(
+            ($this->order->guest?->first_name ?? '') . ' ' . ($this->order->guest?->last_name ?? '')
+        ) ?: null;
+
         return [
+            // Use 'id' for consistency with OrderCreated event
+            'id' => $this->orderId,
             'order_id' => $this->orderId,
             'hotel_id' => $this->hotelId,
             'status' => $this->status,
@@ -89,6 +94,19 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
             'message' => $this->message,
             'estimated_completion_minutes' => $this->estimatedCompletionMinutes,
             'updated_at' => now()->toISOString(),
+            // Include full order data so frontend can display it
+            'order' => [
+                'id' => $this->orderId,
+                'order_number' => $this->orderNumber,
+                'status' => $this->status,
+                'previous_status' => $this->previousStatus,
+                'room_number' => $this->roomNumber,
+                'table_number' => $this->tableNumber,
+                'guest_name' => $guestName,
+                'chef_id' => $this->chefId,
+                'created_at' => $this->order->created_at,
+                'updated_at' => now()->toISOString(),
+            ],
         ];
     }
 
