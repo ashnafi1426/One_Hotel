@@ -203,8 +203,8 @@ class BroadcastAuthController extends Controller
      */
     protected function generateChannelAuth(string $channelName, string $socketId): string
     {
-        $appKey = config('broadcasting.connections.reverb.key');
-        $appSecret = config('broadcasting.connections.reverb.secret');
+        $appKey = config('broadcasting.connections.pusher.key');
+        $appSecret = config('broadcasting.connections.pusher.secret');
 
         $stringToSign = $socketId . ':' . $channelName;
         $signature = hash_hmac('sha256', $stringToSign, $appSecret);

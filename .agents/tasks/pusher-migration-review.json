@@ -2,24 +2,19 @@
   "verdict": "CHANGES_REQUESTED",
   "findings": [
     {
-      "issue": "Render config typo: PUSHER_APP_KEY in PUSHER_APP_SECRET field",
-      "description": "The render.yaml lists `PUSHER_APP_KEY: 5df8dcb92d20f713b1f2` under the PUSHER_APP_SECRET key. This value is the public app key, not the secret. Update Render's PUSHER_APP_SECRET environment variable to the correct secret value (which should be synced from Render, not hardcoded in the file).",
-      "severity": "critical"
+      "issue": "BroadcastAuthController reads Reverb credentials instead of Pusher",
+      "severity": "BLOCKING",
+      "description": "The generateChannelAuth method must read PUSHER_APP_KEY and PUSHER_APP_SECRET from config('broadcasting.connections.pusher.*') instead of reverb. All channel authorization will fail in production."
     },
     {
-      "issue": "Event name mismatch: Frontend expects `order.status.changed`, backend broadcasts `OrderStatusUpdated`",
-      "description": "OrderStatusUpdated broadcasts to `kitchen.orders.update` channel but with event name `OrderStatusUpdated`. The frontend's echoService listens for `order.status.changed` event. This mismatch means status updates are received by the frontend but not routed to the update handler, breaking real-time status visibility in the kitchen dashboard.",
-      "severity": "critical"
+      "issue": "Echo options include Reverb-only parameters",
+      "severity": "HIGH",
+      "description": "Verify that Reverb parameters (wsHost, wsPort, wssPort, enabledTransports) are not present in the echo.ts Echo constructor."
     },
     {
-      "issue": "Reverb-specific Echo options alongside Pusher broadcaster",
-      "description": "echo.ts includes `enabledTransports`, `disableStats`, and `fallbackTransport` options with the Pusher broadcaster. These are Reverb-specific and should be removed when using Pusher. Pusher's client ignores them, but they create maintenance debt and potential confusion.",
-      "severity": "medium"
-    },
-    {
-      "issue": "VITE_REVERB_* variables not documented or preserved",
-      "description": "Client/.env previously had VITE_REVERB_APP_KEY, VITE_REVERB_CLUSTER, and other Reverb settings. The file now only has Pusher settings. The old Reverb settings should be commented out and kept for reference during rollback scenarios or local testing.",
-      "severity": "low"
+      "issue": "render.yaml PUSHER_APP_SECRET not marked as sync: false",
+      "severity": "MEDIUM",
+      "description": "The PUSHER_APP_SECRET value is an empty string with sync: false, which is correct, but verify in Render that the secret is set as a non-synced variable in the dashboard."
     }
   ],
   "reviewDoc": "c:/Users/Ashu/Desktop/One_Hotel/One_Hotel/.agents/tasks/pusher-migration-review.md"
