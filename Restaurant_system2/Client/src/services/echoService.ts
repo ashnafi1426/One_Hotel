@@ -135,10 +135,15 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
   try {
     const echo = getEcho()
 
+    // Subscribe to kitchen.orders.update channel where OrderStatusChanged is broadcast
     const channel = echo
       .channel('kitchen.orders.update')
-      .listen('OrderStatusUpdated', (data: any) => {
-        console.log('[Echo] Kitchen order status update:', data)
+      .listen('order.status.changed', (data: any) => {
+        console.log('[Echo] ✨ Kitchen order status changed:', data)
+        onUpdate(data)
+      })
+      .listen('order.created', (data: any) => {
+        console.log('[Echo] ✨ New order created in kitchen:', data)
         onUpdate(data)
       })
       .error((error: any) => {
@@ -146,7 +151,7 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
         onError?.(error)
       })
 
-    console.log('[Echo] Subscribed to kitchen order updates')
+    console.log('[Echo] ✅ Subscribed to kitchen order updates (kitchen.orders.update channel)')
 
     // Return unsubscribe function
     return () => {

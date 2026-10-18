@@ -109,36 +109,40 @@ export const useKitchenStore = defineStore('kitchen', () => {
   }
 
   function receiveOrderUpdate(data: any) {
-    console.log('[kitchenStore] Received order update via WebSocket:', data)
+    console.log('[kitchenStore] ✨ Received order update via WebSocket:', data)
     
-    // Extract order ID from the broadcast data
-    const orderId = data.order_id
+    // Extract order ID - backend sends 'id' field in OrderStatusChanged event
+    const orderId = data.id || data.order_id
     if (!orderId) {
-      console.warn('[kitchenStore] No order_id in WebSocket data, doing full refresh')
+      console.warn('[kitchenStore] ❌ No order id in WebSocket data, doing full refresh')
+      console.log('[kitchenStore] Data received:', data)
       fetchDashboard()
       return
     }
     
+    console.log('[kitchenStore] Looking for order:', orderId, 'in local state')
+    
     // Try to find and update existing order incrementally (without full dashboard refresh)
     const existingIndex = orders.value.findIndex((o) => o.id === orderId)
     if (existingIndex !== -1) {
-      // Update existing order incrementally
+      // Order found - update incrementally
       const updatedOrder = orders.value[existingIndex]
-      updatedOrder.status = data.status || updatedOrder.status
-      updatedOrder.previous_status = data.previous_status
+      updatedOrder.status = data.status || data.newStatus || updatedOrder.status
+      updatedOrder.previous_status = data.old_status || data.previous_status
       updatedOrder.updated_at = data.updated_at
       
       // Trigger Vue reactivity by reassigning the array element
       orders.value[existingIndex] = { ...updatedOrder }
       
-      console.log('[kitchenStore] ✨ Incremental update for order:', orderId, 'new status:', data.status)
+      console.log('[kitchenStore] ✨ Incremental update - Order', orderId, '→', updatedOrder.status)
     } else {
-      // Order not found locally - do full refresh to fetch new orders
-      console.log('[kitchenStore] Order not in local state, doing full refresh')
+      // Order not found locally - could be a new order or not in current view
+      console.log('[kitchenStore] ⚠️ Order not in local state, doing full refresh to sync')
       fetchDashboard()
+      return
     }
     
-    // Always sync statistics
+    // Always sync statistics after update
     syncStatistics()
   }
 
