@@ -61,18 +61,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Clear config cache on every boot to ensure env vars are fresh
-        if (file_exists(base_path('bootstrap/cache/config.php'))) {
-            @unlink(base_path('bootstrap/cache/config.php'));
-        }
-
-        // Force SMTP mailer if Resend is somehow still configured
-        // This handles edge case where env vars are cached or not updated
-        if (config('mail.default') === 'resend') {
-            config(['mail.default' => 'smtp']);
-            \Illuminate\Support\Facades\Log::warning('[AppServiceProvider] Detected Resend mailer, forcing SMTP instead');
-        }
-
         require_once app_path('Translations/helpers.php');
 
         view()->addNamespace('mail', resource_path('views/emails'));
