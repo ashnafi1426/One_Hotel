@@ -62,12 +62,8 @@ class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("orders.{$this->orderId}"),
-            new PrivateChannel("orders.{$this->hotelId}.{$this->orderId}"),
-            new PrivateChannel("hotel.kitchen"),
-            new PrivateChannel("hotel.{$this->hotelId}.kitchen"),
-            new PrivateChannel("hotel.orders"),
-            new PrivateChannel("hotel.{$this->hotelId}.orders"),
+            new Channel('kitchen.orders'),
+            new Channel("hotel.{$this->hotelId}.kitchen"),
         ];
     }
 

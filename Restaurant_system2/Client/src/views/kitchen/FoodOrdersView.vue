@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, computed, watch } from 'vue'
+import { onMounted, ref, computed, watch, onUnmounted } from 'vue'
 import { useKitchenStore } from '@/stores/kitchenStore'
 import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
@@ -57,6 +57,11 @@ const itemsPerPage = ref(10)
 
 onMounted(async () => {
   await kitchenStore.fetchDashboard()
+  kitchenStore.subscribeToUpdates()
+})
+
+onUnmounted(() => {
+  kitchenStore.unsubscribeFromUpdates()
 })
 
 const filteredOrders = computed(() => {
@@ -181,7 +186,9 @@ const refresh = async () => {
 watch(
   () => hotelStore.hotelId,
   async () => {
+    kitchenStore.unsubscribeFromUpdates()
     await kitchenStore.fetchDashboard()
+    kitchenStore.subscribeToUpdates()
   },
 )
 

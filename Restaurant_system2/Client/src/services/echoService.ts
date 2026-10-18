@@ -131,29 +131,32 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
  * Subscribe to all kitchen order updates
  * Fired when any order status changes in the kitchen
  */
-export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): void {
+export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
 
-    echo
-      .channel('kitchen.orders.update')
-      .listen('order.status.changed', (data: any) => {
+    const channel = echo
+      .channel('kitchen.orders')
+      .listen('OrderStatusUpdated', (data: any) => {
         console.log('[Echo] Kitchen order status update:', data)
         onUpdate(data)
       })
-      .listen('order.created', (data: any) => {
-        console.log('[Echo] New order in kitchen:', data)
-        onUpdate(data)
-      })
       .error((error: any) => {
-        console.error('[Echo] Error on kitchen.orders.update:', error)
+        console.error('[Echo] Error on kitchen.orders:', error)
         onError?.(error)
       })
 
     console.log('[Echo] Subscribed to kitchen order updates')
+
+    // Return unsubscribe function
+    return () => {
+      echo.leave('kitchen.orders')
+      console.log('[Echo] Unsubscribed from kitchen order updates')
+    }
   } catch (error: any) {
     console.error('[Echo] Failed to subscribe to kitchen updates:', error)
     onError?.(error)
+    return () => {} // Return no-op function if subscription fails
   }
 }
 

@@ -109,62 +109,9 @@ export const useKitchenStore = defineStore('kitchen', () => {
   }
 
   function receiveOrderUpdate(data: any) {
-    // Handle WebSocket update from OrderStatusChanged event
-    const order: KitchenOrder = {
-      id: data.id,
-      order_number: data.order_number,
-      status: data.status || data.new_status,
-      order_type: data.order_type,
-      guest_id: data.guest_id,
-      room_id: data.room_id,
-      table_id: data.table_id,
-      guest_name: data.guest_name,
-      room_number: data.room_number,
-      table_number: data.table_number,
-      total: data.total,
-      updated_at: data.updated_at,
-    }
-
-    updateOrder(order)
-    syncStatistics()
-    console.log('[KitchenStore] Order updated via WebSocket:', order)
-  }
-
-  /**
-   * Handle WebSocket order updates from Reverb
-   * Called when order.status.changed or order.created events are received
-   */
-  function receiveOrderUpdate(data: any) {
     console.log('[kitchenStore] Received order update via WebSocket:', data)
-    
-    try {
-      const orderData = data.order || data
-      if (orderData && orderData.id) {
-        // For status changes, update existing order
-        if (data.old_status) {
-          const existingIndex = orders.value.findIndex((o) => o.id === orderData.id)
-          if (existingIndex !== -1) {
-            orders.value[existingIndex] = {
-              ...orders.value[existingIndex],
-              ...orderData,
-            }
-            console.log('[kitchenStore] Updated existing order:', orderData.id)
-          }
-        } else {
-          // For new orders, add to the list
-          const existing = orders.value.find((o) => o.id === orderData.id)
-          if (!existing) {
-            orders.value.unshift(orderData as KitchenOrder)
-            console.log('[kitchenStore] Added new order:', orderData.id)
-          }
-        }
-        
-        // Refresh statistics
-        syncStatistics()
-      }
-    } catch (err) {
-      console.error('[kitchenStore] Failed to process order update:', err)
-    }
+    // Refresh the full dashboard to ensure order list stays in sync
+    fetchDashboard()
   }
 
   /**
@@ -178,8 +125,8 @@ export const useKitchenStore = defineStore('kitchen', () => {
       unsubscribe()
     }
 
-    // Subscribe to kitchen order updates
-    echoService.subscribeToKitchenOrderUpdates(
+    // Subscribe to kitchen order updates and capture the unsubscribe function
+    unsubscribe = echoService.subscribeToKitchenOrderUpdates(
       (data: any) => {
         receiveOrderUpdate(data)
       },
