@@ -150,7 +150,7 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
 
     // Return unsubscribe function
     return () => {
-      echo.leave('kitchen.orders')
+      echo.leave('kitchen.orders.update')
       console.log('[Echo] Unsubscribed from kitchen order updates')
     }
   } catch (error: any) {
