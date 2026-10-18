@@ -28,15 +28,10 @@ const echo = new Echo({
   cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
   forceTLS: true,
   encrypted: true,
-  auth: {
-    headers: {
-      'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content,
-    },
-  },
 
   /**
    * Custom authorizer for private channel authentication.
-   * Calls Laravel's /api/broadcasting/auth endpoint with hotel context.
+   * Calls Laravel's /api/broadcasting/auth endpoint on the backend.
    */
   authorizer: (channel: any) => {
     return {
