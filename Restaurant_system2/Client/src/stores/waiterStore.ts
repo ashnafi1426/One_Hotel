@@ -1,388 +1,143 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import waiterService from '@/services/waiterService'
-import { getErrorMessage } from '@/utils/error'
-import type {
-  WaiterAssignment,
-  WaiterDashboard,
-  WaiterProfile,
-  DeliveryLog,
-  WaiterPerformance,
-  QuickStats,
-} from '@/types/waiter'
+import echoService from '@/services/echoService'
 
-const createInitialDashboard = (): WaiterDashboard => ({
-  today_stats: {
-    total_assignments: 0,
-    completed_deliveries: 0,
-    failed_deliveries: 0,
-    rejected_assignments: 0,
-    pending_assignments: 0,
-    active_assignments: 0,
-    on_delivery_count: 0,
-    average_delivery_time: 0,
-    completion_rate: 0,
-  },
-  performance: {
-    today: { deliveries: 0, failed: 0, average_delivery_time: 0, rating: 0 },
-    week: { deliveries: 0, failed: 0, average_delivery_time: 0, rating: 0 },
-    month: { deliveries: 0, failed: 0, average_delivery_time: 0, rating: 0 },
-  },
-  recent_assignments: [],
-  pending_count: 0,
-  active_count: 0,
-})
+/**
+ * Waiter Dashboard Store
+ *
+ * Manages waiter assignments, delivery tracking, and real-time updates via WebSocket.
+ * Features:
+ * - Centralized state for waiter dashboard
+ * - Real-time updates via Echo WebSocket (incremental + fallback to full refresh)
+ * - Proper subscription cleanup on unmount
+ * - Performance-optimized incremental updates
+ */
 
 export const useWaiterStore = defineStore('waiter', () => {
-  const dashboard = ref<WaiterDashboard>(createInitialDashboard())
-  const assignments = ref<WaiterAssignment[]>([])
-  const currentAssignment = ref<WaiterAssignment | null>(null)
-  const profile = ref<WaiterProfile | null>(null)
-  const deliveryHistory = ref<DeliveryLog[]>([])
-  const performance = ref<WaiterPerformance | null>(null)
-  const quickStats = ref<QuickStats>({
-    pending: 0,
-    active: 0,
-    completed: 0,
-    failed: 0,
+  const assignments = ref<any[]>([])
+  const stats = ref({
+    todayDeliveries: 0,
+    pendingDeliveries: 0,
+    onDelivery: 0,
+    avgDeliveryTime: 0,
   })
-
-  const isLoading = ref(false)
+  const activeDelivery = ref<any | null>(null)
+  const loading = ref(false)
   const error = ref<string | null>(null)
+  let unsubscribe: (() => void) | null = null
 
-  const hasPendingAssignments = computed(() => quickStats.value.pending > 0)
-  const hasActiveDeliveries = computed(() => quickStats.value.active > 0)
-
-  const fetchDashboard = async () => {
-    isLoading.value = true
+  /**
+   * Fetch complete waiter dashboard data
+   */
+  async function fetchDashboard() {
+    loading.value = true
     error.value = null
     try {
-      dashboard.value = await waiterService.getDashboard()
+      const data = await waiterService.getDashboard()
+      assignments.value = data.recent_assignments || []
+      activeDelivery.value = data.active_delivery || null
+
+      // Update stats
+      stats.value = {
+        todayDeliveries: data.today_stats?.completed_deliveries || 0,
+        pendingDeliveries: data.today_stats?.pending_assignments || 0,
+        onDelivery: data.today_stats?.on_delivery_count || 0,
+        avgDeliveryTime: Math.round(data.today_stats?.average_delivery_time || 0),
+      }
+
+      console.log('[waiterStore] Dashboard loaded:', {
+        assignments: assignments.value.length,
+        activeDelivery: !!activeDelivery.value,
+        stats: stats.value,
+      })
     } catch (err: any) {
-      console.error('[WaiterStore] Error fetching dashboard:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch dashboard')
-      dashboard.value = createInitialDashboard()
+      console.error('[waiterStore] Failed to load dashboard:', err)
+      error.value = err.message || 'Failed to load dashboard'
     } finally {
-      isLoading.value = false
+      loading.value = false
     }
   }
 
-  const fetchQuickStats = async () => {
-    try {
-      quickStats.value = await waiterService.getQuickStats()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching quick stats:', err)
-    }
-  }
-
-  const fetchAssignments = async (params: any = {}) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const result = await waiterService.getAssignments(params)
-      assignments.value = result.data
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching assignments:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch assignments')
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchPendingAssignments = async () => {
-    try {
-      assignments.value = await waiterService.getPendingAssignments()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching pending assignments:', err)
-    }
-  }
-
-  const fetchActiveAssignments = async () => {
-    try {
-      assignments.value = await waiterService.getActiveAssignments()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching active assignments:', err)
-    }
-  }
-
-  const fetchReadyForPickup = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      assignments.value = await waiterService.getReadyForPickup()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching ready orders:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch ready orders')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchPendingPickupOrders = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      assignments.value = await waiterService.getPendingPickupOrders()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching pending pickup orders:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch pending pickup orders')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchKitchenOrders = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const readyOrders = await waiterService.getReadyForPickup()
-      const pendingOrders = await waiterService.getPendingPickupOrders()
-      assignments.value = [...readyOrders, ...pendingOrders]
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching kitchen orders:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch kitchen orders')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchOnDelivery = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      assignments.value = await waiterService.getOnDelivery()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching on-delivery orders:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch on-delivery orders')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchCompletedDeliveries = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      assignments.value = await waiterService.getCompletedDeliveries()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching completed deliveries:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch completed deliveries')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchFailedDeliveries = async () => {
-    isLoading.value = true
-    error.value = null
-    try {
-      assignments.value = await waiterService.getFailedDeliveries()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching failed deliveries:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch failed deliveries')
-      assignments.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const fetchProfile = async () => {
-    try {
-      profile.value = await waiterService.getProfile()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching profile:', err)
-    }
-  }
-
-  const fetchPerformance = async () => {
-    try {
-      performance.value = await waiterService.getPerformance()
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching performance:', err)
-    }
-  }
-
-  const fetchHistory = async (params: any = {}) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      const result = await waiterService.getHistory(params)
-      deliveryHistory.value = result.data
-    } catch (err: any) {
-      console.error('[WaiterStore] Error fetching history:', err)
-      error.value = getErrorMessage(err, 'Failed to fetch delivery history')
-      deliveryHistory.value = []
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const acceptAssignment = async (id: string) => {
-    const assignment = assignments.value.find((a) => a.id === id)
-    if (!assignment) {
-      error.value = 'Assignment not found'
-      return false
-    }
-    if (assignment.status !== 'pending') {
-      error.value = `Cannot accept assignment with status: ${assignment.status}`
-      return false
-    }
-
-    isLoading.value = true
-    error.value = null
-    try {
-      currentAssignment.value = await waiterService.acceptAssignment(id)
-      await Promise.all([fetchDashboard(), fetchAssignments()])
+  /**
+   * Update a single assignment status incrementally (no full refresh)
+   */
+  function updateAssignmentStatus(orderId: string, newStatus: string) {
+    const index = assignments.value.findIndex((a) => a.order_id === orderId || a.id === orderId)
+    if (index !== -1) {
+      assignments.value[index].status = newStatus
+      assignments.value[index].updated_at = new Date().toISOString()
+      console.log('[waiterStore] ✨ Incremental update - assignment', orderId, '→', newStatus)
       return true
-    } catch (err: any) {
-      console.error('[WaiterStore] Error accepting assignment:', err)
-      error.value = getErrorMessage(err, 'Failed to accept assignment')
-      return false
-    } finally {
-      isLoading.value = false
+    }
+    return false
+  }
+
+  /**
+   * Handle WebSocket order update
+   */
+  function receiveOrderUpdate(data: any) {
+    console.log('[waiterStore] Received order update via WebSocket:', data)
+
+    const orderId = data.order_id
+    if (!orderId) {
+      console.warn('[waiterStore] No order_id in WebSocket data, doing full refresh')
+      fetchDashboard()
+      return
+    }
+
+    // Try incremental update first
+    const updated = updateAssignmentStatus(orderId, data.status)
+    if (!updated) {
+      // Order not found in local assignments - do full refresh
+      console.log('[waiterStore] Order not in local assignments, doing full refresh')
+      fetchDashboard()
     }
   }
 
-  const rejectAssignment = async (id: string, reason?: string) => {
-    const assignment = assignments.value.find((a) => a.id === id)
-    if (!assignment) {
-      error.value = 'Assignment not found'
-      return false
+  /**
+   * Subscribe to real-time order updates via WebSocket
+   */
+  function subscribeToUpdates() {
+    console.log('[waiterStore] Subscribing to WebSocket updates')
+
+    // Unsubscribe from previous subscription if it exists
+    if (unsubscribe) {
+      unsubscribe()
     }
-    if (assignment.status !== 'pending') {
-      error.value = `Cannot reject assignment with status: ${assignment.status}`
-      return false
-    }
 
-    isLoading.value = true
-    error.value = null
-    try {
-      currentAssignment.value = await waiterService.rejectAssignment(id, reason)
-      await Promise.all([fetchDashboard(), fetchAssignments()])
-      return true
-    } catch (err: any) {
-      console.error('[WaiterStore] Error rejecting assignment:', err)
-      error.value = getErrorMessage(err, 'Failed to reject assignment')
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const executeOrderAction = async (
-    action: () => Promise<WaiterAssignment>,
-    errorMsg: string,
-  ): Promise<boolean> => {
-    isLoading.value = true
-    error.value = null
-    try {
-      currentAssignment.value = await action()
-      await fetchDashboard()
-      return true
-    } catch (err: any) {
-      console.error(`[WaiterStore] ${errorMsg}:`, err)
-      error.value = getErrorMessage(err, errorMsg)
-      return false
-    } finally {
-      isLoading.value = false
-    }
-  }
-
-  const pickupOrder = (id: string) =>
-    executeOrderAction(() => waiterService.pickupOrder(id), 'Failed to pickup order')
-
-  const startDelivery = (id: string) =>
-    executeOrderAction(() => waiterService.startDelivery(id), 'Failed to start delivery')
-
-  const deliverOrder = (id: string, remarks?: string) =>
-    executeOrderAction(() => waiterService.deliverOrder(id, remarks), 'Failed to deliver order')
-
-  const failDelivery = (id: string, reason: string, remarks?: string) =>
-    executeOrderAction(
-      () => waiterService.failDelivery(id, reason, remarks),
-      'Failed to mark delivery as failed',
+    // Subscribe to manager order updates (covers all orders for waiters)
+    unsubscribe = echoService.subscribeToManagerOrderUpdates(
+      (data: any) => {
+        receiveOrderUpdate(data)
+      },
+      (error: any) => {
+        console.error('[waiterStore] WebSocket error:', error)
+      }
     )
+  }
 
-  const updateProfile = async (data: any) => {
-    isLoading.value = true
-    error.value = null
-    try {
-      profile.value = await waiterService.updateProfile(data)
-      return true
-    } catch (err: any) {
-      console.error('[WaiterStore] Error updating profile:', err)
-      error.value = getErrorMessage(err, 'Failed to update profile')
-      return false
-    } finally {
-      isLoading.value = false
+  /**
+   * Unsubscribe from WebSocket updates and cleanup
+   */
+  function unsubscribeFromUpdates() {
+    console.log('[waiterStore] Unsubscribing from WebSocket updates')
+    if (unsubscribe) {
+      unsubscribe()
+      unsubscribe = null
     }
-  }
-
-  const exportHistory = async (filters?: any) => {
-    try {
-      const blob = await waiterService.exportHistory(filters)
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `delivery-history-${new Date().toISOString().split('T')[0]}.csv`
-      link.click()
-      URL.revokeObjectURL(url)
-    } catch (err: any) {
-      console.error('[WaiterStore] Error exporting history:', err)
-    }
-  }
-
-  const refreshDashboard = async () => {
-    await fetchDashboard()
-    await fetchQuickStats()
-  }
-
-  const clearError = () => {
-    error.value = null
   }
 
   return {
-    dashboard,
     assignments,
-    currentAssignment,
-    profile,
-    deliveryHistory,
-    performance,
-    quickStats,
-    isLoading,
+    stats,
+    activeDelivery,
+    loading,
     error,
-
-    hasPendingAssignments,
-    hasActiveDeliveries,
-
     fetchDashboard,
-    fetchQuickStats,
-    fetchAssignments,
-    fetchPendingAssignments,
-    fetchActiveAssignments,
-    fetchReadyForPickup,
-    fetchPendingPickupOrders,
-    fetchKitchenOrders,
-    fetchOnDelivery,
-    fetchCompletedDeliveries,
-    fetchFailedDeliveries,
-    fetchProfile,
-    fetchPerformance,
-    fetchHistory,
-    acceptAssignment,
-    rejectAssignment,
-    pickupOrder,
-    startDelivery,
-    deliverOrder,
-    failDelivery,
-    updateProfile,
-    exportHistory,
-    refreshDashboard,
-    clearError,
+    updateAssignmentStatus,
+    receiveOrderUpdate,
+    subscribeToUpdates,
+    unsubscribeFromUpdates,
   }
 })

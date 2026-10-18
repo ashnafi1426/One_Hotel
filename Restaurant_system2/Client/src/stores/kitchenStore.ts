@@ -110,8 +110,36 @@ export const useKitchenStore = defineStore('kitchen', () => {
 
   function receiveOrderUpdate(data: any) {
     console.log('[kitchenStore] Received order update via WebSocket:', data)
-    // Refresh the full dashboard to ensure order list stays in sync
-    fetchDashboard()
+    
+    // Extract order ID from the broadcast data
+    const orderId = data.order_id
+    if (!orderId) {
+      console.warn('[kitchenStore] No order_id in WebSocket data, doing full refresh')
+      fetchDashboard()
+      return
+    }
+    
+    // Try to find and update existing order incrementally (without full dashboard refresh)
+    const existingIndex = orders.value.findIndex((o) => o.id === orderId)
+    if (existingIndex !== -1) {
+      // Update existing order incrementally
+      const updatedOrder = orders.value[existingIndex]
+      updatedOrder.status = data.status || updatedOrder.status
+      updatedOrder.previous_status = data.previous_status
+      updatedOrder.updated_at = data.updated_at
+      
+      // Trigger Vue reactivity by reassigning the array element
+      orders.value[existingIndex] = { ...updatedOrder }
+      
+      console.log('[kitchenStore] ✨ Incremental update for order:', orderId, 'new status:', data.status)
+    } else {
+      // Order not found locally - do full refresh to fetch new orders
+      console.log('[kitchenStore] Order not in local state, doing full refresh')
+      fetchDashboard()
+    }
+    
+    // Always sync statistics
+    syncStatistics()
   }
 
   /**

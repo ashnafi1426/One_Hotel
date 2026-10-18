@@ -412,13 +412,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import SkeletonLoaders from '@/components/waiter/SkeletonLoaders.vue'
-import waiterService from '@/services/waiterService'
 import { useHotelStore } from '@/stores/hotelStore'
-import { useAuthStore } from '@/stores/auth'
+import { useWaiterStore } from '@/stores/waiterStore'
 import { useLanguageStore } from '@/stores/language'
+import { storeToRefs } from 'pinia'
 import {
   Building2,
   Loader2,
@@ -437,88 +437,17 @@ import {
 } from 'lucide-vue-next'
 
 const hotelStore = useHotelStore()
-const authStore = useAuthStore()
+const waiterStore = useWaiterStore()
 const languageStore = useLanguageStore()
 
-const loading = ref(true)
-const error = ref<string | null>(null)
-const stats = ref({
-  todayDeliveries: 0,
-  pendingDeliveries: 0,
-  onDelivery: 0,
-  avgDeliveryTime: 0,
-})
-const recentAssignments = ref<any[]>([])
-const activeDelivery = ref<any | null>(null)
+const { assignments, stats, activeDelivery, loading, error } = storeToRefs(waiterStore)
+
+// Alias for template compatibility
+const recentAssignments = computed(() => assignments.value)
+
 const activeMenuId = ref<string | null>(null)
 const showDetailModal = ref(false)
 const selectedOrder = ref<any | null>(null)
-
-const getItemCount = (items: any): number => {
-  if (typeof items === 'number') return items
-  if (Array.isArray(items)) return items.length
-  return 1
-}
-
-const getOrderNumber = (order: any): string => {
-  if (!order) return ''
-  return (
-    order.order_number ||
-    order.order_id ||
-    (typeof order.id === 'string' ? order.id.slice(0, 8) : order.id) ||
-    ''
-  )
-}
-
-const getStatusBadgeClass = (status?: string): string => {
-  switch (status) {
-    case 'delivered':
-      return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
-    case 'on_delivery':
-      return 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/20'
-    case 'picked_up':
-      return 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20'
-    default:
-      return 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
-  }
-}
-
-const updateStats = (todayStats?: any) => {
-  if (!todayStats) return
-  stats.value = {
-    todayDeliveries: todayStats.completed_deliveries ?? 0,
-    pendingDeliveries: todayStats.pending_assignments ?? 0,
-    onDelivery: todayStats.on_delivery_count ?? 0,
-    avgDeliveryTime: Math.round(todayStats.average_delivery_time ?? 0),
-  }
-}
-
-const getCacheKey = () => `waiter_dashboard_cache_${hotelStore.hotelId || 'default'}`
-
-const restoreCachedData = () => {
-  try {
-    const cached = localStorage.getItem(getCacheKey())
-    if (cached) {
-      const parsed = JSON.parse(cached)
-      if (parsed && typeof parsed === 'object') {
-        updateStats(parsed.today_stats)
-        if (parsed.active_delivery) {
-          activeDelivery.value = parsed.active_delivery
-        } else if (Array.isArray(parsed.recent_assignments)) {
-          const currentOnDelivery = parsed.recent_assignments.find(
-            (a: any) => a.status === 'on_delivery' || a.status === 'picked_up',
-          )
-          if (currentOnDelivery) {
-            activeDelivery.value = currentOnDelivery
-          }
-        }
-        loading.value = false
-      }
-    }
-  } catch (e) {
-    // Ignore cache parse error
-  }
-}
 
 const toggleMenu = (id: string | number) => {
   const key = String(id)
@@ -537,102 +466,62 @@ const handleOutsideClick = () => {
 
 const loadDashboard = async (isManualRefresh = false) => {
   try {
-    if (!recentAssignments.value.length && !activeDelivery.value && !stats.value.todayDeliveries) {
-      loading.value = true
+    if (isManualRefresh) {
+      await waiterStore.fetchDashboard()
     }
-    error.value = null
 
-    const dashboardData = await waiterService.getDashboard({
-      ...(isManualRefresh ? { refresh: 'true' } : {}),
-    })
-
-    if (dashboardData) {
-      updateStats(dashboardData.today_stats)
-      recentAssignments.value = dashboardData.recent_assignments || []
-      activeDelivery.value =
-        dashboardData.active_delivery ||
-        recentAssignments.value.find(
-          (a: any) => a.status === 'on_delivery' || a.status === 'picked_up',
-        ) ||
-        null
-
-      try {
-        localStorage.setItem(getCacheKey(), JSON.stringify(dashboardData))
-      } catch (e) {}
+    // Cache the data
+    try {
+      const dashboardData = {
+        today_stats: {
+          completed_deliveries: stats.value.todayDeliveries,
+          pending_assignments: stats.value.pendingDeliveries,
+          on_delivery_count: stats.value.onDelivery,
+          average_delivery_time: stats.value.avgDeliveryTime,
+        },
+        active_delivery: activeDelivery.value,
+        recent_assignments: recentAssignments.value,
+      }
+      localStorage.setItem(getCacheKey(), JSON.stringify(dashboardData))
+    } catch (e) {
+      console.warn('[WaiterDashboard] Cache save error:', e)
     }
   } catch (err: any) {
     console.error('[WaiterDashboard] Error loading dashboard:', err)
-    if (!recentAssignments.value.length) {
-      error.value = err.message || 'Failed to load dashboard'
-    }
-  } finally {
-    loading.value = false
   }
 }
 
 const setupWebSocket = () => {
-  if (typeof window === 'undefined' || !(window as any).Echo) return
-
-  try {
-    const echo = (window as any).Echo
-    const waiterId = authStore.user?.waiter?.id || authStore.user?.id
-    if (waiterId) {
-      echo
-        .private(`waiter.${waiterId}`)
-        .listen('.waiter.assigned', () => {
-          loadDashboard(true)
-        })
-        .listen('WaiterAssignedEvent', () => {
-          loadDashboard(true)
-        })
-    }
-
-    echo
-      .private('hotel.waiters')
-      .listen('.waiter.assigned', () => {
-        loadDashboard(true)
-      })
-      .listen('WaiterAssignedEvent', () => {
-        loadDashboard(true)
-      })
-
-    echo
-      .private('hotel.orders')
-      .listen('.OrderStatusUpdated', () => {
-        loadDashboard(true)
-      })
-      .listen('.OrderCreated', () => {
-        loadDashboard(true)
-      })
-  } catch (e) {
-    console.warn('[WaiterDashboard] Echo subscription warning:', e)
-  }
+  console.log('[WaiterDashboard] Setting up WebSocket via waiterStore')
+  waiterStore.subscribeToUpdates()
 }
 
 const teardownWebSocket = () => {
-  if (typeof window === 'undefined' || !(window as any).Echo) return
-  try {
-    const echo = (window as any).Echo
-    const waiterId = authStore.user?.waiter?.id || authStore.user?.id
-    if (waiterId) {
-      echo.leave(`waiter.${waiterId}`)
-    }
-    echo.leave('hotel.waiters')
-    echo.leave('hotel.orders')
-  } catch (e) {}
+  console.log('[WaiterDashboard] Tearing down WebSocket via waiterStore')
+  waiterStore.unsubscribeFromUpdates()
 }
 
 onMounted(() => {
+  console.log('[WaiterDashboard] Mounting - restore cache and fetch')
   restoreCachedData()
-  loadDashboard(true)
-  setupWebSocket()
+  waiterStore.fetchDashboard()
+  waiterStore.subscribeToUpdates()
   window.addEventListener('click', handleOutsideClick)
 })
 
 onUnmounted(() => {
-  teardownWebSocket()
+  console.log('[WaiterDashboard] Unmounting - cleanup')
+  waiterStore.unsubscribeFromUpdates()
   window.removeEventListener('click', handleOutsideClick)
 })
+
+watch(
+  () => hotelStore.hotelId,
+  async () => {
+    console.log('[WaiterDashboard] Hotel changed - refetch')
+    await waiterStore.fetchDashboard()
+  }
+)
 </script>
 
 <style scoped>

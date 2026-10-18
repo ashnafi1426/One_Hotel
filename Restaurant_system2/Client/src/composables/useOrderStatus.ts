@@ -311,10 +311,12 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
     }
 
     try {
-      const channelName = `orders.${orderId}`
+      // Subscribe to both public channels for order updates
+      // The backend broadcasts OrderStatusChanged events to orders.update.{orderId}
+      const channelName = `orders.update.${orderId}`
       console.log(`[useOrderStatus] 📡 Subscribing to channel: ${channelName}`)
 
-      channel = window.Echo.private(channelName)
+      channel = window.Echo.channel(channelName)
 
       // Connection state handling
       if (window.Echo.connector?.pusher) {
@@ -343,9 +345,27 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
         console.log('[useOrderStatus] Initial connection state:', connectionState)
       }
 
-      // Listen for OrderStatusUpdated events
+      // Listen for order.status.changed events (OrderStatusChanged event)
+      channel.listen('.order.status.changed', (event: any) => {
+        console.log('[useOrderStatus] ✨ Order status changed:', event)
+
+        status.value = event.status || event.newStatus
+        lastUpdate.value = event.updated_at
+
+        // Update order data status
+        if (orderData.value) {
+          orderData.value.status = (event.status || event.newStatus) as any
+          orderData.value.updated_at = event.updated_at
+          
+          // Update other fields if available
+          if (event.guest_name) orderData.value.guest_name = event.guest_name
+          if (event.room_number) orderData.value.room_number = event.room_number
+        }
+      })
+
+      // Listen for OrderStatusUpdated events (from kitchen service)
       channel.listen('.OrderStatusUpdated', (event: OrderStatusEvent) => {
-        console.log('[useOrderStatus] OrderStatusUpdated received:', event)
+        console.log('[useOrderStatus] ✨ OrderStatusUpdated received:', event)
 
         status.value = event.status
         lastUpdate.value = event.updated_at
@@ -359,7 +379,7 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
 
       // Listen for PaymentStatusUpdated events
       channel.listen('.PaymentStatusUpdated', (event: PaymentStatusEvent) => {
-        console.log('[useOrderStatus]  PaymentStatusUpdated received:', event)
+        console.log('[useOrderStatus]  💳 PaymentStatusUpdated received:', event)
 
         paymentStatus.value = event.payment_status
         lastUpdate.value = event.updated_at
@@ -390,15 +410,15 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
         console.log('[useOrderStatus] ❌ OrderCancelled received:', event)
 
         status.value = 'cancelled'
-        lastUpdate.value = event.cancelled_at
+        lastUpdate.value = event.cancelled_at || event.updated_at
 
         if (orderData.value) {
           orderData.value.status = 'cancelled'
-          orderData.value.updated_at = event.cancelled_at
+          orderData.value.updated_at = event.cancelled_at || event.updated_at
         }
       })
 
-      console.log('[useOrderStatus]  Channel subscription setup complete')
+      console.log('[useOrderStatus] ✅ Channel subscription setup complete')
     } catch (err: any) {
       console.error('[useOrderStatus] Error subscribing to channel:', err)
       error.value = 'Failed to subscribe to order updates'
@@ -455,7 +475,7 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
    */
   const cleanup = (): void => {
     if (channel) {
-      const channelName = `orders.${hotelId.value}.${orderId}`
+      const channelName = `orders.update.${orderId}`
       console.log(`[useOrderStatus] Leaving channel: ${channelName}`)
       window.Echo.leave(channelName)
       channel = null
