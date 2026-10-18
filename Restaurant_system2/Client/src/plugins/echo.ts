@@ -28,6 +28,11 @@ const echo = new Echo({
   cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
   forceTLS: true,
   encrypted: true,
+  auth: {
+    headers: {
+      'X-CSRF-Token': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content,
+    },
+  },
 
   /**
    * Custom authorizer for private channel authentication.
@@ -36,88 +41,103 @@ const echo = new Echo({
   authorizer: (channel: any) => {
     return {
       authorize: (socketId: string, callback: Function) => {
-        const token = localStorage.getItem('token')
-        const hotelId = localStorage.getItem('hotel_id') || localStorage.getItem('active_hotel_id')
-        let qrToken = localStorage.getItem('guest_qr_token')
+        try {
+          const token = localStorage.getItem('token')
+          const hotelId = localStorage.getItem('hotel_id') || localStorage.getItem('active_hotel_id')
+          let qrToken = localStorage.getItem('guest_qr_token')
 
-        if (!qrToken) {
-          try {
-            const walkInData =
-              localStorage.getItem('walk_in_payment_data') ||
-              sessionStorage.getItem('walk_in_payment_data')
-            if (walkInData) {
-              const parsed = JSON.parse(walkInData)
-              if (parsed.qr_token) {
-                qrToken = parsed.qr_token
-                localStorage.setItem('guest_qr_token', qrToken)
+          if (!qrToken) {
+            try {
+              const walkInData =
+                localStorage.getItem('walk_in_payment_data') ||
+                sessionStorage.getItem('walk_in_payment_data')
+              if (walkInData) {
+                const parsed = JSON.parse(walkInData)
+                if (parsed.qr_token) {
+                  qrToken = parsed.qr_token
+                  localStorage.setItem('guest_qr_token', qrToken)
+                }
               }
-            }
-          } catch (_) {}
-        }
-        if (!qrToken) {
-          try {
-            const orderPaymentData =
-              localStorage.getItem('order_payment_data') ||
-              sessionStorage.getItem('order_payment_data')
-            if (orderPaymentData) {
-              const parsed = JSON.parse(orderPaymentData)
-              if (parsed.qr_token) {
-                qrToken = parsed.qr_token
-                localStorage.setItem('guest_qr_token', qrToken)
+            } catch (_) {}
+          }
+          if (!qrToken) {
+            try {
+              const orderPaymentData =
+                localStorage.getItem('order_payment_data') ||
+                sessionStorage.getItem('order_payment_data')
+              if (orderPaymentData) {
+                const parsed = JSON.parse(orderPaymentData)
+                if (parsed.qr_token) {
+                  qrToken = parsed.qr_token
+                  localStorage.setItem('guest_qr_token', qrToken)
+                }
               }
-            }
-          } catch (_) {}
-        }
+            } catch (_) {}
+          }
 
-        console.log('[Echo] Authorizing channel:', channel.name)
-        console.log('[Echo] Socket ID:', socketId)
-        console.log('[Echo] Hotel ID:', hotelId || 'MISSING')
-        console.log('[Echo] QR Token:', qrToken ? qrToken.substring(0, 4) + '****' : 'MISSING')
+          console.log('[Echo] Authorizing channel:', channel.name)
+          console.log('[Echo] Socket ID:', socketId)
+          console.log('[Echo] API URL:', import.meta.env.VITE_API_BASE_URL)
+          console.log('[Echo] Hotel ID:', hotelId || 'MISSING')
+          console.log('[Echo] QR Token:', qrToken ? qrToken.substring(0, 4) + '****' : 'MISSING')
 
-        const requestBody: any = {
-          socket_id: socketId,
-          channel_name: channel.name,
-        }
+          if (!import.meta.env.VITE_API_BASE_URL) {
+            console.error('[Echo] ❌ VITE_API_BASE_URL is not set!')
+            throw new Error('API base URL not configured')
+          }
 
-        if (qrToken && channel.name.includes('orders.')) {
-          requestBody.qr_token = qrToken
-          console.log('[Echo] Including QR token in request body for guest order channel')
-        }
+          const authUrl = `${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`
+          console.log('[Echo] Auth URL:', authUrl)
 
-        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'application/json',
-            Authorization: token ? `Bearer ${token}` : '',
-            'X-QR-Token': qrToken || '',
-          },
-          body: JSON.stringify(requestBody),
-        })
-          .then((response) => {
-            if (!response.ok) {
-              console.error(
-                '[Echo] ❌ Authorization failed - HTTP',
-                response.status,
-                response.statusText,
-              )
-              return response.text().then((text) => {
-                console.error('[Echo] Response body:', text)
-                throw new Error(
-                  `Authorization failed: ${response.status} ${response.statusText} - ${text}`,
+          const requestBody: any = {
+            socket_id: socketId,
+            channel_name: channel.name,
+          }
+
+          if (qrToken && channel.name.includes('orders.')) {
+            requestBody.qr_token = qrToken
+            console.log('[Echo] Including QR token in request body for guest order channel')
+          }
+
+          fetch(authUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Accept: 'application/json',
+              Authorization: token ? `Bearer ${token}` : '',
+              'X-QR-Token': qrToken || '',
+            },
+            body: JSON.stringify(requestBody),
+          })
+            .then((response) => {
+              console.log('[Echo] Auth response status:', response.status)
+              if (!response.ok) {
+                console.error(
+                  '[Echo] ❌ Authorization failed - HTTP',
+                  response.status,
+                  response.statusText,
                 )
-              })
-            }
-            return response.json()
-          })
-          .then((data) => {
-            console.log('[Echo]  Channel authorization successful:', channel.name)
-            callback(null, data)
-          })
-          .catch((error) => {
-            console.error('[Echo] ⚠️ Channel authorization error:', error)
-            callback(error, null)
-          })
+                return response.text().then((text) => {
+                  console.error('[Echo] Response body:', text)
+                  throw new Error(
+                    `Authorization failed: ${response.status} ${response.statusText} - ${text}`,
+                  )
+                })
+              }
+              return response.json()
+            })
+            .then((data) => {
+              console.log('[Echo] ✅ Channel authorization successful:', channel.name)
+              callback(null, data)
+            })
+            .catch((error) => {
+              console.error('[Echo] ⚠️ Channel authorization error:', error)
+              callback(error, null)
+            })
+        } catch (error) {
+          console.error('[Echo] ⚠️ Authorizer error:', error)
+          callback(error, null)
+        }
       },
     }
   },
