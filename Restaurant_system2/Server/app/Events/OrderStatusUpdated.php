@@ -40,7 +40,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     public function __construct(Order $order, ?string $previousStatus = null)
     {
         $this->orderId = $order->id;
-        $this->hotelId = $order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544';
+        $this->hotelId = (string) ($order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544');
         $this->status = $order->status;
         $this->previousStatus = $previousStatus;
         $this->orderNumber = $order->order_number;
