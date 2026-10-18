@@ -28,6 +28,10 @@ const echo = new Echo({
   cluster: import.meta.env.VITE_PUSHER_APP_CLUSTER,
   forceTLS: true,
   encrypted: true,
+  
+  // CRITICAL: Explicitly set authEndpoint for private channels
+  // Without this, Pusher uses default /broadcasting/auth on current domain
+  authEndpoint: `${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`,
 
   /**
    * Custom authorizer for private channel authentication.
