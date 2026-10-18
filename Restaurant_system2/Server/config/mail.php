@@ -14,7 +14,9 @@ return [
     |
     */
 
-    'default' => env('MAIL_MAILER', 'smtp'),
+    // PRODUCTION FIX: Force Resend on production (Render free tier blocks SMTP port 587)
+    // Do NOT fallback to 'smtp' — it will timeout and fail
+    'default' => env('APP_ENV') === 'production' ? 'resend' : env('MAIL_MAILER', 'resend'),
 
     /*
     |--------------------------------------------------------------------------
