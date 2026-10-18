@@ -136,13 +136,13 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
     const echo = getEcho()
 
     const channel = echo
-      .channel('kitchen.orders')
+      .channel('kitchen.orders.update')
       .listen('OrderStatusUpdated', (data: any) => {
         console.log('[Echo] Kitchen order status update:', data)
         onUpdate(data)
       })
       .error((error: any) => {
-        console.error('[Echo] Error on kitchen.orders:', error)
+        console.error('[Echo] Error on kitchen.orders.update:', error)
         onError?.(error)
       })
 
