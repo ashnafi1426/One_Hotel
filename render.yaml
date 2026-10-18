@@ -65,6 +65,6 @@ services:
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM_ADDRESS
-        value: "noreply@one-hotel.com"
+        value: "ashenafisileshi7@gmail.com"
       - key: MAIL_FROM_NAME
         value: "HMS"
