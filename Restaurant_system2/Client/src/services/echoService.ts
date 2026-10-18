@@ -100,7 +100,7 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
         console.log('[Echo] Manager order status update:', data)
         onUpdate(data)
       })
-      .listen('order.created', (data: any) => {
+      .listen('.order.created', (data: any) => {
         console.log('[Echo] New order for manager:', data)
         onUpdate(data)
       })
@@ -138,7 +138,7 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
         console.log('[Echo] ✨ Kitchen order status updated:', data)
         onUpdate(data)
       })
-      .listen('order.created', (data: any) => {
+      .listen('.order.created', (data: any) => {
         console.log('[Echo] ✨ New order created in kitchen:', data)
         onUpdate(data)
       })
@@ -175,7 +175,7 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
         console.log('[Echo] Waiter order update:', data)
         onUpdate(data)
       })
-      .listen('order.created', (data: any) => {
+      .listen('.order.created', (data: any) => {
         console.log('[Echo] New order for waiter:', data)
         onUpdate(data)
       })
