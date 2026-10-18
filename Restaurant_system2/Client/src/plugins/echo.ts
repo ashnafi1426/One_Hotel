@@ -64,9 +64,10 @@ function getPusherAuthHeaders() {
 }
 
 // Log configuration for debugging
+const backendAuthEndpoint = `${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`
 console.log('[Echo] Initializing Pusher with:')
 console.log('[Echo] API Base URL:', import.meta.env.VITE_API_BASE_URL)
-console.log('[Echo] Auth Endpoint:', `${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`)
+console.log('[Echo] Auth Endpoint:', backendAuthEndpoint)
 
 /**
  * Configure Laravel Echo instance with Pusher broadcaster
@@ -78,22 +79,47 @@ const echo = new Echo({
   forceTLS: true,
   encrypted: true,
 
-  // CRITICAL: authEndpoint MUST point to backend, not frontend
-  authEndpoint: `${import.meta.env.VITE_API_BASE_URL}/api/broadcasting/auth`,
+  // CRITICAL: Use custom authorizer to FORCE requests to backend
+  // This ensures Pusher NEVER falls back to default /broadcasting/auth
+  authorizer: (channel: any) => {
+    return {
+      authorize: (socketId: string, callback: Function) => {
+        const { token, qrToken } = getPusherAuthHeaders()
 
-  // Use auth object with headers instead of custom authorizer
-  // This ensures Pusher uses the authEndpoint without falling back to default
-  auth: {
-    headers: {
-      get Authorization() {
-        const { token } = getPusherAuthHeaders()
-        return token ? `Bearer ${token}` : ''
+        console.log('[Echo] Authorizing channel:', channel.name)
+        console.log('[Echo] Posting to:', backendAuthEndpoint)
+
+        fetch(backendAuthEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'Authorization': token ? `Bearer ${token}` : '',
+            'X-QR-Token': qrToken || '',
+          },
+          body: JSON.stringify({
+            socket_id: socketId,
+            channel_name: channel.name,
+          }),
+        })
+          .then((response) => {
+            console.log('[Echo] Auth response status:', response.status)
+            if (!response.ok) {
+              console.error('[Echo] ❌ Auth failed:', response.status, response.statusText)
+              throw new Error(`HTTP ${response.status}`)
+            }
+            return response.json()
+          })
+          .then((data) => {
+            console.log('[Echo] ✅ Channel authorized:', channel.name)
+            callback(false, data)
+          })
+          .catch((error) => {
+            console.error('[Echo] ❌ Authorization error:', error)
+            callback(error)
+          })
       },
-      get 'X-QR-Token'() {
-        const { qrToken } = getPusherAuthHeaders()
-        return qrToken || ''
-      },
-    },
+    }
   },
 })
 
