@@ -61,6 +61,9 @@ RUN COMPOSER_MEMORY_LIMIT=-1 composer install \
 # Copy application files
 COPY . .
 
+# Clear bootstrap cache before deploying (ensures fresh config cache is created at runtime)
+RUN rm -rf bootstrap/cache/*.php || true
+
 # Run post autoload dump
 RUN composer dump-autoload --optimize --no-dev
 
