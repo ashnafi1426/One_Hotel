@@ -326,7 +326,7 @@ class OrderStatusService
                     ]);
 
                     Log::info("[ORDER_STATUS] Notified assigned waiter {$waiter->id} for ready order #{$order->order_number}");
-                    return;
+                    // Continue to check if waiter needs to be assigned to delivery task
                 }
             }
 
@@ -381,4 +381,5 @@ class OrderStatusService
         ]);
     }
 }
+
 
