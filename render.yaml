@@ -60,3 +60,11 @@ services:
         value: 127.0.0.1
       - key: REVERB_SERVER_PORT
         value: "8080"
+      - key: MAIL_MAILER
+        value: resend
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        value: "noreply@one-hotel.com"
+      - key: MAIL_FROM_NAME
+        value: "HMS"
