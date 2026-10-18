@@ -6,7 +6,8 @@ use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -17,9 +18,9 @@ use Illuminate\Queue\SerializesModels;
  *
  * Broadcasts to the kitchen.orders.update channel for real-time kitchen dashboard updates.
  *
- * Uses ShouldBroadcastNow to broadcast immediately without queuing (required for real-time response).
+ * Uses ShouldBroadcast with ShouldQueue for reliable async broadcasting.
  */
-class OrderStatusUpdated implements ShouldBroadcastNow
+class OrderStatusUpdated implements ShouldBroadcast, ShouldQueue
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -59,7 +60,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('private-kitchen.orders.update'),
+            new Channel('kitchen.orders.update'),
         ];
     }
 
@@ -68,7 +69,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
      */
     public function broadcastAs(): string
     {
-        return 'order.status.changed';
+        return 'OrderStatusUpdated';
     }
 
     /**
@@ -129,4 +130,3 @@ class OrderStatusUpdated implements ShouldBroadcastNow
         return null;
     }
 }
-

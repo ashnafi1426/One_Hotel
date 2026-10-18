@@ -7,11 +7,12 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderCreated implements ShouldBroadcastNow
+class OrderCreated implements ShouldBroadcast, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -30,7 +31,7 @@ class OrderCreated implements ShouldBroadcastNow
     {
         return [
             new Channel('orders.update.' . $this->order->id),
-            new PrivateChannel('private-kitchen.orders.update'),
+            new Channel('kitchen.orders.update'),
             new Channel('waiter.orders.update'),
             new Channel('manager.orders.update'),
         ];

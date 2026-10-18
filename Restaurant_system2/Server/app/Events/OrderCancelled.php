@@ -6,7 +6,8 @@ use App\Models\Order;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -16,7 +17,7 @@ use Illuminate\Queue\SerializesModels;
  * Broadcast when an order is cancelled by customer or staff.
  * Notifies both customer and kitchen staff in real-time.
  */
-class OrderCancelled implements ShouldBroadcastNow
+class OrderCancelled implements ShouldBroadcast, ShouldQueue
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -51,10 +52,11 @@ class OrderCancelled implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("orders.{$this->orderId}"),
-            new PrivateChannel("orders.{$this->hotelId}.{$this->orderId}"),
-            new PrivateChannel("hotel.kitchen"),
-            new PrivateChannel("hotel.{$this->hotelId}.kitchen"),
+            new Channel("orders.{$this->orderId}"),
+            new Channel("orders.{$this->hotelId}.{$this->orderId}"),
+            new Channel("kitchen.orders.update"),
+            new Channel("waiter.orders.update"),
+            new Channel("manager.orders.update"),
         ];
     }
 
@@ -81,4 +83,3 @@ class OrderCancelled implements ShouldBroadcastNow
         ];
     }
 }
-
