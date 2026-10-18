@@ -33,12 +33,14 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     public ?string $chefId;
     public ?string $message;
     public ?int $estimatedCompletionMinutes;
+    public Order $order;
 
     /**
      * Create a new event instance.
      */
     public function __construct(Order $order, ?string $previousStatus = null)
     {
+        $this->order = $order;
         $this->orderId = $order->id;
         $this->hotelId = (string) ($order->hotel_id ?? '41b094f8-7ed2-4af0-bd16-6f0533e34544');
         $this->status = $order->status;
@@ -148,3 +150,4 @@ class OrderStatusUpdated implements ShouldBroadcastNow
         return null;
     }
 }
+
