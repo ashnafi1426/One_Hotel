@@ -53,7 +53,7 @@ class Room extends Model
                     $room->id,
                     $room->room_number,
                     $room->qr_token,
-                    config('app.frontend_url', 'http://localhost:5173')
+                    config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app'))
                 );
 
                 $room->updateQuietly([

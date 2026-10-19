@@ -32,7 +32,7 @@ class QRCodeController extends Controller
                 ], 422);
             }
 
-            $baseUrl = config('app.frontend_url', 'http://localhost:5173');
+            $baseUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
             $orderUrl = "{$baseUrl}/order/{$room->qr_token}";
             $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($orderUrl);
 
@@ -68,7 +68,7 @@ class QRCodeController extends Controller
             $rooms = Room::where('is_active', true)->get();
 
             $qrCodes = [];
-            $baseUrl = config('app.frontend_url', 'http://localhost:5173');
+            $baseUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
 
             foreach ($rooms as $room) {
                 if (!$room->qr_token) {
@@ -124,7 +124,7 @@ class QRCodeController extends Controller
                 ], 422);
             }
 
-            $baseUrl = config('app.frontend_url', 'http://localhost:5173');
+            $baseUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
             $orderUrl = "{$baseUrl}/order/{$room->qr_token}";
             $qrImageUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($orderUrl);
 

@@ -19,7 +19,9 @@
         :alt="slide.titleLine1 + ' ' + slide.titleLine2"
         class="w-full h-full object-cover object-right opacity-100 brightness-105 contrast-105 transition-transform duration-1000 ease-out"
         :class="index === currentSlide ? 'scale-105' : 'scale-100'"
-        loading="eager"
+        :loading="index === 0 ? 'eager' : 'lazy'"
+        :fetchpriority="index === 0 ? 'high' : 'low'"
+        :decoding="index === 0 ? 'sync' : 'async'"
       />
 
       <div
@@ -119,7 +121,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  intervalMs: 1000,
+  intervalMs: 5000,
 })
 
 const emit = defineEmits<{
@@ -146,7 +148,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: languageStore.t('view_specials', 'View Specials'),
     category: 'Specials',
     imageUrl:
-      'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?w=900&auto=format&fit=crop&q=75',
   },
   {
     id: 2,
@@ -157,7 +159,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: 'Explore Steaks',
     category: 'Main Courses',
     imageUrl:
-      'https://images.unsplash.com/photo-1544025162-d76694265947?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1544025162-d76694265947?w=900&auto=format&fit=crop&q=75',
   },
   {
     id: 3,
@@ -168,7 +170,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: 'Taste Pizza',
     category: 'Pizza',
     imageUrl:
-      'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=900&auto=format&fit=crop&q=75',
   },
   {
     id: 4,
@@ -179,7 +181,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: 'Discover Burgers',
     category: 'Burgers',
     imageUrl:
-      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=900&auto=format&fit=crop&q=75',
   },
   {
     id: 5,
@@ -190,7 +192,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: 'Taste Seafood',
     category: 'Seafood',
     imageUrl:
-      'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=900&auto=format&fit=crop&q=75',
   },
   {
     id: 6,
@@ -201,7 +203,7 @@ const slides = computed<HeroSlide[]>(() => [
     ctaText: 'Browse Sweets',
     category: 'Desserts',
     imageUrl:
-      'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=1600&auto=format&fit=crop&q=80',
+      'https://images.unsplash.com/photo-1606313564200-e75d5e30476c?w=900&auto=format&fit=crop&q=75',
   },
 ])
 
@@ -251,10 +253,6 @@ const handleSpecials = (category?: string) => {
 }
 
 onMounted(() => {
-  slides.value.forEach((slide) => {
-    const img = new Image()
-    img.src = slide.imageUrl
-  })
   startAutoplay()
 })
 

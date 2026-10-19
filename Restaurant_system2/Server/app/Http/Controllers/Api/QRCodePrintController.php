@@ -107,7 +107,7 @@ class QRCodePrintController extends Controller
         try {
             $newPath = QRCodeService::regenerateQRCode(
                 $room,
-                config('app.frontend_url', 'http://localhost:5173')
+                rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/')
             );
 
             return response()->json([

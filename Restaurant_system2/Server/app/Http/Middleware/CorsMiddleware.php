@@ -22,9 +22,15 @@ class CorsMiddleware
             'http://127.0.0.1:5173',
             'http://localhost:5174',
             'http://127.0.0.1:5174',
+            'https://one-hotel-lemon.vercel.app',
         ];
 
-        $isAllowed = in_array($origin, $allowedOrigins);
+        $frontendUrl = config('app.frontend_url', env('APP_FRONTEND_URL'));
+        if ($frontendUrl && !in_array($frontendUrl, $allowedOrigins)) {
+            $allowedOrigins[] = rtrim($frontendUrl, '/');
+        }
+
+        $isAllowed = in_array($origin, $allowedOrigins) || (is_string($origin) && preg_match('/\.vercel\.app$/', parse_url($origin, PHP_URL_HOST) ?? $origin));
         $requestedHeaders = $request->header('Access-Control-Request-Headers')
             ?: 'Content-Type, Authorization, Accept, X-Requested-With, X-Hotel-ID, x-hotel-id, Origin';
         if ($request->getMethod() === 'OPTIONS') {

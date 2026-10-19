@@ -39,10 +39,43 @@ export interface QRValidationResult {
   context: 'room' | 'table' | null
 }
 
+const resolutionCache = new Map<string, { data: QRResolutionResult; time: number }>()
+const CACHE_TTL_MS = 60000 // 60 seconds
+
 export const qrService = {
-  async resolveQRToken(token: string): Promise<QRResolutionResult> {
+  async resolveQRToken(token: string, force = false): Promise<QRResolutionResult> {
+    if (!force && token) {
+      const cached = resolutionCache.get(token)
+      if (cached && Date.now() - cached.time < CACHE_TTL_MS) {
+        return cached.data
+      }
+      try {
+        const stored = sessionStorage.getItem(`qr_res_${token}`)
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          if (parsed && Date.now() - parsed.time < CACHE_TTL_MS) {
+            resolutionCache.set(token, { data: parsed.data, time: parsed.time })
+            return parsed.data
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
     try {
       const response = await axios.get(`/qr/resolve/${token}`)
+      if (response.data && response.data.success) {
+        resolutionCache.set(token, { data: response.data, time: Date.now() })
+        try {
+          sessionStorage.setItem(
+            `qr_res_${token}`,
+            JSON.stringify({ data: response.data, time: Date.now() }),
+          )
+        } catch (e) {
+          // ignore
+        }
+      }
       return response.data
     } catch (error: any) {
       console.error('[QRService] Error resolving QR token:', error)

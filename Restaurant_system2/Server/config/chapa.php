@@ -68,7 +68,7 @@ return [
 
     'order_return_url' => env(
         'CHAPA_ORDER_RETURN_URL',
-        env('APP_FRONTEND_URL', 'http://localhost:5173') . '/order/payment/success'
+        env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app') . '/order/payment/success'
     ),
 
 ];

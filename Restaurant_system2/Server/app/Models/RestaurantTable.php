@@ -53,7 +53,7 @@ class RestaurantTable extends Model
                     $table->id,
                     $table->table_number,
                     $table->qr_token,
-                    config('app.frontend_url', 'http://localhost:5173')
+                    config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app'))
                 );
 
                 $table->update([
@@ -191,7 +191,7 @@ class RestaurantTable extends Model
     public function regenerateQRCode($baseUrl = null): string
     {
         if (!$baseUrl) {
-            $baseUrl = config('app.frontend_url', 'http://localhost:5173');
+            $baseUrl = config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app'));
         }
 
         if ($this->qr_image_path) {

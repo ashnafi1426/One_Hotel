@@ -8,9 +8,10 @@ use Illuminate\Support\Str;
 
 class QRCodeService
 {
-    public static function generateAndSaveQRCode($roomId, $roomNumber, $qrToken, $baseUrl = 'http://localhost:5173')
+    public static function generateAndSaveQRCode($roomId, $roomNumber, $qrToken, $baseUrl = null)
     {
         try {
+            $baseUrl = rtrim($baseUrl ?: config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
             $url = "{$baseUrl}/order/{$qrToken}";
             $storageDir = storage_path('app/public/qr-codes');
             if (!is_dir($storageDir)) {
@@ -89,8 +90,10 @@ class QRCodeService
         }
         return url("storage/{$imagePath}");
     }
-    public static function regenerateQRCode($room, $baseUrl = 'http://localhost:5173')
+    public static function regenerateQRCode($room, $baseUrl = null)
     {
+        $baseUrl = rtrim($baseUrl ?: config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
+
         if ($room->qr_image_path) {
             Storage::delete("public/{$room->qr_image_path}");
         }

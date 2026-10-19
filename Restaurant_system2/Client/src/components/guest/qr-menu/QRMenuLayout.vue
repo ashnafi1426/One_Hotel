@@ -318,8 +318,8 @@
     </Transition>
 
     <div
-      v-if="isLoadingMenu"
-      class="fixed inset-0 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm z-40 flex items-center justify-center"
+      v-if="isLoadingMenu && allMenuItems.length === 0"
+      class="fixed inset-0 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xs z-40 flex items-center justify-center transition-opacity"
     >
       <div class="flex flex-col items-center gap-4">
         <div class="relative w-12 h-12">
@@ -568,9 +568,9 @@ function deriveCategoriesFromMenuItems() {
 }
 
 const getMenuCacheKey = () =>
-  `qr_menu_items_cache_${props.hotelId || guestHotelStore.hotelId || ''}_${props.qrToken || 'all'}`
+  `qr_menu_items_cache_${props.qrToken || 'all'}`
 const getCatCacheKey = () =>
-  `qr_categories_cache_${props.hotelId || guestHotelStore.hotelId || ''}_${props.qrToken || 'all'}`
+  `qr_categories_cache_${props.qrToken || 'all'}`
 
 const loadFromClientCache = (): boolean => {
   try {
@@ -596,6 +596,9 @@ const loadFromClientCache = (): boolean => {
 
     if (hasData) {
       isLoadingMenu.value = false
+      if (allMenuItems.value.length > 0) {
+        updateCategoryCounts()
+      }
       return true
     }
   } catch (e) {
@@ -656,14 +659,22 @@ const loadCategories = async (forceRefresh = false) => {
         slug: cat.slug || (typeof cat.id === 'string' ? cat.id : ''),
         name: cat.name,
         icon: cat.icon || '',
-        count: cat.count ?? cat.menu_items_count ?? 0,
+        count: Number(cat.count ?? cat.menu_items_count ?? 0),
       }))
 
+      const totalItemsCount =
+        allMenuItems.value.length > 0
+          ? allMenuItems.value.length
+          : backendCategories.reduce((sum, c) => sum + (c.count || 0), 0)
+
       categories.value = [
-        { id: null, name: 'All Categories', icon: 'grid', count: allMenuItems.value.length },
+        { id: null, name: 'All Categories', icon: 'grid', count: totalItemsCount },
         ...backendCategories,
       ]
-      updateCategoryCounts()
+
+      if (allMenuItems.value.length > 0) {
+        updateCategoryCounts()
+      }
       saveToClientCache()
       return
     }
@@ -674,7 +685,9 @@ const loadCategories = async (forceRefresh = false) => {
   }
 
   deriveCategoriesFromMenuItems()
-  updateCategoryCounts()
+  if (allMenuItems.value.length > 0) {
+    updateCategoryCounts()
+  }
   saveToClientCache()
 }
 
@@ -895,6 +908,9 @@ function matchCategory(
 }
 
 const updateCategoryCounts = () => {
+  if (!allMenuItems.value || allMenuItems.value.length === 0) {
+    return
+  }
   categories.value.forEach((cat) => {
     if (cat.id) {
       const count = allMenuItems.value.filter((item) =>
@@ -1116,13 +1132,27 @@ watch(
   { immediate: true, deep: true },
 )
 
+let isMenuDataFetching = false
+
+const loadMenuData = async (forceRefresh = false) => {
+  if (isMenuDataFetching) return
+  isMenuDataFetching = true
+  try {
+    await Promise.allSettled([
+      loadCategories(forceRefresh),
+      loadMenuItems(forceRefresh),
+    ])
+  } finally {
+    isMenuDataFetching = false
+  }
+}
+
 watch(
   () => props.qrToken,
   (newVal, oldVal) => {
     if (newVal && newVal !== oldVal) {
       loadFromClientCache()
-      loadCategories(true)
-      loadMenuItems(true)
+      loadMenuData(false)
     }
   },
 )
@@ -1130,10 +1160,9 @@ watch(
 watch(
   () => props.hotelId,
   (newVal, oldVal) => {
-    if (newVal && newVal !== oldVal) {
-      loadFromClientCache()
-      loadCategories(true)
-      loadMenuItems(true)
+    // Only fetch if menu items haven't been loaded yet to avoid redundant double requests on initial mount
+    if (newVal && newVal !== oldVal && allMenuItems.value.length === 0) {
+      loadMenuData(false)
     }
   },
 )
@@ -1147,8 +1176,7 @@ onMounted(() => {
   if (hasCached) {
     isLoadingMenu.value = false
   }
-  loadCategories(false)
-  loadMenuItems(true)
+  loadMenuData(false)
 
   window.addEventListener('review-stats-updated', handleReviewStatsUpdated)
 })
