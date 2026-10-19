@@ -115,23 +115,7 @@ export const useWaiterStore = defineStore('waiter', () => {
     unsubscribeFromUpdates()
 
     try {
-      const unsubManager = echoService.subscribeToManagerOrderUpdates(
-        (data: any) => {
-          receiveOrderUpdate(data)
-        },
-        (error: any) => {
-          console.error('[waiterStore] Manager WebSocket error:', error)
-        }
-      )
-      if (typeof unsubManager === 'function') {
-        unsubscribers.push(unsubManager)
-      }
-    } catch (e) {
-      console.warn('[waiterStore] Error subscribing to manager channel:', e)
-    }
-
-    try {
-      const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(
+      const unsub = echoService.subscribeToWaiterOrderUpdates(
         (data: any) => {
           receiveOrderUpdate(data)
         },
@@ -139,8 +123,8 @@ export const useWaiterStore = defineStore('waiter', () => {
           console.error('[waiterStore] Waiter WebSocket error:', error)
         }
       )
-      if (typeof unsubWaiter === 'function') {
-        unsubscribers.push(unsubWaiter)
+      if (typeof unsub === 'function') {
+        unsubscribers.push(unsub)
       }
     } catch (e) {
       console.warn('[waiterStore] Error subscribing to waiter channel:', e)

@@ -177,16 +177,16 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
 
-const loadOrders = async () => {
+const loadOrders = async (showSpinner = true) => {
   try {
-    loading.value = true
+    if (showSpinner) loading.value = true
     const data = await waiterService.getReadyForPickupOrders()
     orders.value = Array.isArray(data) ? data : (data as any)?.data || []
-    currentPage.value = 1
+    if (showSpinner) currentPage.value = 1
   } catch (err: any) {
     console.error('[ReadyPickup] Error loading ready orders:', err)
   } finally {
-    loading.value = false
+    if (showSpinner) loading.value = false
   }
 }
 
@@ -195,7 +195,7 @@ const pickupOrder = async (orderId: string | number) => {
     loadingOrderId.value = String(orderId)
     await waiterService.pickupOrder(String(orderId))
     orders.value = orders.value.filter((o) => o.id !== orderId && o.order_id !== String(orderId))
-    await loadOrders()
+    await loadOrders(false)
   } catch (err: any) {
     console.error('[ReadyPickup] Error picking up order:', err)
     alert(err.message || 'Failed to pickup order')
@@ -204,49 +204,88 @@ const pickupOrder = async (orderId: string | number) => {
   }
 }
 
-let unsubscribers: (() => void)[] = []
-let pollInterval: any = null
+const handleWebSocketOrder = (data: any) => {
+  console.log('[ReadyPickup] ⚡ Real-Time WebSocket event received:', data)
+  const orderId = String(data.order_id || data.id || data.order?.id || '')
+  const status = (data.status || data.order?.status || data.new_status || '').toLowerCase()
+
+  if (!orderId) {
+    loadOrders(false)
+    return
+  }
+
+  if (status === 'ready') {
+    const ord = data.order || {}
+    const tableNumber = ord.table?.table_number || data.table_number || null
+    const isTable = Boolean(tableNumber || ord.order_type === 'dine_in')
+    const roomNumber = !isTable ? ord.room?.room_number || data.room_number || null : null
+    const destination = tableNumber
+      ? `Table ${tableNumber}`
+      : roomNumber
+        ? `Room ${roomNumber}`
+        : isTable
+          ? 'Table Order'
+          : 'Room Service'
+    const guestName = ord.guest?.full_name || ord.guest?.name || data.guest_name || 'Guest'
+
+    const newItem: ReadyOrder = {
+      id: ord.id || orderId,
+      order_id: orderId,
+      order_number: ord.order_number || data.order_number || 'ORD-' + orderId.slice(0, 8),
+      order_type: ord.order_type || (isTable ? 'dine_in' : 'room_service'),
+      is_table_order: isTable,
+      room_number: roomNumber,
+      table_number: tableNumber,
+      destination,
+      guest_name: guestName,
+      items: ord.items?.length || 1,
+      special_requests: ord.notes || ord.special_requests || 'None',
+    }
+
+    const idx = orders.value.findIndex(
+      (o) => String(o.id) === orderId || String(o.order_id) === orderId,
+    )
+    if (idx !== -1) {
+      orders.value.splice(idx, 1, newItem)
+      console.log('[ReadyPickup] ✨ Updated ready order in memory:', orderId)
+    } else {
+      orders.value.unshift(newItem)
+      console.log('[ReadyPickup] ✨ Added new ready order to memory:', orderId)
+    }
+  } else if (status && status !== 'ready') {
+    const beforeCount = orders.value.length
+    orders.value = orders.value.filter(
+      (o) => String(o.id) !== orderId && String(o.order_id) !== orderId,
+    )
+    if (orders.value.length !== beforeCount) {
+      console.log('[ReadyPickup] ✨ Removed order no longer ready:', orderId)
+    }
+  }
+
+  // Quietly sync with database in background
+  loadOrders(false)
+}
+
+let unsubscribe: (() => void) | null = null
 
 onMounted(() => {
-  loadOrders()
+  console.log('[ReadyPickup] Mounting - loading orders and connecting to WebSocket')
+  loadOrders(true)
 
   try {
-    const unsubManager = echoService.subscribeToManagerOrderUpdates(() => {
-      console.log('[ReadyPickup] WebSocket manager update - reloading')
-      loadOrders()
+    unsubscribe = echoService.subscribeToWaiterOrderUpdates((data: any) => {
+      handleWebSocketOrder(data)
     })
-    if (typeof unsubManager === 'function') unsubscribers.push(unsubManager)
   } catch (e) {
-    console.warn('[ReadyPickup] Manager WebSocket subscription error:', e)
+    console.warn('[ReadyPickup] WebSocket subscription error:', e)
   }
-
-  try {
-    const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(() => {
-      console.log('[ReadyPickup] WebSocket waiter update - reloading')
-      loadOrders()
-    })
-    if (typeof unsubWaiter === 'function') unsubscribers.push(unsubWaiter)
-  } catch (e) {
-    console.warn('[ReadyPickup] Waiter WebSocket subscription error:', e)
-  }
-
-  // 15-second background poll fallback
-  pollInterval = setInterval(() => {
-    loadOrders()
-  }, 15000)
 })
 
 onUnmounted(() => {
-  if (pollInterval) {
-    clearInterval(pollInterval)
-  }
-  while (unsubscribers.length > 0) {
-    const unsub = unsubscribers.pop()
-    try {
-      unsub?.()
-    } catch (e) {
-      // ignore
-    }
+  console.log('[ReadyPickup] Unmounting - cleaning up WebSocket')
+  if (unsubscribe) {
+    unsubscribe()
+    unsubscribe = null
   }
 })
 

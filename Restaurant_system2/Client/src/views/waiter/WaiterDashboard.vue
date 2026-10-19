@@ -538,8 +538,6 @@ const handleOutsideClick = () => {
   activeMenuId.value = null
 }
 
-let pollInterval: any = null
-
 const saveCacheData = () => {
   try {
     const dashboardData = {
@@ -586,23 +584,15 @@ const teardownWebSocket = () => {
 }
 
 onMounted(() => {
-  console.log('[WaiterDashboard] Mounting - restore cache, fetch live, subscribe')
+  console.log('[WaiterDashboard] Mounting - restore cache, fetch live, subscribe to WebSocket')
   restoreCachedData()
   waiterStore.fetchDashboard(true)
   waiterStore.subscribeToUpdates()
   window.addEventListener('click', handleOutsideClick)
-
-  // 15-second background polling fallback to guarantee real-time sync
-  pollInterval = setInterval(() => {
-    waiterStore.fetchDashboard(false)
-  }, 15000)
 })
 
 onUnmounted(() => {
-  console.log('[WaiterDashboard] Unmounting - cleanup')
-  if (pollInterval) {
-    clearInterval(pollInterval)
-  }
+  console.log('[WaiterDashboard] Unmounting - cleanup WebSocket')
   waiterStore.unsubscribeFromUpdates()
   window.removeEventListener('click', handleOutsideClick)
 })

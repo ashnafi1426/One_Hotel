@@ -183,13 +183,14 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
 }
 
 /**
- * Subscribe to all waiter order updates
- * Fired when any order is assigned, becomes ready, or status changes
+ * Subscribe to all waiter order updates via WebSocket
+ * Connects to waiter, kitchen, and manager channels so ANY kitchen status update (ready, preparing, served)
+ * triggers real-time UI updates without any polling.
  */
 export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
-    const channel = echo.channel('waiter.orders.update')
+    const channelNames = ['waiter.orders.update', 'kitchen.orders.update', 'manager.orders.update']
 
     const events = [
       'OrderStatusUpdated',
@@ -208,23 +209,51 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
       '.WaiterOrderReadyEvent',
     ]
 
-    events.forEach((evt) => {
-      channel.listen(evt, (data: any) => {
-        console.log(`[Echo] Waiter update [${evt}]:`, data)
-        onUpdate(data)
+    // In-memory deduplicator to prevent duplicate callbacks within 350ms
+    const recentTriggers = new Map<string, number>()
+
+    const handleEvent = (evt: string, ch: string, data: any) => {
+      const id = data?.id || data?.order_id || data?.order?.id
+      const status = data?.status || data?.order?.status
+      const key = `${id}_${status}`
+      const now = Date.now()
+
+      if (id && status && recentTriggers.has(key)) {
+        const last = recentTriggers.get(key)!
+        if (now - last < 350) {
+          return // duplicate from another channel
+        }
+      }
+
+      if (id && status) {
+        recentTriggers.set(key, now)
+        if (recentTriggers.size > 200) {
+          recentTriggers.clear()
+        }
+      }
+
+      console.log(`[Echo] ⚡ Waiter WebSocket update [${ch} -> ${evt}]:`, data)
+      onUpdate(data)
+    }
+
+    channelNames.forEach((chName) => {
+      const ch = echo.channel(chName)
+      events.forEach((evt) => {
+        ch.listen(evt, (data: any) => handleEvent(evt, chName, data))
+      })
+      ch.error((err: any) => {
+        console.error(`[Echo] WebSocket error on ${chName}:`, err)
+        onError?.(err)
       })
     })
 
-    channel.error((error: any) => {
-      console.error('[Echo] Error on waiter.orders.update:', error)
-      onError?.(error)
-    })
-
-    console.log('[Echo] Subscribed to waiter order updates')
+    console.log('[Echo] ✅ Waiter subscribed to real-time WebSocket channels:', channelNames.join(', '))
 
     return () => {
-      echo.leave('waiter.orders.update')
-      console.log('[Echo] Unsubscribed from waiter order updates')
+      channelNames.forEach((chName) => {
+        echo.leave(chName)
+      })
+      console.log('[Echo] Unsubscribed from real-time waiter channels')
     }
   } catch (error: any) {
     console.error('[Echo] Failed to subscribe to waiter updates:', error)

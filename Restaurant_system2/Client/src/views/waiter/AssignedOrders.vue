@@ -152,9 +152,9 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
 
-const loadAssignments = async () => {
+const loadAssignments = async (showSpinner = true) => {
   try {
-    loading.value = true
+    if (showSpinner) loading.value = true
     error.value = null
     const data = await waiterService.getRecentAssignments(100)
     if (Array.isArray(data)) {
@@ -164,12 +164,12 @@ const loadAssignments = async () => {
     } else {
       assignments.value = []
     }
-    currentPage.value = 1
+    if (showSpinner) currentPage.value = 1
   } catch (err: any) {
     console.error('[AssignedOrders] Error:', err)
     error.value = err.message || 'Failed to load orders'
   } finally {
-    loading.value = false
+    if (showSpinner) loading.value = false
   }
 }
 
@@ -221,60 +221,56 @@ const pickupOrder = async (orderId: string | number) => {
   }
 }
 
-watch(itemsPerPage, () => {
-  currentPage.value = 1
-})
+const handleWebSocketOrder = (data: any) => {
+  console.log('[AssignedOrders] ⚡ Real-Time WebSocket event received:', data)
+  const orderId = String(data.order_id || data.id || data.order?.id || '')
+  const status = (data.status || data.order?.status || data.new_status || '').toLowerCase()
 
-let unsubscribers: (() => void)[] = []
-let pollInterval: any = null
+  if (orderId && status) {
+    const idx = assignments.value.findIndex(
+      (a) => String(a.order_id) === orderId || String(a.id) === orderId,
+    )
+    if (idx !== -1) {
+      if (status === 'ready') {
+        assignments.value[idx].status = 'ready'
+        assignments.value[idx].is_ready = true
+      }
+      assignments.value[idx].order_status = status
+      console.log('[AssignedOrders] ✨ Updated assignment status in memory:', orderId, '→', status)
+    }
+  }
+
+  // Quietly sync with API
+  loadAssignments(false)
+}
+
+let unsubscribe: (() => void) | null = null
 
 onMounted(() => {
-  loadAssignments()
+  console.log('[AssignedOrders] Mounting - loading assignments and connecting to WebSocket')
+  loadAssignments(true)
 
   try {
-    const unsubManager = echoService.subscribeToManagerOrderUpdates(() => {
-      console.log('[AssignedOrders] WebSocket manager update - reloading')
-      loadAssignments()
+    unsubscribe = echoService.subscribeToWaiterOrderUpdates((data: any) => {
+      handleWebSocketOrder(data)
     })
-    if (typeof unsubManager === 'function') unsubscribers.push(unsubManager)
   } catch (e) {
-    console.warn('[AssignedOrders] Manager WebSocket subscription error:', e)
+    console.warn('[AssignedOrders] WebSocket subscription error:', e)
   }
-
-  try {
-    const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(() => {
-      console.log('[AssignedOrders] WebSocket waiter update - reloading')
-      loadAssignments()
-    })
-    if (typeof unsubWaiter === 'function') unsubscribers.push(unsubWaiter)
-  } catch (e) {
-    console.warn('[AssignedOrders] Waiter WebSocket subscription error:', e)
-  }
-
-  // 15-second background poll fallback
-  pollInterval = setInterval(() => {
-    loadAssignments()
-  }, 15000)
 })
 
 onUnmounted(() => {
-  if (pollInterval) {
-    clearInterval(pollInterval)
-  }
-  while (unsubscribers.length > 0) {
-    const unsub = unsubscribers.pop()
-    try {
-      unsub?.()
-    } catch (e) {
-      // ignore
-    }
+  console.log('[AssignedOrders] Unmounting - cleaning up WebSocket')
+  if (unsubscribe) {
+    unsubscribe()
+    unsubscribe = null
   }
 })
 
 watch(
   () => hotelStore.hotelId,
   () => {
-    loadAssignments()
+    loadAssignments(true)
   },
 )
 </script>

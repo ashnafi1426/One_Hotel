@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import waiterService from '@/services/waiterService'
+import echoService from '@/services/echoService'
 import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
 import {
@@ -162,9 +163,9 @@ const toggleFullscreen = () => {
   isFullscreen.value = !isFullscreen.value
 }
 
-const loadDeliveries = async () => {
+const loadDeliveries = async (showSpinner = true) => {
   try {
-    loading.value = true
+    if (showSpinner) loading.value = true
     const data = await waiterService.getActiveDeliveries()
     if (Array.isArray(data)) {
       deliveries.value = data
@@ -173,11 +174,11 @@ const loadDeliveries = async () => {
     } else {
       deliveries.value = []
     }
-    currentPage.value = 1
+    if (showSpinner) currentPage.value = 1
   } catch (err: any) {
     console.error('[OnDelivery] Error loading deliveries:', err)
   } finally {
-    loading.value = false
+    if (showSpinner) loading.value = false
   }
 }
 
@@ -205,14 +206,43 @@ const formatDateTime = (dateStr: string) => {
     : d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
 }
 
+let unsubscribe: (() => void) | null = null
+
+const handleWebSocketOrder = (data: any) => {
+  console.log('[OnDelivery] ⚡ Real-Time WebSocket event received:', data)
+  const status = (data.status || data.order?.status || data.new_status || '').toLowerCase()
+
+  // When order status is updated, refresh active deliveries quietly in background
+  if (['picked_up', 'on_delivery', 'delivered', 'cancelled'].includes(status)) {
+    loadDeliveries(false)
+  }
+}
+
 onMounted(() => {
-  loadDeliveries()
+  console.log('[OnDelivery] Mounting - loading deliveries and connecting to WebSocket')
+  loadDeliveries(true)
+
+  try {
+    unsubscribe = echoService.subscribeToWaiterOrderUpdates((data: any) => {
+      handleWebSocketOrder(data)
+    })
+  } catch (e) {
+    console.warn('[OnDelivery] WebSocket subscription error:', e)
+  }
+})
+
+onUnmounted(() => {
+  console.log('[OnDelivery] Unmounting - cleaning up WebSocket')
+  if (unsubscribe) {
+    unsubscribe()
+    unsubscribe = null
+  }
 })
 
 watch(
   () => hotelStore.hotelId,
   () => {
-    loadDeliveries()
+    loadDeliveries(true)
   },
 )
 </script>
