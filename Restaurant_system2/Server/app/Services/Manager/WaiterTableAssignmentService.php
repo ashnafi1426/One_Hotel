@@ -180,11 +180,15 @@ class WaiterTableAssignmentService
                 } catch (\Exception $e) {
                     $errors[] = [
                         'index' => $index,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ];
                     Log::error('Failed to create table assignment', [
                         'assignment_data' => $assignmentData,
-                        'error' => $e->getMessage()
+                        'error' => $e->getMessage(),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString()
                     ]);
                 }
             }
