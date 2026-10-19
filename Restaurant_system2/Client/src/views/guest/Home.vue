@@ -17,7 +17,7 @@ import GuestLayout from '@/Layouts/GuestLayout.vue'
       <HeroSection />
 
       <!-- Dedicated Booking Search Section with elegant desktop overlap and natural mobile flow -->
-      <section id="booking-search-section" class="relative -mt-8 sm:-mt-12 lg:-mt-16 mb-12 sm:mb-16 z-30">
+      <section id="booking-search-section" class="relative mt-3 sm:-mt-10 lg:-mt-16 mb-10 sm:mb-14 z-30">
         <BookingSearchForm variant="hero" />
       </section>
 

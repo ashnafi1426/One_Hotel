@@ -145,8 +145,8 @@ watch(
     >
       <RoomHero />
 
-      <!-- Docked Search & Filter Bar -->
-      <section class="mx-auto -mt-10 sm:-mt-12 max-w-6xl px-4 sm:px-6 relative z-20">
+      <!-- Docked Search & Filter Bar with smooth mobile flow and desktop docking -->
+      <section class="mx-auto mt-2 sm:-mt-10 lg:-mt-12 max-w-6xl px-4 sm:px-6 relative z-20">
         <RoomSearchBar
           v-model="search"
           :type="selectedType"

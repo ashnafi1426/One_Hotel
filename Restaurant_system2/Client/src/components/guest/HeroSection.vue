@@ -3,7 +3,14 @@ import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
-import { Calendar, BedDouble, MapPin, Clock, ShieldCheck, Sparkles } from 'lucide-vue-next'
+import {
+  Calendar,
+  BedDouble,
+  MapPin,
+  Clock,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-vue-next'
 
 const router = useRouter()
 const languageStore = useLanguageStore()
@@ -13,11 +20,13 @@ const heroLocation = computed(() => {
   if (guestHotelStore.currentHotel?.address) {
     return guestHotelStore.currentHotel.address
   }
+
   return `${guestHotelStore.hotelCity}, ${guestHotelStore.hotelCountry}`
 })
 
 function bookNow() {
   const bookingForm = document.getElementById('booking-search-section')
+
   if (bookingForm) {
     bookingForm.scrollIntoView({ behavior: 'smooth' })
   } else {
@@ -26,7 +35,10 @@ function bookNow() {
 }
 
 function exploreRooms() {
-  const target = document.getElementById('featured-rooms') || document.getElementById('rooms-section')
+  const target =
+    document.getElementById('featured-rooms') ||
+    document.getElementById('rooms-section')
+
   if (target) {
     target.scrollIntoView({ behavior: 'smooth' })
   } else {
@@ -37,54 +49,90 @@ function exploreRooms() {
 
 <template>
   <section
-    class="relative min-h-[88vh] lg:min-h-[92vh] flex flex-col justify-between overflow-hidden bg-[#101827] text-white pt-10 sm:pt-14 pb-24 sm:pb-28 lg:pb-32"
+    class="relative isolate flex min-h-[650px] flex-col justify-center
+           overflow-hidden bg-[#101827] text-white
+           sm:min-h-[700px] lg:min-h-[710px] xl:min-h-[740px]"
   >
-    <!-- Background Hotel Visual with Balanced Directional & Radial Overlay -->
-    <div class="absolute inset-0 z-0">
+    <!-- Background image -->
+    <div class="absolute inset-0 -z-10">
       <img
         src="/images/rooms/image.png"
-        :alt="guestHotelStore.hotelName"
-        class="h-full w-full object-cover object-[center_60%] sm:object-[center_55%] lg:object-center brightness-105 transition-transform duration-1000"
-        @error="(e: any) => (e.target.src = 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?w=1920&h=1080&fit=crop')"
+        :alt="`${guestHotelStore.hotelName} hotel exterior`"
+        class="h-full w-full object-cover object-center"
+        @error="(e: Event) => {
+          const img = e.target as HTMLImageElement
+          if (!img.dataset.fallback) {
+            img.dataset.fallback = 'true'
+            img.src = '/images/gallery/executive-suite.jpg'
+          }
+        }"
       />
 
-      <!-- Directional gradient ensuring high text contrast while letting illuminated entrance & fountains shine -->
+      <!-- Keep the hotel visible while protecting text contrast -->
       <div
-        class="absolute inset-0"
-        style="background: linear-gradient(180deg, rgba(16, 24, 39, 0.72) 0%, rgba(16, 24, 39, 0.42) 48%, rgba(16, 24, 39, 0.68) 100%);"
+        class="absolute inset-0 bg-[#101827]/35"
       />
-      <!-- Radial vignette focused behind headline for a quiet text backdrop -->
+
       <div
-        class="absolute inset-0 pointer-events-none"
-        style="background: radial-gradient(ellipse at 50% 36%, rgba(16, 24, 39, 0.68) 0%, rgba(16, 24, 39, 0.3) 60%, transparent 100%);"
+        class="absolute inset-0 bg-gradient-to-b
+               from-[#101827]/60 via-[#101827]/35
+               to-[#101827]/65"
+      />
+
+      <!-- Local contrast behind the heading -->
+      <div
+        class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,24,39,0.35)_0%,transparent_72%)]"
       />
     </div>
 
-    <!-- Center Hero Main Content Area -->
-    <div class="relative z-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center my-auto w-full pt-4">
-      <!-- Luxury Hotel Eyebrow Badge -->
+    <!-- Main hero content -->
+    <div
+      class="relative z-10 mx-auto flex w-full max-w-6xl flex-col
+             items-center px-5 py-12 text-center
+             sm:px-8 sm:py-14 lg:px-10 lg:py-16"
+    >
+      <!-- Hotel badge -->
       <div
-        class="inline-flex items-center gap-2 px-4 sm:px-5 py-1.5 sm:py-2 rounded-full bg-[#192438]/90 text-white border border-[#D6A746]/50 text-[11px] sm:text-xs font-bold uppercase tracking-[0.08em] backdrop-blur-md shadow-xl"
+        class="inline-flex max-w-full items-center justify-center gap-2
+               rounded-full border border-white/60 bg-[#192438]/90
+               px-4 py-2 text-[10px] font-bold uppercase
+               tracking-[0.08em] text-white shadow-lg
+               backdrop-blur-md sm:px-6 sm:text-xs"
       >
-        <Sparkles class="w-3.5 h-3.5 text-[#D6A746]" />
-        <span class="text-white font-bold">{{ guestHotelStore.hotelName }} • {{ (guestHotelStore.hotelCity || 'ADDIS ABABA').toUpperCase().replace('ADDISS', 'ADDIS') }}</span>
+        <Sparkles class="h-4 w-4 shrink-0 text-[#D6A746]" />
+
+        <span class="truncate">
+          {{ guestHotelStore.hotelName }}
+          •
+          {{ (guestHotelStore.hotelCity || 'ADDIS ABABA')
+            .toUpperCase()
+            .replace('ADDISS', 'ADDIS') }}
+        </span>
       </div>
 
-      <!-- Main Headline with Clear Visual Hierarchy (White Dominates, Gold Italic Complements) -->
+      <!-- Heading: one clear primary line and a gold accent line -->
       <h1
-        class="max-w-3xl mx-auto drop-shadow-md text-balance mt-4 sm:mt-5"
+        class="mt-6 max-w-4xl font-serif font-bold
+               text-[clamp(2.5rem,5vw,4.5rem)]
+               leading-[1.08] tracking-[-0.035em]
+               text-white drop-shadow-lg text-balance"
       >
-        <span class="block font-serif font-bold text-white text-3xl sm:text-5xl lg:text-6xl tracking-tight leading-[1.12]">
-          {{ languageStore.t('hero_title_part1', 'Timeless Luxury') }}
-        </span>
-        <span class="block font-serif italic font-normal text-[#D6A746] text-xl sm:text-3xl lg:text-4xl mt-1.5 sm:mt-2.5 tracking-normal">
-          &amp; {{ languageStore.t('hero_title_part2', 'Unmatched Comfort') }}
-        </span>
+        {{ languageStore.t('hero_title_part1', 'Timeless Luxury') }}
       </h1>
 
-      <!-- Supporting Subtitle with Balanced Width and Clear Readability -->
       <p
-        class="text-slate-100/90 font-normal max-w-xl sm:max-w-2xl mx-auto leading-relaxed font-sans text-sm sm:text-base lg:text-[17px] mt-3 sm:mt-4"
+        class="mt-3 max-w-4xl font-serif text-[clamp(1.65rem,3.5vw,3rem)]
+               font-normal italic leading-tight tracking-normal
+               text-[#E7B84F] drop-shadow-md text-balance"
+      >
+        &amp; {{ languageStore.t('hero_title_part2', 'Unmatched Comfort') }}
+      </p>
+
+      <!-- Supporting subtitle -->
+      <p
+        class="mt-5 max-w-2xl px-2 font-sans text-sm font-normal
+               leading-relaxed text-white/95 drop-shadow-md
+               sm:text-base md:text-lg"
       >
         {{
           guestHotelStore.currentHotel?.description ||
@@ -97,73 +145,118 @@ function exploreRooms() {
         }}
       </p>
 
-      <!-- Primary & Secondary CTA Buttons with Refined Sizing, Padding and Focus States -->
+      <!-- Primary and secondary actions -->
       <div
-        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 mt-6 sm:mt-7 w-full max-w-xs sm:max-w-none mx-auto"
+        class="mt-7 flex w-full max-w-2xl flex-col items-stretch
+               justify-center gap-3 sm:flex-row sm:items-center sm:gap-4"
       >
-        <!-- Primary Action: Book Your Stay -->
         <button
-          @click="bookNow"
           type="button"
-          class="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-full bg-[#D6A746] hover:bg-[#C59B3F] text-[#192438] font-bold text-xs sm:text-sm uppercase tracking-[0.08em] shadow-lg shadow-[#D6A746]/25 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          @click="bookNow"
+          class="inline-flex min-h-[54px] flex-1 items-center
+                 justify-center gap-2.5 rounded-full
+                 bg-[#D6A746] px-6 py-3 text-sm font-bold
+                 uppercase tracking-[0.07em] text-[#192438]
+                 shadow-lg shadow-black/20 transition-all
+                 duration-300 hover:-translate-y-0.5 hover:bg-[#E3B956]
+                 focus-visible:outline-none focus-visible:ring-2
+                 focus-visible:ring-white focus-visible:ring-offset-2
+                 focus-visible:ring-offset-[#192438]
+                 active:scale-[0.98]"
         >
-          <Calendar class="w-4 h-4 text-[#192438]" />
-          <span class="text-[#192438] font-bold">{{ languageStore.t('book_your_stay', 'Book Your Stay') }}</span>
+          <Calendar class="h-5 w-5 shrink-0" />
+          <span>
+            {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
+          </span>
         </button>
 
-        <!-- Secondary Action: Explore Rooms & Suites -->
         <button
-          @click="exploreRooms"
           type="button"
-          class="w-full sm:w-auto min-h-[48px] px-8 py-3.5 rounded-full bg-[#192438]/80 hover:bg-[#192438] text-white font-semibold text-xs sm:text-sm uppercase tracking-[0.08em] border border-white/30 hover:border-[#D6A746] shadow-md backdrop-blur-sm transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#D6A746]"
+          @click="exploreRooms"
+          class="inline-flex min-h-[54px] flex-1 items-center
+                 justify-center gap-2.5 rounded-full
+                 border border-white/70 bg-[#192438]/75
+                 px-6 py-3 text-sm font-semibold uppercase
+                 tracking-[0.06em] text-white shadow-lg
+                 backdrop-blur-md transition-all duration-300
+                 hover:-translate-y-0.5 hover:border-[#D6A746]
+                 hover:bg-[#192438]/95
+                 focus-visible:outline-none focus-visible:ring-2
+                 focus-visible:ring-[#D6A746]
+                 active:scale-[0.98]"
         >
-          <BedDouble class="w-4 h-4 text-[#D6A746]" />
-          <span class="text-white font-semibold">{{ languageStore.t('explore_rooms_suites', 'Explore Rooms & Suites') }}</span>
+          <BedDouble class="h-5 w-5 shrink-0 text-[#D6A746]" />
+          <span>
+            {{ languageStore.t('explore_rooms_suites', 'Explore Rooms & Suites') }}
+          </span>
         </button>
       </div>
 
-      <!-- 3 Operational Highlight Cards with Compact Sizing and Consistent Alignment -->
+      <!-- Hotel information cards -->
       <div
-        class="mt-8 sm:mt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 max-w-3xl mx-auto text-left w-full"
+        class="mt-9 grid w-full max-w-5xl grid-cols-1 gap-3
+               text-left sm:grid-cols-3 sm:gap-4 lg:mt-12"
       >
-        <!-- Check-in Card -->
-        <div
-          class="px-4 py-3 rounded-xl bg-[#192438]/90 border border-white/15 backdrop-blur-md space-y-1 flex flex-col justify-center shadow-lg text-white transition-transform duration-200 hover:-translate-y-0.5"
+        <article
+          class="flex min-h-[78px] flex-col justify-center rounded-2xl
+                 border border-white/35 bg-[#192438]/90 px-4 py-3
+                 shadow-lg backdrop-blur-md transition-colors
+                 hover:bg-[#192438]/95 sm:px-5"
         >
-          <p class="text-[10px] sm:text-[11px] font-bold uppercase text-[#D6A746] tracking-[0.08em] flex items-center gap-1.5">
-            <Clock class="w-3.5 h-3.5 text-[#D6A746] shrink-0" />
-            <span class="text-[#D6A746] font-bold">{{ languageStore.t('check_in', 'Check-In') }}</span>
+          <p
+            class="flex items-center gap-2 text-[11px] font-bold
+                   uppercase tracking-[0.09em] text-[#E7B84F]"
+          >
+            <Clock class="h-4 w-4 shrink-0" />
+            {{ languageStore.t('check_in', 'Check-In') }}
           </p>
-          <p class="text-xs sm:text-sm font-semibold text-white">
+
+          <p class="mt-1.5 text-sm font-medium leading-snug text-white sm:text-base">
             {{ guestHotelStore.currentHotel?.front_desk_hours || 'Open 24/7 / 365 Days' }}
           </p>
-        </div>
+        </article>
 
-        <!-- Location Card -->
-        <div
-          class="px-4 py-3 rounded-xl bg-[#192438]/90 border border-white/15 backdrop-blur-md space-y-1 flex flex-col justify-center shadow-lg text-white transition-transform duration-200 hover:-translate-y-0.5"
+        <article
+          class="flex min-h-[78px] flex-col justify-center rounded-2xl
+                 border border-white/35 bg-[#192438]/90 px-4 py-3
+                 shadow-lg backdrop-blur-md transition-colors
+                 hover:bg-[#192438]/95 sm:px-5"
         >
-          <p class="text-[10px] sm:text-[11px] font-bold uppercase text-[#D6A746] tracking-[0.08em] flex items-center gap-1.5">
-            <MapPin class="w-3.5 h-3.5 text-[#D6A746] shrink-0" />
-            <span class="text-[#D6A746] font-bold">{{ languageStore.t('location', 'Location') }}</span>
+          <p
+            class="flex items-center gap-2 text-[11px] font-bold
+                   uppercase tracking-[0.09em] text-[#E7B84F]"
+          >
+            <MapPin class="h-4 w-4 shrink-0" />
+            {{ languageStore.t('location', 'Location') }}
           </p>
-          <p class="text-xs sm:text-sm font-semibold text-white truncate" :title="heroLocation">
+
+          <p
+            class="mt-1.5 line-clamp-2 break-words text-sm font-medium
+                   leading-snug text-white sm:text-base"
+            :title="heroLocation"
+          >
             {{ heroLocation }}
           </p>
-        </div>
+        </article>
 
-        <!-- Concierge Card -->
-        <div
-          class="px-4 py-3 rounded-xl bg-[#192438]/90 border border-white/15 backdrop-blur-md space-y-1 flex flex-col justify-center shadow-lg text-white transition-transform duration-200 hover:-translate-y-0.5"
+        <article
+          class="flex min-h-[78px] flex-col justify-center rounded-2xl
+                 border border-white/35 bg-[#192438]/90 px-4 py-3
+                 shadow-lg backdrop-blur-md transition-colors
+                 hover:bg-[#192438]/95 sm:px-5"
         >
-          <p class="text-[10px] sm:text-[11px] font-bold uppercase text-[#D6A746] tracking-[0.08em] flex items-center gap-1.5">
-            <ShieldCheck class="w-3.5 h-3.5 text-[#D6A746] shrink-0" />
-            <span class="text-[#D6A746] font-bold">{{ languageStore.t('concierge', 'Concierge Service') }}</span>
+          <p
+            class="flex items-center gap-2 text-[11px] font-bold
+                   uppercase tracking-[0.09em] text-[#E7B84F]"
+          >
+            <ShieldCheck class="h-4 w-4 shrink-0" />
+            {{ languageStore.t('concierge', 'Concierge Service') }}
           </p>
-          <p class="text-xs sm:text-sm font-semibold text-white truncate">
+
+          <p class="mt-1.5 text-sm font-medium leading-snug text-white sm:text-base">
             {{ languageStore.t('concierge_service', '24/7 Dedicated Care') }}
           </p>
-        </div>
+        </article>
       </div>
     </div>
   </section>

@@ -138,9 +138,9 @@ onUnmounted(() => {
         class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] group"
         aria-label="Executive Hotel Addis Ababa Home"
       >
-        <!-- 56px Emblem Container for clear visibility of crest details -->
+        <!-- Responsive Emblem Container for clear visibility of crest details -->
         <div
-          class="relative w-14 h-14 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-[#182235] p-1 shadow-sm border border-slate-200/90 dark:border-[#D6A94F]/30 shrink-0 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
+          class="relative w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-[#182235] p-1 shadow-sm border border-slate-200/90 dark:border-[#D6A746]/30 shrink-0 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
         >
           <img
             :src="currentHotelLogo"
@@ -156,12 +156,12 @@ onUnmounted(() => {
 
         <div class="flex flex-col min-w-0">
           <span
-            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.08em] text-slate-900 dark:text-white leading-tight uppercase whitespace-nowrap"
+            class="font-serif text-[15px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.06em] sm:tracking-[0.08em] text-slate-900 dark:text-white leading-tight uppercase whitespace-nowrap"
           >
             {{ guestHotelStore.hotelName }}
           </span>
           <span
-            class="text-[9px] sm:text-[10px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.08em] uppercase mt-0.5 leading-none whitespace-nowrap"
+            class="text-[8.5px] sm:text-[10px] font-bold text-[#9A7418] dark:text-[#D6A746] tracking-[0.06em] sm:tracking-[0.08em] uppercase mt-0.5 leading-none whitespace-nowrap"
           >
             {{
               (guestHotelStore.hotelCity || 'ADDIS ABABA')
