@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Http\Controllers\Api\Manager;
 
@@ -16,7 +16,6 @@ class TableAssignmentTestController extends Controller
     public function testAssignment(Request $request)
     {
         try {
-            // Get first active waiter
             $waiter = Waiter::where('status', 'active')->first();
             if (!$waiter) {
                 return response()->json([
@@ -25,7 +24,6 @@ class TableAssignmentTestController extends Controller
                 ], 400);
             }
 
-            // Get first table
             $table = RestaurantTable::first();
             if (!$table) {
                 return response()->json([
@@ -34,7 +32,6 @@ class TableAssignmentTestController extends Controller
                 ], 400);
             }
 
-            // Get current user
             $user = auth()->user();
             if (!$user) {
                 return response()->json([
@@ -42,10 +39,8 @@ class TableAssignmentTestController extends Controller
                 ], 401);
             }
 
-            // Check table schema
             $columns = Schema::getColumnListing('waiter_table_assignments');
 
-            // Try to create assignment
             $assignment = WaiterTableAssignment::create([
                 'waiter_id' => $waiter->id,
                 'table_id' => $table->id,
