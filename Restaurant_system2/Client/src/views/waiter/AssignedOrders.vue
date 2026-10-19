@@ -225,22 +225,49 @@ watch(itemsPerPage, () => {
   currentPage.value = 1
 })
 
-let unsubscribe: (() => void) | null = null
+let unsubscribers: (() => void)[] = []
+let pollInterval: any = null
 
 onMounted(() => {
   loadAssignments()
+
   try {
-    unsubscribe = echoService.subscribeToManagerOrderUpdates(() => {
+    const unsubManager = echoService.subscribeToManagerOrderUpdates(() => {
+      console.log('[AssignedOrders] WebSocket manager update - reloading')
       loadAssignments()
     })
+    if (typeof unsubManager === 'function') unsubscribers.push(unsubManager)
   } catch (e) {
-    console.warn('[AssignedOrders] WebSocket subscription error:', e)
+    console.warn('[AssignedOrders] Manager WebSocket subscription error:', e)
   }
+
+  try {
+    const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(() => {
+      console.log('[AssignedOrders] WebSocket waiter update - reloading')
+      loadAssignments()
+    })
+    if (typeof unsubWaiter === 'function') unsubscribers.push(unsubWaiter)
+  } catch (e) {
+    console.warn('[AssignedOrders] Waiter WebSocket subscription error:', e)
+  }
+
+  // 15-second background poll fallback
+  pollInterval = setInterval(() => {
+    loadAssignments()
+  }, 15000)
 })
 
 onUnmounted(() => {
-  if (unsubscribe) {
-    unsubscribe()
+  if (pollInterval) {
+    clearInterval(pollInterval)
+  }
+  while (unsubscribers.length > 0) {
+    const unsub = unsubscribers.pop()
+    try {
+      unsub?.()
+    } catch (e) {
+      // ignore
+    }
   }
 })
 

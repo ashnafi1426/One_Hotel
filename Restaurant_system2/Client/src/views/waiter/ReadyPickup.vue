@@ -204,22 +204,49 @@ const pickupOrder = async (orderId: string | number) => {
   }
 }
 
-let unsubscribe: (() => void) | null = null
+let unsubscribers: (() => void)[] = []
+let pollInterval: any = null
 
 onMounted(() => {
   loadOrders()
+
   try {
-    unsubscribe = echoService.subscribeToManagerOrderUpdates(() => {
+    const unsubManager = echoService.subscribeToManagerOrderUpdates(() => {
+      console.log('[ReadyPickup] WebSocket manager update - reloading')
       loadOrders()
     })
+    if (typeof unsubManager === 'function') unsubscribers.push(unsubManager)
   } catch (e) {
-    console.warn('[ReadyPickup] WebSocket subscription error:', e)
+    console.warn('[ReadyPickup] Manager WebSocket subscription error:', e)
   }
+
+  try {
+    const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(() => {
+      console.log('[ReadyPickup] WebSocket waiter update - reloading')
+      loadOrders()
+    })
+    if (typeof unsubWaiter === 'function') unsubscribers.push(unsubWaiter)
+  } catch (e) {
+    console.warn('[ReadyPickup] Waiter WebSocket subscription error:', e)
+  }
+
+  // 15-second background poll fallback
+  pollInterval = setInterval(() => {
+    loadOrders()
+  }, 15000)
 })
 
 onUnmounted(() => {
-  if (unsubscribe) {
-    unsubscribe()
+  if (pollInterval) {
+    clearInterval(pollInterval)
+  }
+  while (unsubscribers.length > 0) {
+    const unsub = unsubscribers.pop()
+    try {
+      unsub?.()
+    } catch (e) {
+      // ignore
+    }
   }
 })
 

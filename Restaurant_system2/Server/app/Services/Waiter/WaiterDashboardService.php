@@ -84,6 +84,25 @@ class WaiterDashboardService
         Cache::forget($cacheKey);
     }
 
+    public static function clearDashboardCache($waiterId = null): void
+    {
+        try {
+            Cache::forget("waiter_dashboard_stats:all");
+            if ($waiterId) {
+                Cache::forget("waiter_dashboard_stats:{$waiterId}");
+                $waiter = Waiter::find($waiterId);
+                if ($waiter && $waiter->user_id) {
+                    Cache::forget("waiter_dashboard_stats:{$waiter->user_id}");
+                }
+            }
+            if (auth()->check()) {
+                Cache::forget("waiter_dashboard_stats:" . auth()->id());
+            }
+        } catch (\Throwable $e) {
+            \Log::warning("Failed to clear waiter dashboard cache: " . $e->getMessage());
+        }
+    }
+
     public function getDashboardStats($waiterId = null): array
     {
         try {
@@ -464,7 +483,7 @@ class WaiterDashboardService
                         'guest_name' => $guestName,
                         'order_number' => $orderNumber,
                         'items' => $itemCount,
-                        'status' => $delivery->status,
+                        'status' => ($delivery->order?->status === 'ready' && in_array($delivery->status, ['assigned', 'waiting_assignment', 'accepted'])) ? 'ready' : $delivery->status,
                         'delivery_status' => $delivery->status,
                         'order_status' => $delivery->order?->status ?? $delivery->status,
                         'is_ready' => ($delivery->order?->status === 'ready'),
@@ -764,7 +783,7 @@ class WaiterDashboardService
                 'table:id,table_number,section',
             ])
             ->whereHas('order', function ($q) {
-                $q->whereIn('status', ['ready', 'pending', 'preparing']);
+                $q->where('status', 'ready');
             })
             ->orderBy('assigned_at', 'desc')
             ->limit($limit)

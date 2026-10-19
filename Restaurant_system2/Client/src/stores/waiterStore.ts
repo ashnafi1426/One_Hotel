@@ -30,11 +30,13 @@ export const useWaiterStore = defineStore('waiter', () => {
   /**
    * Fetch complete waiter dashboard data
    */
-  async function fetchDashboard() {
-    loading.value = true
+  async function fetchDashboard(showLoading = false) {
+    if (showLoading) {
+      loading.value = true
+    }
     error.value = null
     try {
-      const data = await waiterService.getDashboard()
+      const data = await waiterService.getDashboard({ refresh: 'true' })
       assignments.value = data.recent_assignments || []
       activeDelivery.value = data.active_delivery || null
 
@@ -55,17 +57,25 @@ export const useWaiterStore = defineStore('waiter', () => {
       console.error('[waiterStore] Failed to load dashboard:', err)
       error.value = err.message || 'Failed to load dashboard'
     } finally {
-      loading.value = false
+      if (showLoading) {
+        loading.value = false
+      }
     }
   }
 
   /**
-   * Update a single assignment status incrementally (no full refresh)
+   * Update a single assignment status incrementally (no full refresh flicker)
    */
   function updateAssignmentStatus(orderId: string, newStatus: string) {
-    const index = assignments.value.findIndex((a) => a.order_id === orderId || a.id === orderId)
+    const index = assignments.value.findIndex(
+      (a) => String(a.order_id) === String(orderId) || String(a.id) === String(orderId)
+    )
     if (index !== -1) {
       assignments.value[index].status = newStatus
+      assignments.value[index].order_status = newStatus
+      if (newStatus === 'ready') {
+        assignments.value[index].is_ready = true
+      }
       assignments.value[index].updated_at = new Date().toISOString()
       console.log('[waiterStore] ✨ Incremental update - assignment', orderId, '→', newStatus)
       return true
@@ -79,20 +89,15 @@ export const useWaiterStore = defineStore('waiter', () => {
   function receiveOrderUpdate(data: any) {
     console.log('[waiterStore] Received order update via WebSocket:', data)
 
-    const orderId = data.order_id
-    if (!orderId) {
-      console.warn('[waiterStore] No order_id in WebSocket data, doing full refresh')
-      fetchDashboard()
-      return
+    const orderId = data.order_id || data.id || data.order?.id
+    const status = data.status || data.order?.status || data.new_status
+
+    if (orderId && status) {
+      updateAssignmentStatus(String(orderId), status)
     }
 
-    // Try incremental update first
-    const updated = updateAssignmentStatus(orderId, data.status)
-    if (!updated) {
-      // Order not found in local assignments - do full refresh
-      console.log('[waiterStore] Order not in local assignments, doing full refresh')
-      fetchDashboard()
-    }
+    // Always fetch fresh dashboard data silently to update stats & cards
+    fetchDashboard(false)
   }
 
   /**

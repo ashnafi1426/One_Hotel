@@ -293,6 +293,19 @@
 
                           <router-link
                             v-if="
+                              assignment.status === 'ready' ||
+                              assignment.is_ready ||
+                              assignment.order_status === 'ready'
+                            "
+                            to="/waiter/ready-pickup"
+                            class="w-full px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center gap-2 rounded-lg transition"
+                          >
+                            <PackageCheck class="w-3.5 h-3.5 text-amber-500" />
+                            <span>Pick Up Order</span>
+                          </router-link>
+
+                          <router-link
+                            v-if="
                               assignment.status === 'on_delivery' ||
                               assignment.status === 'picked_up'
                             "
@@ -434,6 +447,7 @@ import {
   ArrowRight,
   Inbox,
   UtensilsCrossed,
+  PackageCheck,
 } from 'lucide-vue-next'
 
 const hotelStore = useHotelStore()
@@ -524,28 +538,38 @@ const handleOutsideClick = () => {
   activeMenuId.value = null
 }
 
-const loadDashboard = async (isManualRefresh = false) => {
-  try {
-    if (isManualRefresh) {
-      await waiterStore.fetchDashboard()
-    }
+let pollInterval: any = null
 
-    // Cache the data
-    try {
-      const dashboardData = {
-        today_stats: {
-          completed_deliveries: stats.value.todayDeliveries,
-          pending_assignments: stats.value.pendingDeliveries,
-          on_delivery_count: stats.value.onDelivery,
-          average_delivery_time: stats.value.avgDeliveryTime,
-        },
-        active_delivery: activeDelivery.value,
-        recent_assignments: recentAssignments.value,
-      }
-      localStorage.setItem(getCacheKey(), JSON.stringify(dashboardData))
-    } catch (e) {
-      console.warn('[WaiterDashboard] Cache save error:', e)
+const saveCacheData = () => {
+  try {
+    const dashboardData = {
+      today_stats: {
+        completed_deliveries: stats.value.todayDeliveries,
+        pending_assignments: stats.value.pendingDeliveries,
+        on_delivery_count: stats.value.onDelivery,
+        average_delivery_time: stats.value.avgDeliveryTime,
+      },
+      active_delivery: activeDelivery.value,
+      recent_assignments: recentAssignments.value,
     }
+    localStorage.setItem(getCacheKey(), JSON.stringify(dashboardData))
+  } catch (e) {
+    // ignore
+  }
+}
+
+watch(
+  [stats, activeDelivery, recentAssignments],
+  () => {
+    saveCacheData()
+  },
+  { deep: true },
+)
+
+const loadDashboard = async () => {
+  try {
+    await waiterStore.fetchDashboard(true)
+    saveCacheData()
   } catch (err: any) {
     console.error('[WaiterDashboard] Error loading dashboard:', err)
   }
@@ -562,15 +586,23 @@ const teardownWebSocket = () => {
 }
 
 onMounted(() => {
-  console.log('[WaiterDashboard] Mounting - restore cache and fetch')
+  console.log('[WaiterDashboard] Mounting - restore cache, fetch live, subscribe')
   restoreCachedData()
-  waiterStore.fetchDashboard()
+  waiterStore.fetchDashboard(true)
   waiterStore.subscribeToUpdates()
   window.addEventListener('click', handleOutsideClick)
+
+  // 15-second background polling fallback to guarantee real-time sync
+  pollInterval = setInterval(() => {
+    waiterStore.fetchDashboard(false)
+  }, 15000)
 })
 
 onUnmounted(() => {
   console.log('[WaiterDashboard] Unmounting - cleanup')
+  if (pollInterval) {
+    clearInterval(pollInterval)
+  }
   waiterStore.unsubscribeFromUpdates()
   window.removeEventListener('click', handleOutsideClick)
 })
@@ -579,8 +611,8 @@ watch(
   () => hotelStore.hotelId,
   async () => {
     console.log('[WaiterDashboard] Hotel changed - refetch')
-    await waiterStore.fetchDashboard()
-  }
+    await waiterStore.fetchDashboard(true)
+  },
 )
 </script>
 

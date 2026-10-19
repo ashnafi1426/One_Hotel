@@ -8,7 +8,7 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
@@ -19,7 +19,7 @@ use Illuminate\Queue\SerializesModels;
  * Can be automatic (from OrderReadyEvent) or manual (from manager)
  * Triggers notifications and workload updates
  */
-class WaiterAssignedEvent implements ShouldBroadcast
+class WaiterAssignedEvent implements ShouldBroadcastNow
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
@@ -72,6 +72,9 @@ class WaiterAssignedEvent implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
+            new Channel('waiter.orders.update'),
+            new Channel('manager.orders.update'),
+            new Channel('waiter.' . $this->waiterId),
             new PrivateChannel('waiter.' . $this->waiterId),
             new PrivateChannel('manager'),
             new PrivateChannel('delivery.' . $this->deliveryId),

@@ -5,18 +5,12 @@ namespace App\Listeners;
 use App\Events\WaiterAssignedEvent;
 use App\Events\DeliveryReassignedEvent;
 use App\Models\Waiter;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class UpdateWorkloadListener implements ShouldQueue
+class UpdateWorkloadListener
 {
-    use InteractsWithQueue;
-
-    public $tries = 2;
-
     public function __construct() {}
 
     public function handleWaiterAssigned(WaiterAssignedEvent $event): void

@@ -116,8 +116,16 @@ class OrderStatusService
         // Broadcast the status change via WebSocket
         try {
             OrderStatusChanged::dispatch($result, $previousStatus, $newStatus);
+            \App\Events\OrderStatusUpdated::dispatch($result, $previousStatus);
         } catch (\Throwable $e) {
             Log::warning("Failed to broadcast order status change: {$e->getMessage()}");
+        }
+
+        // Clear dashboard caches so fresh data is immediately served
+        try {
+            \App\Services\Waiter\WaiterDashboardService::clearDashboardCache();
+        } catch (\Throwable $ce) {
+            // ignore cache clear error
         }
 
         return $result;

@@ -93,25 +93,39 @@ export function subscribeToOrderUpdates(
 export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
+    const channel = echo.channel('manager.orders.update')
 
-    const channel = echo
-      .channel('manager.orders.update')
-      .listen('OrderStatusUpdated', (data: any) => {
-        console.log('[Echo] Manager order status update:', data)
+    const events = [
+      'OrderStatusUpdated',
+      '.OrderStatusUpdated',
+      'order.ready',
+      '.order.ready',
+      'order.status.changed',
+      '.order.status.changed',
+      'order.created',
+      '.order.created',
+      'waiter.assigned',
+      '.waiter.assigned',
+      'OrderReadyEvent',
+      '.OrderReadyEvent',
+      'WaiterOrderReadyEvent',
+      '.WaiterOrderReadyEvent',
+    ]
+
+    events.forEach((evt) => {
+      channel.listen(evt, (data: any) => {
+        console.log(`[Echo] Manager update [${evt}]:`, data)
         onUpdate(data)
       })
-      .listen('.order.created', (data: any) => {
-        console.log('[Echo] New order for manager:', data)
-        onUpdate(data)
-      })
-      .error((error: any) => {
-        console.error('[Echo] Error on manager.orders.update:', error)
-        onError?.(error)
-      })
+    })
+
+    channel.error((error: any) => {
+      console.error('[Echo] Error on manager.orders.update:', error)
+      onError?.(error)
+    })
 
     console.log('[Echo] Subscribed to manager order updates')
 
-    // Return unsubscribe function
     return () => {
       echo.leave('manager.orders.update')
       console.log('[Echo] Unsubscribed from manager order updates')
@@ -119,7 +133,7 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
   } catch (error: any) {
     console.error('[Echo] Failed to subscribe to manager updates:', error)
     onError?.(error)
-    return () => {} // Return no-op function if subscription fails
+    return () => {}
   }
 }
 
@@ -130,26 +144,33 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
 export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
+    const channel = echo.channel('kitchen.orders.update')
 
-    // Subscribe to kitchen.orders.update PUBLIC channel where OrderStatusUpdated and OrderCreated are broadcast
-    const channel = echo
-      .channel('kitchen.orders.update')
-      .listen('OrderStatusUpdated', (data: any) => {
-        console.log('[Echo] ✨ Kitchen order status updated:', data)
+    const events = [
+      'OrderStatusUpdated',
+      '.OrderStatusUpdated',
+      'order.status.changed',
+      '.order.status.changed',
+      'order.created',
+      '.order.created',
+      'order.ready',
+      '.order.ready',
+    ]
+
+    events.forEach((evt) => {
+      channel.listen(evt, (data: any) => {
+        console.log(`[Echo] Kitchen update [${evt}]:`, data)
         onUpdate(data)
       })
-      .listen('.order.created', (data: any) => {
-        console.log('[Echo] ✨ New order created in kitchen:', data)
-        onUpdate(data)
-      })
-      .error((error: any) => {
-        console.error('[Echo] Error on kitchen.orders.update:', error)
-        onError?.(error)
-      })
+    })
+
+    channel.error((error: any) => {
+      console.error('[Echo] Error on kitchen.orders.update:', error)
+      onError?.(error)
+    })
 
     console.log('[Echo] ✅ Subscribed to kitchen order updates (kitchen.orders.update channel)')
 
-    // Return unsubscribe function
     return () => {
       echo.leave('kitchen.orders.update')
       console.log('[Echo] Unsubscribed from kitchen order updates')
@@ -157,36 +178,47 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
   } catch (error: any) {
     console.error('[Echo] Failed to subscribe to kitchen updates:', error)
     onError?.(error)
-    return () => {} // Return no-op function if subscription fails
+    return () => {}
   }
 }
 
 /**
  * Subscribe to all waiter order updates
- * Fired when any order is assigned or status changes
+ * Fired when any order is assigned, becomes ready, or status changes
  */
 export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
+    const channel = echo.channel('waiter.orders.update')
 
-    echo
-      .channel('waiter.orders.update')
-      .listen('OrderStatusUpdated', (data: any) => {
-        console.log('[Echo] Waiter order update:', data)
+    const events = [
+      'OrderStatusUpdated',
+      '.OrderStatusUpdated',
+      'order.ready',
+      '.order.ready',
+      'order.status.changed',
+      '.order.status.changed',
+      'order.created',
+      '.order.created',
+      'waiter.assigned',
+      '.waiter.assigned',
+      'OrderReadyEvent',
+      '.OrderReadyEvent',
+      'WaiterOrderReadyEvent',
+      '.WaiterOrderReadyEvent',
+    ]
+
+    events.forEach((evt) => {
+      channel.listen(evt, (data: any) => {
+        console.log(`[Echo] Waiter update [${evt}]:`, data)
         onUpdate(data)
       })
-      .listen('order.ready', (data: any) => {
-        console.log('[Echo] Waiter order ready:', data)
-        onUpdate(data)
-      })
-      .listen('.order.created', (data: any) => {
-        console.log('[Echo] New order for waiter:', data)
-        onUpdate(data)
-      })
-      .error((error: any) => {
-        console.error('[Echo] Error on waiter.orders.update:', error)
-        onError?.(error)
-      })
+    })
+
+    channel.error((error: any) => {
+      console.error('[Echo] Error on waiter.orders.update:', error)
+      onError?.(error)
+    })
 
     console.log('[Echo] Subscribed to waiter order updates')
 

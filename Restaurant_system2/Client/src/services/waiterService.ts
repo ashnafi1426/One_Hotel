@@ -14,7 +14,11 @@ class WaiterService {
   async getDashboard(customParams?: any): Promise<WaiterDashboard> {
     try {
       const response = await api.get('/waiter/dashboard', {
-        params: this.getTenantParams(customParams),
+        params: this.getTenantParams({
+          refresh: 'true',
+          _t: Date.now(),
+          ...customParams,
+        }),
       })
       if (response.data && response.data.data) {
         return response.data.data
@@ -27,25 +31,25 @@ class WaiterService {
   }
   async getTodayStats(): Promise<any> {
     const response = await api.get('/waiter/dashboard/today', {
-      params: this.getTenantParams(),
+      params: this.getTenantParams({ refresh: 'true', _t: Date.now() }),
     })
     return response.data.data
   }
   async getPerformance(): Promise<any> {
     const response = await api.get('/waiter/dashboard/performance', {
-      params: this.getTenantParams(),
+      params: this.getTenantParams({ _t: Date.now() }),
     })
     return response.data.data
   }
-  async getRecentAssignments(limit: number = 10): Promise<WaiterAssignment[]> {
+  async getRecentAssignments(limit: number = 10, customParams?: any): Promise<WaiterAssignment[]> {
     const response = await api.get('/waiter/dashboard/recent-assignments', {
-      params: this.getTenantParams({ limit }),
+      params: this.getTenantParams({ limit, refresh: 'true', _t: Date.now(), ...customParams }),
     })
     return response.data.data
   }
   async getReadyForPickup(customParams?: any): Promise<WaiterAssignment[]> {
     const response = await api.get('/waiter/dashboard/ready-pickup', {
-      params: this.getTenantParams(customParams),
+      params: this.getTenantParams({ refresh: 'true', _t: Date.now(), ...customParams }),
     })
     return response.data.data
   }

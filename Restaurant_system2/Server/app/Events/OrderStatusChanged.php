@@ -7,11 +7,11 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class OrderStatusChanged implements ShouldBroadcast
+class OrderStatusChanged implements ShouldBroadcastNow
 {
     use Dispatchable;
     use InteractsWithSockets;
@@ -51,6 +51,7 @@ class OrderStatusChanged implements ShouldBroadcast
 
         return [
             'id' => $this->order->id,
+            'order_id' => $this->order->id,
             'order_number' => $this->order->order_number,
             'status' => $this->newStatus,
             'old_status' => $this->oldStatus,

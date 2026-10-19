@@ -5,15 +5,11 @@ namespace App\Listeners;
 use App\Events\WaiterAssignedEvent;
 use App\Events\DeliveryReassignedEvent;
 use App\Models\WaiterNotification;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 use Exception;
 
-class NotifyWaiterListener implements ShouldQueue
+class NotifyWaiterListener
 {
-    use InteractsWithQueue;
-    public $tries = 3;
     public function __construct() {}
 
     public function handleWaiterAssigned(WaiterAssignedEvent $event): void
