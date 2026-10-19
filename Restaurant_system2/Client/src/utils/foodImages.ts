@@ -124,7 +124,7 @@ export function resolveFoodImageUrl(imagePath?: string | null, itemName: string 
   }
 
   const category = detectFoodCategory(itemName)
-  return CURATED_FOOD_PHOTOS[category] || FALLBACK_SVGS[category] || FALLBACK_SVGS.default
+  return FALLBACK_SVGS[category] || FALLBACK_SVGS.default
 }
 
 /**

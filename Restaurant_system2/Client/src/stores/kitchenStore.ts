@@ -79,17 +79,36 @@ export const useKitchenStore = defineStore('kitchen', () => {
 
   async function executeStatusChange(
     orderId: string,
+    targetStatus: 'pending' | 'preparing' | 'ready' | 'served' | null,
     action: () => Promise<KitchenOrder>,
     fallbackMsg: string,
   ): Promise<KitchenOrder> {
     actionLoading.value = orderId
     error.value = null
+
+    // Optimistic UI update: instantly update status so cards move in 0ms
+    const existingIndex = orders.value.findIndex((o) => String(o.id) === String(orderId))
+    const previousStatus = existingIndex !== -1 ? orders.value[existingIndex].status : null
+    if (existingIndex !== -1 && targetStatus) {
+      orders.value[existingIndex] = {
+        ...orders.value[existingIndex],
+        status: targetStatus,
+      }
+    }
+
     try {
       const updatedOrder = await action()
       updateOrder(updatedOrder)
       return updatedOrder
     } catch (err: any) {
       console.error(`[kitchenStore] ${fallbackMsg}:`, err)
+      // Revert optimistic update on failure
+      if (existingIndex !== -1 && previousStatus) {
+        orders.value[existingIndex] = {
+          ...orders.value[existingIndex],
+          status: previousStatus,
+        }
+      }
       error.value = err?.response?.data?.message ?? err.message ?? fallbackMsg
       throw err
     } finally {
@@ -100,6 +119,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
   function startPreparing(orderId: string) {
     return executeStatusChange(
       orderId,
+      'preparing',
       () => kitchenService.startPreparing(orderId),
       'Failed to start preparing order',
     )
@@ -108,6 +128,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
   function markReady(orderId: string) {
     return executeStatusChange(
       orderId,
+      'ready',
       () => kitchenService.markReady(orderId),
       'Failed to mark order ready',
     )
@@ -116,6 +137,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
   function markServed(orderId: string) {
     return executeStatusChange(
       orderId,
+      'served',
       () => kitchenService.markServed(orderId),
       'Failed to complete order',
     )

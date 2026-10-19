@@ -61,6 +61,7 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
+            new Channel('orders.update.' . $this->orderId),
             new Channel('kitchen.orders.update'),
             new Channel('waiter.orders.update'),
             new Channel('manager.orders.update'),

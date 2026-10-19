@@ -113,9 +113,8 @@ class OrderStatusService
             }
         });
 
-        // Broadcast the status change via WebSocket
+        // Broadcast the status change via WebSocket (single unified broadcast covering all channels)
         try {
-            OrderStatusChanged::dispatch($result, $previousStatus, $newStatus);
             \App\Events\OrderStatusUpdated::dispatch($result, $previousStatus);
         } catch (\Throwable $e) {
             Log::warning("Failed to broadcast order status change: {$e->getMessage()}");
@@ -189,12 +188,6 @@ class OrderStatusService
         $freshOrder = $this->loadOrderRelations($order->fresh());
 
         $this->notifyAssignedWaiterOnReady($freshOrder);
-
-        try {
-            OrderReadyEvent::dispatch($freshOrder);
-        } catch (\Throwable $e) {
-            Log::error("Failed to dispatch OrderReadyEvent for order #{$order->id}: {$e->getMessage()}");
-        }
 
         $this->notifyChefs(
             'order_ready',
@@ -374,19 +367,24 @@ class OrderStatusService
     protected function notifyChefs(string $type, string $title, string $message, ?Order $order = null): void
     {
         try {
-            $chefs = User::where(function ($q) {
+            $chefIds = User::where(function ($q) {
                 $q->where('role', 'chef')
                   ->orWhereHas('roles', fn($rq) => $rq->where('slug', 'chef'));
-            })->get();
+            })->pluck('id');
 
-            foreach ($chefs as $chef) {
-                Notification::create([
-                    'user_id' => $chef->id,
+            if ($chefIds->isNotEmpty()) {
+                $now = now();
+                $rows = $chefIds->map(fn($id) => [
+                    'id' => (string) \Illuminate\Support\Str::uuid(),
+                    'user_id' => $id,
                     'type' => $type,
                     'title' => $title,
                     'message' => $message,
                     'read' => false,
-                ]);
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ])->toArray();
+                Notification::insert($rows);
             }
         } catch (\Throwable $e) {
             Log::error('Failed to create chef notifications: ' . $e->getMessage());

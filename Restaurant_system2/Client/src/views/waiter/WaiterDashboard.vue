@@ -371,6 +371,9 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        width="36"
+                        height="36"
+                        decoding="async"
                         @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
@@ -539,6 +542,9 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        width="36"
+                        height="36"
+                        decoding="async"
                         @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
@@ -663,6 +669,9 @@
                     <img
                       :src="item.image"
                       :alt="item.name"
+                      width="44"
+                      height="44"
+                      decoding="async"
                       @error="onFoodImageError($event, item.name)"
                       class="w-11 h-11 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                       loading="lazy"
@@ -1024,44 +1033,44 @@ const handlePickupOrder = async (order: any, event?: Event) => {
   if (!order) return
 
   const targetId = getOrderKey(order)
-  actionLoadingOrderId.value = targetId
+  const orderNum = getOrderNumber(order)
+  const originalPending = [...pendingOrders.value]
+  const originalDelivery = [...deliveryOrders.value]
+
+  const pickedOrder = {
+    ...order,
+    status: 'on_delivery',
+    delivery_task_status: 'on_delivery',
+    order_status: 'on_delivery',
+  }
+
+  // Optimistic UI update: instantly update list in 0ms
+  pendingOrders.value = pendingOrders.value.filter((o) => getOrderKey(o) !== targetId)
+  if (!deliveryOrders.value.some((o) => getOrderKey(o) === targetId)) {
+    deliveryOrders.value.unshift(pickedOrder)
+  }
+  if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
+    selectedOrder.value = pickedOrder
+  }
+
+  showToast(
+    'Order Picked Up',
+    `Order #${orderNum} picked up from kitchen. Ready for delivery to guest!`,
+    'success',
+  )
 
   try {
     await waiterService.pickupOrder(targetId)
-
-    const orderNum = getOrderNumber(order)
-    const pickedOrder = {
-      ...order,
-      status: 'on_delivery',
-      delivery_task_status: 'on_delivery',
-      order_status: 'on_delivery',
-    }
-
-    pendingOrders.value = pendingOrders.value.filter((o) => getOrderKey(o) !== targetId)
-
-    const exists = deliveryOrders.value.some((o) => getOrderKey(o) === targetId)
-    if (!exists) {
-      deliveryOrders.value.unshift(pickedOrder)
-    }
-
-    if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
-      selectedOrder.value = pickedOrder
-    }
-
-    showToast(
-      'Order Picked Up',
-      `Order #${orderNum} picked up from kitchen. Ready for delivery to guest!`,
-      'success',
-    )
   } catch (err: any) {
     console.error('[WaiterDashboard] Pickup error:', err)
+    // Revert optimistic update
+    pendingOrders.value = originalPending
+    deliveryOrders.value = originalDelivery
     showToast(
       'Pickup Failed',
       err.response?.data?.message || err.message || 'Failed to mark order as picked up',
       'error',
     )
-  } finally {
-    actionLoadingOrderId.value = null
   }
 }
 
@@ -1070,33 +1079,31 @@ const handleDeliverOrder = async (order: any, event?: Event) => {
   if (!order) return
 
   const targetId = getOrderKey(order)
-  actionLoadingOrderId.value = targetId
+  const orderNum = getOrderNumber(order)
+  const originalDelivery = [...deliveryOrders.value]
+
+  // Optimistic UI update
+  deliveryOrders.value = deliveryOrders.value.filter((o) => getOrderKey(o) !== targetId)
+  if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
+    selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
+  }
+
+  showToast(
+    'Order Delivered',
+    `Order #${orderNum} successfully delivered to the guest!`,
+    'success',
+  )
 
   try {
     await waiterService.deliverOrder(targetId)
-
-    const orderNum = getOrderNumber(order)
-
-    deliveryOrders.value = deliveryOrders.value.filter((o) => getOrderKey(o) !== targetId)
-
-    if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
-      selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
-    }
-
-    showToast(
-      'Order Delivered',
-      `Order #${orderNum} successfully delivered to the guest!`,
-      'success',
-    )
   } catch (err: any) {
     console.error('[WaiterDashboard] Delivery error:', err)
+    deliveryOrders.value = originalDelivery
     showToast(
       'Delivery Failed',
       err.response?.data?.message || err.message || 'Failed to mark order as delivered',
       'error',
     )
-  } finally {
-    actionLoadingOrderId.value = null
   }
 }
 

@@ -369,6 +369,9 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        width="36"
+                        height="36"
+                        decoding="async"
                         @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
@@ -535,6 +538,9 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        width="36"
+                        height="36"
+                        decoding="async"
                         @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
@@ -663,6 +669,9 @@
                     <img
                       :src="item.image"
                       :alt="item.name"
+                      width="44"
+                      height="44"
+                      decoding="async"
                       @error="onFoodImageError($event, item.name)"
                       class="w-11 h-11 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                       loading="lazy"
@@ -1073,16 +1082,17 @@ const handleStartPreparing = async (order: KitchenOrder, event?: Event) => {
   if (event) event.stopPropagation()
   if (!order) return
 
+  showToast(
+    'Order Started',
+    `Order #${getOrderNumber(order)} is now being prepared in the kitchen.`,
+    'info',
+  )
+  if (selectedOrder.value?.id === order.id) {
+    selectedOrder.value = { ...order, status: 'preparing' }
+  }
+
   try {
     await kitchenStore.startPreparing(order.id)
-    showToast(
-      'Order Started',
-      `Order #${getOrderNumber(order)} is now being prepared in the kitchen.`,
-      'info',
-    )
-    if (selectedOrder.value?.id === order.id) {
-      selectedOrder.value = { ...order, status: 'preparing' }
-    }
   } catch (err: any) {
     console.error('Failed to start preparing:', err)
     showToast('Failed to start', err.message || 'Could not update order status', 'error')
@@ -1093,16 +1103,17 @@ const handleMarkReady = async (order: KitchenOrder, event?: Event) => {
   if (event) event.stopPropagation()
   if (!order) return
 
+  showToast(
+    'Order Ready',
+    `Order #${getOrderNumber(order)} is ready! Waiters have been notified in real-time.`,
+    'success',
+  )
+  if (selectedOrder.value?.id === order.id) {
+    selectedOrder.value = { ...order, status: 'ready' }
+  }
+
   try {
     await kitchenStore.markReady(order.id)
-    showToast(
-      'Order Ready',
-      `Order #${getOrderNumber(order)} is ready! Waiters have been notified in real-time.`,
-      'success',
-    )
-    if (selectedOrder.value?.id === order.id) {
-      selectedOrder.value = preparingOrders.value[0] || pendingOrders.value[0] || null
-    }
   } catch (err: any) {
     console.error('Failed to mark ready:', err)
     showToast('Failed to mark ready', err.message || 'Could not update order status', 'error')

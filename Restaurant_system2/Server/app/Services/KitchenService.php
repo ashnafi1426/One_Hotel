@@ -82,12 +82,7 @@ class KitchenService
      */
     public function markReady(Order $order): Order
     {
-        $previousStatus = $order->status;
-        $updatedOrder = $this->orderStatusService->markReady($order);
-
-        OrderStatusUpdated::dispatch($updatedOrder, $previousStatus);
-
-        return $updatedOrder;
+        return $this->orderStatusService->markReady($order);
     }
 
     /**
@@ -95,12 +90,7 @@ class KitchenService
      */
     public function markServed(Order $order): Order
     {
-        $previousStatus = $order->status;
-        $updatedOrder = $this->orderStatusService->markServed($order);
-
-        OrderStatusUpdated::dispatch($updatedOrder, $previousStatus);
-
-        return $updatedOrder;
+        return $this->orderStatusService->markServed($order);
     }
 
     /**
