@@ -4,6 +4,7 @@ import { RouterLink, useRoute } from 'vue-router'
 import { useThemeStore } from '@/stores/theme'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import { useLanguageStore, type LanguageCode } from '@/stores/language'
+import { useAuthStore } from '@/stores/auth'
 import LanguageSelector from '@/components/common/LanguageSelector.vue'
 import {
   Sun,
@@ -12,12 +13,14 @@ import {
   X as CloseIcon,
   Globe,
   Sparkles,
+  ArrowUpRight,
 } from 'lucide-vue-next'
 
 const route = useRoute()
 const theme = useThemeStore()
 const guestHotelStore = useGuestHotelStore()
 const languageStore = useLanguageStore()
+const authStore = useAuthStore()
 
 const currentHotelLogo = computed(() => {
   const logo = guestHotelStore.currentHotel?.logo
@@ -60,11 +63,10 @@ function isItemActive(itemRoute: string) {
   return route.path === itemRoute || route.path.startsWith(`${itemRoute}/`)
 }
 
-// Navigation links with Title Case labels and consistent 0.08em tracking
+// Navigation links with Title Case labels and consistent 0.08em tracking (Facilities removed)
 const menus = computed(() => [
   { title: languageStore.t('home', 'Home'), route: '/' },
   { title: languageStore.t('rooms', 'Rooms & Suites'), route: '/rooms' },
-  { title: languageStore.t('facilities', 'Facilities'), route: '/#facilities' },
   { title: languageStore.t('gallery', 'Gallery'), route: '/gallery' },
   { title: languageStore.t('about', 'About Us'), route: '/about' },
   { title: languageStore.t('contact', 'Contact'), route: '/contact' },
@@ -249,9 +251,8 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <!-- Responsive Slide-In Drawer & Backdrop (< 1024px) -->
+    <!-- Floating Card Modal & Backdrop (< 1024px) -->
     <Teleport to="body">
-      <!-- Backdrop Dimmer Overlay -->
       <Transition
         enter-active-class="transition-opacity duration-300 ease-out"
         enter-from-class="opacity-0"
@@ -262,140 +263,152 @@ onUnmounted(() => {
       >
         <div
           v-if="mobileMenu"
-          class="fixed inset-0 bg-black/60 backdrop-blur-xs z-[998] lg:hidden"
+          class="fixed inset-0 bg-black/45 backdrop-blur-xs z-[998] lg:hidden flex justify-end items-start p-3 sm:p-5"
           @click="closeMenu"
           aria-hidden="true"
-        />
-      </Transition>
-
-      <!-- Slide-In Drawer Panel -->
-      <Transition
-        enter-active-class="transition-transform duration-300 ease-out"
-        enter-from-class="translate-x-full"
-        enter-to-class="translate-x-0"
-        leave-active-class="transition-transform duration-200 ease-in"
-        leave-from-class="translate-x-0"
-        leave-to-class="translate-x-full"
-      >
-        <aside
-          v-if="mobileMenu"
-          class="fixed top-0 right-0 bottom-0 w-full max-w-sm bg-white dark:bg-[#101827] text-slate-900 dark:text-white shadow-2xl z-[999] lg:hidden flex flex-col justify-between border-l border-slate-200 dark:border-white/10"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Mobile Navigation Drawer"
         >
-          <!-- Drawer Header with Logo & Close Button -->
-          <div class="p-5 border-b border-slate-200 dark:border-white/10 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-              <div
-                class="w-11 h-11 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-[#182235] p-1 shadow-sm border border-slate-200 dark:border-[#D6A94F]/30 shrink-0"
-              >
-                <img
-                  :src="currentHotelLogo"
-                  :alt="guestHotelStore.hotelName"
-                  class="w-full h-full object-contain"
-                />
-              </div>
-              <div class="flex flex-col">
-                <span class="font-serif text-base font-bold tracking-[0.08em] text-slate-900 dark:text-white uppercase leading-tight">
-                  {{ guestHotelStore.hotelName }}
-                </span>
-                <span class="text-[9px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.08em] uppercase">
-                  {{ guestHotelStore.hotelCity }}
-                </span>
-              </div>
-            </div>
-
-            <button
-              @click="closeMenu"
-              type="button"
-              class="w-9 h-9 flex items-center justify-center rounded-full border border-slate-200 dark:border-white/15 bg-slate-50 dark:bg-[#182235] text-slate-700 dark:text-slate-300 hover:text-slate-950 dark:hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] cursor-pointer"
-              aria-label="Close navigation menu"
+          <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0 scale-95 -translate-y-2"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 -translate-y-2"
+            appear
+          >
+            <aside
+              class="w-full max-w-[340px] sm:max-w-[360px] bg-white dark:bg-[#111A28] text-slate-900 dark:text-white rounded-[26px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-10px_rgba(0,0,0,0.8)] border border-slate-200/90 dark:border-white/10 p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-28px)]"
+              @click.stop
+              role="dialog"
+              aria-modal="true"
+              aria-label="Navigation Menu"
             >
-              <CloseIcon class="w-4 h-4 text-slate-700 dark:text-slate-200" />
-            </button>
-          </div>
+              <!-- Card Header: Brand Identity, Theme Pill & Close Button -->
+              <div class="flex items-center justify-between pb-1">
+                <!-- Brand Identity -->
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div
+                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50/80 dark:bg-[#182235] p-1 border border-blue-100 dark:border-[#D6A94F]/30 shrink-0 shadow-xs"
+                  >
+                    <img
+                      :src="currentHotelLogo"
+                      :alt="guestHotelStore.hotelName"
+                      class="w-full h-full object-contain"
+                      @error="(e: any) => { e.target.src = '/images/Hotel logo.png' }"
+                    />
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span class="font-serif text-[15px] sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                      {{ guestHotelStore.hotelName }}
+                    </span>
+                    <span class="text-[9px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase">
+                      {{ (guestHotelStore.hotelCity || 'ADDIS ABABA').toUpperCase().replace('ADDISS', 'ADDIS') }}
+                    </span>
+                  </div>
+                </div>
 
-          <!-- Drawer Navigation Links -->
-          <div class="flex-1 overflow-y-auto p-5 space-y-1.5">
-            <p class="text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-500 mb-3 px-3">
-              Menu Navigation
-            </p>
-            <RouterLink
-              v-for="menu in menus"
-              :key="menu.route"
-              :to="menu.route"
-              @click="closeMenu"
-              class="flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium tracking-[0.08em] uppercase transition-all"
-              :class="[
-                isItemActive(menu.route)
-                  ? 'font-semibold text-[#9A7418] dark:text-[#D6A94F] bg-[#FAF3E7] dark:bg-[#182235] border border-[#9A7418]/30 dark:border-[#D6A94F]/30'
-                  : 'text-slate-700 hover:text-slate-950 hover:bg-slate-100 dark:text-slate-300 dark:hover:text-white dark:hover:bg-[#182235]/60',
-              ]"
-            >
-              <span>{{ menu.title }}</span>
-              <span
-                v-if="isItemActive(menu.route)"
-                class="w-2 h-2 rounded-full bg-[#9A7418] dark:bg-[#D6A94F]"
-              />
-            </RouterLink>
-          </div>
+                <!-- Right Controls: Theme Switch Pill & Circular Close Button -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <!-- Theme Pill Toggle (Moon & Sun) -->
+                  <button
+                    @click="handleThemeToggle"
+                    type="button"
+                    class="flex items-center gap-0.5 p-0.5 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200/70 dark:border-white/10 transition-colors cursor-pointer"
+                    :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+                  >
+                    <span
+                      class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
+                      :class="theme.isDark ? 'bg-[#101827] text-[#D6A94F] shadow-xs' : 'text-slate-400'"
+                    >
+                      <Moon class="w-3.5 h-3.5" />
+                    </span>
+                    <span
+                      class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
+                      :class="!theme.isDark ? 'bg-[#0F56B3] text-white shadow-xs' : 'text-slate-400'"
+                    >
+                      <Sun class="w-3.5 h-3.5" />
+                    </span>
+                  </button>
 
-          <!-- Drawer Bottom Actions: Language Selector, Theme Toggle & CTA -->
-          <div class="p-5 border-t border-slate-200 dark:border-white/10 space-y-4 bg-slate-50/60 dark:bg-[#101827]">
-            <!-- Language Selector Section -->
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Globe class="w-3.5 h-3.5 text-[#9A7418] dark:text-[#D6A94F]" />
-                {{ languageStore.t('language', 'Language') }}
-              </span>
-              <div class="flex items-center gap-1 bg-white dark:bg-[#182235] p-1 rounded-xl border border-slate-200 dark:border-white/10 shadow-xs">
-                <button
-                  v-for="opt in languageStore.options"
-                  :key="opt.code"
-                  @click="selectLanguage(opt.code)"
-                  type="button"
-                  class="px-2.5 py-1 rounded-lg text-xs font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
+                  <!-- Circular Close Button -->
+                  <button
+                    @click="closeMenu"
+                    type="button"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none"
+                    aria-label="Close navigation menu"
+                  >
+                    <CloseIcon class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Navigation Links with ArrowUpRight -->
+              <nav class="flex flex-col py-1" aria-label="Mobile Navigation Links">
+                <RouterLink
+                  v-for="menu in menus"
+                  :key="menu.route"
+                  :to="menu.route"
+                  @click="closeMenu"
+                  class="flex items-center justify-between py-2.5 sm:py-3 px-1 text-base font-serif transition-colors group border-b border-slate-100/80 dark:border-white/5 last:border-0"
                   :class="[
-                    languageStore.currentLanguage === opt.code
-                      ? 'bg-[#FAF3E7] dark:bg-[#101827] text-[#9A7418] dark:text-[#D6A94F] shadow-xs font-bold'
-                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                    isItemActive(menu.route)
+                      ? 'text-[#0F56B3] dark:text-[#D6A94F] font-bold'
+                      : 'text-slate-800 dark:text-slate-200 hover:text-[#0F56B3] dark:hover:text-[#D6A94F] font-medium',
                   ]"
-                  :aria-label="'Switch language to ' + opt.name"
                 >
-                  {{ opt.nativeName }}
-                </button>
+                  <span>{{ menu.title }}</span>
+                  <ArrowUpRight
+                    class="w-4 h-4 text-[#0F56B3] dark:text-[#D6A94F] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                  />
+                </RouterLink>
+              </nav>
+
+              <!-- Language Selector Section -->
+              <div class="pt-2 border-t border-slate-100 dark:border-white/10">
+                <span class="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2">
+                  {{ languageStore.t('language', 'Language') }}
+                </span>
+                <div class="inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10">
+                  <button
+                    v-for="opt in languageStore.options"
+                    :key="opt.code"
+                    @click="selectLanguage(opt.code)"
+                    type="button"
+                    class="px-3.5 py-1 text-xs font-semibold rounded-full transition-all focus:outline-none cursor-pointer"
+                    :class="[
+                      languageStore.currentLanguage === opt.code
+                        ? 'bg-[#0F56B3] dark:bg-[#D6A94F] text-white dark:text-[#101827] shadow-xs'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                    ]"
+                  >
+                    {{ opt.nativeName }}
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <!-- Theme Toggle Section -->
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-bold uppercase tracking-[0.08em] text-slate-500 dark:text-slate-400 flex items-center gap-1.5">
-                <Sparkles class="w-3.5 h-3.5 text-[#9A7418] dark:text-[#D6A94F]" />
-                {{ languageStore.t('theme', 'Color Theme') }}
-              </span>
-              <button
-                @click="handleThemeToggle"
-                type="button"
-                class="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-[#182235] text-xs font-semibold text-slate-800 dark:text-slate-100 hover:border-[#9A7418] dark:hover:border-[#D6A94F] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
-                :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-              >
-                <Sun v-if="theme.isDark" class="w-3.5 h-3.5 text-[#D6A94F]" />
-                <Moon v-else class="w-3.5 h-3.5 text-slate-700" />
-                <span>{{ theme.isDark ? 'Dark Mode' : 'Light Mode' }}</span>
-              </button>
-            </div>
+              <!-- Action Buttons -->
+              <div class="flex flex-col gap-2.5 pt-1">
+                <!-- Secondary Button: Sign In / Dashboard -->
+                <RouterLink
+                  :to="authStore.isAuthenticated ? '/admin' : '/login'"
+                  @click="closeMenu"
+                  class="w-full py-2.5 sm:py-3 rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold tracking-wide text-center transition-all shadow-xs block cursor-pointer"
+                >
+                  {{ authStore.isAuthenticated ? languageStore.t('dashboard', 'Dashboard') : languageStore.t('sign_in', 'Sign in') }}
+                </RouterLink>
 
-            <!-- Primary Book Stay CTA -->
-            <RouterLink
-              to="/rooms"
-              @click="closeMenu"
-              class="block w-full text-center py-3.5 rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] text-xs font-bold tracking-[0.08em] uppercase shadow-lg shadow-[#D6A94F]/25 transition-all cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] active:scale-[0.99]"
-            >
-              {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
-            </RouterLink>
-          </div>
-        </aside>
+                <!-- Primary Button: Book Your Stay -->
+                <RouterLink
+                  to="/rooms"
+                  @click="closeMenu"
+                  class="w-full py-3 sm:py-3.5 rounded-2xl bg-[#0F56B3] hover:bg-[#0c448d] dark:bg-[#D6A94F] dark:hover:bg-[#C59B3F] text-white dark:text-[#101827] font-semibold text-xs sm:text-sm tracking-wide shadow-md shadow-[#0F56B3]/20 dark:shadow-black/30 text-center transition-all block active:scale-[0.99] cursor-pointer"
+                >
+                  {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
+                </RouterLink>
+              </div>
+            </aside>
+          </Transition>
+        </div>
       </Transition>
     </Teleport>
   </header>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useGuestHotelStore } from '../../stores/guestHotelStore'
 import { useLanguageStore } from '../../stores/language'
@@ -532,110 +532,113 @@ watch(
       document.body.style.overflow = 'hidden'
       document.body.style.touchAction = 'none'
     } else {
+      isVisible.value = false
+      modalScale.value = 0.95
       document.body.style.overflow = 'auto'
       document.body.style.touchAction = 'auto'
     }
   },
+  { immediate: true },
 )
 
 onMounted(() => {
-  return () => {
-    document.body.style.overflow = 'auto'
-    document.body.style.touchAction = 'auto'
+  if (props.isOpen && props.room) {
+    initializeForm()
   }
 })
+
+onUnmounted(() => {
+  document.body.style.overflow = 'auto'
+  document.body.style.touchAction = 'auto'
+})
+
 </script>
 
 <template>
   <Teleport to="body">
     <div
       v-if="isOpen && room"
-      class="fixed inset-0 bg-black z-50 flex items-center justify-center p-3 md:p-4 overflow-hidden transition-opacity duration-300"
+      class="fixed inset-0 bg-black/75 backdrop-blur-xs z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 overflow-y-auto transition-opacity duration-300"
       :class="isVisible ? 'opacity-100' : 'opacity-0'"
       @click.self="closeModal"
     >
       <div
-        class="bg-white w-full max-w-6xl rounded-2xl md:rounded-3xl flex flex-col overflow-hidden max-h-[95vh] shadow-2xl transition-all duration-300"
+        class="bg-white dark:bg-[#101827] text-slate-900 dark:text-white w-full max-w-5xl rounded-2xl md:rounded-3xl flex flex-col overflow-hidden max-h-[94vh] sm:max-h-[90vh] shadow-2xl border border-slate-200/90 dark:border-white/10 transition-all duration-300 my-auto"
         :style="{ transform: `scale(${modalScale})`, opacity: isVisible ? 1 : 0 }"
       >
+        <!-- Modal Header -->
         <div
-          class="relative bg-[#101827] border-b border-[#26354D] px-4 md:px-6 lg:px-8 py-4 md:py-5 flex justify-between items-center flex-shrink-0"
+          class="relative bg-[#101827] border-b border-[#26354D] px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 flex justify-between items-center flex-shrink-0"
         >
           <!-- Top gold hairline -->
           <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
 
-          <div class="flex items-center gap-3">
-            <div class="p-1.5 bg-[#182235] border border-[#D6A94F]/30 rounded-xl backdrop-blur-sm">
-              <Sparkles class="w-5 h-5 text-[#D6A94F]" />
+          <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+            <div class="p-1.5 sm:p-2 bg-[#182235] border border-[#D6A94F]/30 rounded-xl backdrop-blur-sm shrink-0">
+              <Sparkles class="w-4 h-4 sm:w-5 sm:h-5 text-[#D6A94F]" />
             </div>
-            <div>
-              <h2 class="font-serif text-lg md:text-2xl font-bold text-white tracking-tight">
-                {{ languageStore.t('complete_your_booking', 'Complete Your Reservation') }}
+            <div class="min-w-0">
+              <h2 class="font-serif text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate">
+                {{ languageStore.t('complete_your_booking', 'Complete Your Booking') }}
               </h2>
-              <p class="text-xs text-[#D6A94F] hidden sm:block">
+              <p class="text-[11px] sm:text-xs text-[#D6A94F] truncate">
                 {{ languageStore.t('secure_your_stay', 'Secure your stay at') }}
-                {{ guestHotelStore.hotelName || room?.hotel?.name || 'our luxury hotel' }}
+                {{ guestHotelStore.hotelName || room?.hotel?.name || 'Executive Hotel' }}
               </p>
             </div>
           </div>
           <button
             @click="closeModal"
             class="text-slate-400 hover:text-white hover:bg-[#182235] p-2 rounded-xl transition-all duration-200 leading-none flex-shrink-0 cursor-pointer"
+            aria-label="Close booking modal"
           >
-            <X class="w-5 h-5 md:w-6 md:h-6" />
+            <X class="w-5 h-5" />
           </button>
         </div>
 
+        <!-- Responsive Modal Body -->
         <div
-          class="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4 md:gap-6 p-4 md:p-6 lg:p-8 overflow-hidden"
+          class="flex-1 overflow-y-auto md:overflow-hidden md:grid md:grid-cols-12 md:gap-6 p-4 sm:p-5 md:p-6 lg:p-7 min-h-0"
         >
-          <div class="lg:col-span-2 flex flex-col space-y-4 overflow-y-auto order-2 lg:order-1">
+          <!-- Left Column: Room Details & Breakdown (Desktop & Tablet left; Mobile stacked below) -->
+          <div class="md:col-span-5 flex flex-col space-y-4 md:overflow-y-auto order-2 md:order-1 pr-0 md:pr-1">
+            <!-- Room Image Banner -->
             <div
-              class="relative w-full bg-gradient-to-br from-slate-100 to-slate-200 rounded-xl overflow-hidden flex-shrink-0 shadow-lg"
-              style="aspect-ratio: 4/3; min-height: 220px"
+              class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 shadow-md aspect-[4/3] max-h-[220px] sm:max-h-[260px]"
             >
               <img
                 :src="getRoomImage(room)"
                 :alt="getRoomTypeName(room)"
                 class="w-full h-full object-cover"
               />
+              <!-- Rating Badge -->
               <div
-                class="absolute top-3 right-3 bg-black/70 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5"
+                class="absolute top-3 right-3 bg-black/75 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 whitespace-nowrap shadow-md"
               >
-                <Star class="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
-                {{ getRoomRating(room) }}
+                <Star class="w-3.5 h-3.5 fill-amber-400 text-amber-400 shrink-0" />
+                <span>{{ getRoomRating(room) }}</span>
               </div>
+
+              <!-- Status Badge -->
               <div
                 v-if="!isFetchingStatus"
                 :class="[
-                  'absolute bottom-3 left-3 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5',
+                  'absolute bottom-3 left-3 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md whitespace-nowrap',
                   roomStatus === 'available'
-                    ? 'bg-emerald-500/90'
+                    ? 'bg-emerald-600/90'
                     : roomStatus === 'booked'
-                      ? 'bg-rose-500/90'
-                      : 'bg-amber-500/90',
+                      ? 'bg-rose-600/90'
+                      : 'bg-amber-600/90',
                 ]"
               >
-                <CheckCircle class="w-3.5 h-3.5" />
-                {{ roomStatusMessage }}
+                <CheckCircle class="w-3.5 h-3.5 shrink-0" />
+                <span>{{ roomStatusMessage }}</span>
               </div>
               <div
                 v-else
-                class="absolute bottom-3 left-3 bg-slate-500/90 backdrop-blur-sm text-white text-xs font-semibold px-3 py-1.5 rounded-full flex items-center gap-1.5"
+                class="absolute bottom-3 left-3 bg-slate-700/90 backdrop-blur-sm text-white text-xs font-semibold px-2.5 py-1 rounded-full flex items-center gap-1.5 shadow-md whitespace-nowrap"
               >
-                <div class="relative w-3.5 h-3.5">
-                  <svg class="absolute inset-0 w-full h-full" viewBox="0 0 100 100">
-                    <circle
-                      cx="50"
-                      cy="50"
-                      r="40"
-                      fill="none"
-                      stroke="#0EA5E9"
-                      stroke-width="5"
-                      opacity="0.3"
-                    />
-                  </svg>
-
+                <div class="relative w-3.5 h-3.5 shrink-0">
                   <div
                     class="absolute inset-0 animate-spin"
                     style="animation: spin 1.5s linear infinite"
@@ -647,59 +650,60 @@ onMounted(() => {
                         r="40"
                         fill="none"
                         stroke="#FBBF24"
-                        stroke-width="6"
+                        stroke-width="8"
                         stroke-linecap="round"
                         stroke-dasharray="60 240"
                       />
                     </svg>
                   </div>
                 </div>
-                {{ languageStore.t('checking_status', 'Checking Status...') }}
+                <span>{{ languageStore.t('checking_status', 'Checking Status...') }}</span>
               </div>
             </div>
 
+            <!-- Status banner strip -->
             <div
               :class="[
-                'rounded-xl p-3 flex items-center justify-between flex-shrink-0 shadow-sm border',
+                'rounded-xl p-3 flex items-center justify-between flex-shrink-0 shadow-xs border',
                 roomStatus === 'available'
-                  ? 'bg-emerald-50 border-emerald-200'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800/40'
                   : roomStatus === 'booked'
-                    ? 'bg-rose-50 border-rose-200'
-                    : 'bg-amber-50 border-amber-200',
+                    ? 'bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-800/40'
+                    : 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800/40',
               ]"
             >
-              <div class="flex items-center gap-2">
+              <div class="flex items-center gap-2 min-w-0">
                 <CheckCircle
                   :class="[
-                    'w-5 h-5 flex-shrink-0',
+                    'w-4 h-4 sm:w-5 sm:h-5 flex-shrink-0',
                     roomStatus === 'available'
-                      ? 'text-emerald-600'
+                      ? 'text-emerald-600 dark:text-emerald-400'
                       : roomStatus === 'booked'
-                        ? 'text-rose-600'
-                        : 'text-amber-600',
+                        ? 'text-rose-600 dark:text-rose-400'
+                        : 'text-amber-600 dark:text-amber-400',
                   ]"
                 />
-                <div>
+                <div class="min-w-0">
                   <p
                     :class="[
                       'text-xs font-semibold',
                       roomStatus === 'available'
-                        ? 'text-emerald-900'
+                        ? 'text-emerald-900 dark:text-emerald-200'
                         : roomStatus === 'booked'
-                          ? 'text-rose-900'
-                          : 'text-amber-900',
+                          ? 'text-rose-900 dark:text-rose-200'
+                          : 'text-amber-900 dark:text-amber-200',
                     ]"
                   >
                     {{ languageStore.t('room_status', 'Room Status') }}
                   </p>
                   <p
                     :class="[
-                      'text-sm font-bold',
+                      'text-sm font-bold truncate',
                       roomStatus === 'available'
-                        ? 'text-emerald-600'
+                        ? 'text-emerald-600 dark:text-emerald-400'
                         : roomStatus === 'booked'
-                          ? 'text-rose-600'
-                          : 'text-amber-600',
+                          ? 'text-rose-600 dark:text-rose-400'
+                          : 'text-amber-600 dark:text-amber-400',
                     ]"
                   >
                     {{ roomStatusMessage }}
@@ -708,83 +712,86 @@ onMounted(() => {
               </div>
               <span
                 :class="[
-                  'px-3 py-1 rounded-full text-xs font-bold',
+                  'px-2.5 py-1 rounded-full text-xs font-bold shrink-0',
                   roomStatus === 'available'
-                    ? 'bg-emerald-100 text-emerald-700'
+                    ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-800 dark:text-emerald-200'
                     : roomStatus === 'booked'
-                      ? 'bg-rose-100 text-rose-700'
-                      : 'bg-amber-100 text-amber-700',
+                      ? 'bg-rose-100 dark:bg-rose-900/50 text-rose-800 dark:text-rose-200'
+                      : 'bg-amber-100 dark:bg-amber-900/50 text-amber-800 dark:text-amber-200',
                 ]"
               >
                 {{ roomStatusMessage }}
               </span>
             </div>
 
+            <!-- Room info summary box -->
             <div
-              class="bg-gradient-to-br from-slate-50 to-white border border-slate-200/80 rounded-xl p-4 md:p-5 space-y-3 flex-shrink-0 shadow-sm"
+              class="bg-slate-50 dark:bg-[#182235]/60 border border-slate-200/80 dark:border-[#26354D] rounded-xl sm:rounded-2xl p-4 sm:p-5 space-y-3 shrink-0 shadow-xs"
             >
-              <div class="border-b border-slate-200/80 pb-3">
-                <div class="flex items-start justify-between">
-                  <div>
-                    <h3 class="text-lg md:text-xl font-bold text-slate-900 line-clamp-1">
+              <div class="border-b border-slate-200/80 dark:border-[#26354D] pb-3">
+                <div class="flex items-start justify-between gap-2">
+                  <div class="min-w-0">
+                    <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
                       {{ getRoomTypeName(room) }}
                     </h3>
-                    <p class="text-sm text-slate-500">
+                    <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
                       {{ languageStore.t('room_label', 'Room') }} #{{ room.room_number }}
                     </p>
                   </div>
-                  <div class="text-right">
-                    <span class="text-2xl font-bold text-amber-600"
-                      >ETB {{ getRoomPrice(room) }}</span
-                    >
-                    <span class="text-xs text-slate-500 block"
+                  <div class="text-right shrink-0">
+                    <span class="text-xl sm:text-2xl font-bold text-amber-600 dark:text-[#D6A94F]">
+                      ETB {{ getRoomPrice(room) }}
+                    </span>
+                    <span class="text-xs text-slate-500 dark:text-slate-400 block"
                       >/ {{ languageStore.t('night_singular', 'Night') }}</span
                     >
                   </div>
                 </div>
               </div>
 
+              <!-- Amenities tags -->
               <div class="flex flex-wrap gap-1.5">
                 <span
                   v-for="amenity in getRoomAmenities(room).slice(0, 4)"
                   :key="amenity"
-                  class="inline-flex items-center gap-1 text-xs bg-slate-100 text-slate-700 px-2.5 py-1 rounded-full"
+                  class="inline-flex items-center gap-1 text-[11px] bg-white dark:bg-[#101827] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 px-2.5 py-1 rounded-full"
                 >
-                  <CheckCircle class="w-3 h-3 text-emerald-500" />
-                  {{ amenity }}
+                  <CheckCircle class="w-3 h-3 text-emerald-500 shrink-0" />
+                  <span>{{ amenity }}</span>
                 </span>
                 <span
                   v-if="getRoomAmenities(room).length > 4"
-                  class="text-xs text-slate-400 font-medium"
+                  class="text-[11px] text-slate-400 font-medium self-center px-1"
                 >
                   +{{ getRoomAmenities(room).length - 4 }} more
                 </span>
               </div>
 
-              <p class="text-sm text-slate-600 leading-relaxed">
+              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
                 {{ getRoomDescription(room) }}
               </p>
 
-              <div class="bg-amber-50/80 border border-amber-200/60 rounded-xl p-3 space-y-2">
+              <!-- Stay Duration Box -->
+              <div class="bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200/70 dark:border-amber-500/20 rounded-xl p-3 space-y-2 text-slate-800 dark:text-slate-200">
                 <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-2">
-                    <Calendar class="w-4 h-4 text-amber-600" />
-                    <span class="text-xs font-semibold text-slate-700">{{
+                  <div class="flex items-center gap-1.5">
+                    <Calendar class="w-4 h-4 text-amber-600 dark:text-[#D6A94F]" />
+                    <span class="text-xs font-semibold">{{
                       languageStore.t('stay_duration', 'Stay Duration')
                     }}</span>
                   </div>
-                  <span class="text-sm font-bold text-slate-900"
-                    >{{ calculateNights() }}
+                  <span class="text-xs sm:text-sm font-bold text-slate-900 dark:text-white">
+                    {{ calculateNights() }}
                     {{
                       calculateNights() === 1
                         ? languageStore.t('night_singular', 'Night')
                         : languageStore.t('nights_plural', 'Nights')
-                    }}</span
-                  >
+                    }}
+                  </span>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-slate-600">{{ languageStore.t('check_in', 'Check-in') }}</span>
-                  <span class="font-medium text-slate-800">{{
+                <div class="flex justify-between text-xs sm:text-sm">
+                  <span class="text-slate-600 dark:text-slate-400">{{ languageStore.t('check_in', 'Check-in') }}</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">{{
                     bookingForm.checkInDate
                       ? new Date(bookingForm.checkInDate).toLocaleDateString('en-US', {
                           weekday: 'short',
@@ -794,11 +801,11 @@ onMounted(() => {
                       : '--'
                   }}</span>
                 </div>
-                <div class="flex justify-between text-sm">
-                  <span class="text-slate-600">{{
+                <div class="flex justify-between text-xs sm:text-sm">
+                  <span class="text-slate-600 dark:text-slate-400">{{
                     languageStore.t('check_out', 'Check-out')
                   }}</span>
-                  <span class="font-medium text-slate-800">{{
+                  <span class="font-medium text-slate-800 dark:text-slate-200">{{
                     bookingForm.checkOutDate
                       ? new Date(bookingForm.checkOutDate).toLocaleDateString('en-US', {
                           weekday: 'short',
@@ -808,25 +815,26 @@ onMounted(() => {
                       : '--'
                   }}</span>
                 </div>
-                <div class="flex justify-between text-sm pt-1.5 border-t border-amber-200/60">
-                  <span class="text-slate-600">{{ languageStore.t('guests', 'Guests') }}</span>
-                  <span class="font-medium text-slate-800"
-                    >{{ bookingForm.guests }} {{ languageStore.t('guests', 'Guests') }}</span
-                  >
+                <div class="flex justify-between text-xs sm:text-sm pt-1.5 border-t border-amber-200/50 dark:border-amber-500/20">
+                  <span class="text-slate-600 dark:text-slate-400">{{ languageStore.t('guests', 'Guests') }}</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ bookingForm.guests }} {{ languageStore.t('guests', 'Guests') }}
+                  </span>
                 </div>
               </div>
 
-              <div class="border-t border-slate-200/80 pt-3 space-y-1.5">
-                <div class="flex justify-between text-sm">
-                  <span class="text-slate-600"
-                    >{{ languageStore.t('room_label', 'Room') }} ({{ calculateNights() }} × ETB
-                    {{ getRoomPrice(room) }})</span
-                  >
-                  <span class="font-semibold text-slate-900">ETB {{ calculateRoomTotal() }}</span>
+              <!-- Price Breakdown Items -->
+              <div class="border-t border-slate-200/80 dark:border-[#26354D] pt-3 space-y-1.5">
+                <div class="flex justify-between text-xs sm:text-sm">
+                  <span class="text-slate-600 dark:text-slate-400">
+                    {{ languageStore.t('room_label', 'Room') }} ({{ calculateNights() }} × ETB
+                    {{ getRoomPrice(room) }})
+                  </span>
+                  <span class="font-semibold text-slate-900 dark:text-white">ETB {{ calculateRoomTotal() }}</span>
                 </div>
                 <div
                   v-if="bookingForm.includeBreakfast"
-                  class="flex justify-between text-sm text-emerald-600"
+                  class="flex justify-between text-xs sm:text-sm text-emerald-600 dark:text-emerald-400"
                 >
                   <span class="flex items-center gap-1.5">
                     <Coffee class="w-3.5 h-3.5" />
@@ -836,7 +844,7 @@ onMounted(() => {
                 </div>
                 <div
                   v-if="bookingForm.includeDinner"
-                  class="flex justify-between text-sm text-slate-700"
+                  class="flex justify-between text-xs sm:text-sm text-slate-700 dark:text-slate-300"
                 >
                   <span class="flex items-center gap-1.5">
                     <Utensils class="w-3.5 h-3.5" />
@@ -846,7 +854,7 @@ onMounted(() => {
                 </div>
                 <div
                   v-if="bookingForm.includeSpa"
-                  class="flex justify-between text-sm text-slate-700"
+                  class="flex justify-between text-xs sm:text-sm text-slate-700 dark:text-slate-300"
                 >
                   <span class="flex items-center gap-1.5">
                     <Sparkles class="w-3.5 h-3.5" />
@@ -856,26 +864,28 @@ onMounted(() => {
                 </div>
               </div>
 
+              <!-- Grand Total Box -->
               <div
-                class="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-3 flex justify-between items-center"
+                class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-[#1e2a3f] dark:to-[#182235] border border-amber-200 dark:border-[#D6A94F]/30 rounded-xl p-3 sm:p-3.5 flex justify-between items-center"
               >
-                <span class="text-sm font-bold text-slate-800">{{
+                <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">{{
                   languageStore.t('total', 'Grand Total')
                 }}</span>
-                <span class="text-xl md:text-2xl font-bold text-amber-600"
-                  >ETB {{ calculateGrandTotal() }}</span
-                >
+                <span class="text-lg sm:text-xl md:text-2xl font-bold text-amber-600 dark:text-[#D6A94F]">
+                  ETB {{ calculateGrandTotal() }}
+                </span>
               </div>
             </div>
           </div>
 
-          <div class="lg:col-span-3 flex flex-col space-y-3 overflow-hidden order-1 lg:order-2">
-            <div class="flex items-center justify-between flex-shrink-0">
+          <!-- Right Column: Guest Information Form -->
+          <div class="md:col-span-7 flex flex-col space-y-3.5 md:overflow-y-auto order-1 md:order-2 pr-0 md:pr-1">
+            <div class="flex items-center justify-between flex-shrink-0 pb-1">
               <div>
-                <h3 class="text-sm font-semibold text-slate-900">
+                <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
                   {{ languageStore.t('guest_information', 'Guest Information') }}
                 </h3>
-                <p class="text-xs text-slate-500">
+                <p class="text-xs text-slate-500 dark:text-slate-400">
                   {{
                     languageStore.t(
                       'fill_details_booking',
@@ -884,60 +894,62 @@ onMounted(() => {
                   }}
                 </p>
               </div>
-              <span class="text-xs text-red-500 font-medium"
+              <span class="text-xs text-rose-500 font-semibold"
                 >* {{ languageStore.t('required_mark', 'Required') }}</span
               >
             </div>
-            iv>
 
+            <!-- Mobile-only compact room banner -->
             <div
-              class="bg-gradient-to-r from-slate-50 to-white border border-slate-200 rounded-xl overflow-hidden lg:hidden flex-shrink-0 shadow-sm"
+              class="bg-slate-50 dark:bg-[#182235]/70 border border-slate-200/90 dark:border-[#26354D] rounded-xl overflow-hidden md:hidden flex-shrink-0 shadow-xs"
             >
               <div class="flex items-center gap-3 p-3">
                 <img
                   :src="getRoomImage(room)"
                   :alt="getRoomTypeName(room)"
-                  class="w-20 h-20 object-cover rounded-lg flex-shrink-0"
+                  class="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg flex-shrink-0"
                 />
                 <div class="flex-1 min-w-0">
-                  <h4 class="text-sm font-bold text-slate-900 truncate">
+                  <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">
                     {{ getRoomTypeName(room) }}
                   </h4>
-                  <p class="text-xs text-slate-500">Room #{{ room.room_number }}</p>
-                  <p class="text-sm font-bold text-amber-600 mt-0.5">
+                  <p class="text-xs text-slate-500 dark:text-slate-400">Room #{{ room.room_number }}</p>
+                  <p class="text-sm font-bold text-amber-600 dark:text-[#D6A94F] mt-0.5">
                     ETB {{ calculateGrandTotal() }}
                   </p>
                 </div>
               </div>
             </div>
 
-            <div class="space-y-2.5 overflow-y-auto flex-1 pr-1.5 md:pr-2">
-              <div class="grid grid-cols-2 gap-2">
+            <!-- Form Fields -->
+            <div class="space-y-3 flex-1">
+              <!-- Check-In & Check-Out Inputs -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {{ languageStore.t('check_in', 'Check-in') }}
-                    <span class="text-red-500">*</span>
+                    <span class="text-rose-500">*</span>
                   </label>
                   <input
                     v-model="bookingForm.checkInDate"
                     type="date"
                     :min="today"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all"
+                    class="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all"
                   />
                   <p v-if="isPastDate" class="text-xs text-rose-500 font-semibold mt-1">
                     {{ languageStore.t('check_in_past_error', 'Check-in cannot be in past') }}
                   </p>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                     {{ languageStore.t('check_out', 'Check-out') }}
-                    <span class="text-red-500">*</span>
+                    <span class="text-rose-500">*</span>
                   </label>
                   <input
                     v-model="bookingForm.checkOutDate"
                     type="date"
                     :min="bookingForm.checkInDate || today"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all"
+                    class="w-full px-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all"
                   />
                   <p v-if="!isValidDateRange" class="text-xs text-rose-500 font-semibold mt-1">
                     {{ languageStore.t('must_be_after_checkin', 'Must be after check-in') }}
@@ -945,12 +957,13 @@ onMounted(() => {
                 </div>
               </div>
 
+              <!-- Guests Input -->
               <div>
-                <div class="flex justify-between items-center mb-0.5">
-                  <label class="block text-xs font-semibold text-slate-700">
-                    {{ languageStore.t('guests', 'Guests') }} <span class="text-red-500">*</span>
+                <div class="flex justify-between items-center mb-1">
+                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {{ languageStore.t('guests', 'Guests') }} <span class="text-rose-500">*</span>
                   </label>
-                  <span v-if="room" class="text-xs text-slate-500">
+                  <span v-if="room" class="text-xs text-slate-500 dark:text-slate-400">
                     {{
                       languageStore
                         .t('max_capacity_guests', 'Max: {count} guests')
@@ -958,15 +971,15 @@ onMounted(() => {
                     }}
                   </span>
                 </div>
-                <div class="flex items-center gap-2">
-                  <Users class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="relative flex items-center">
+                  <Users class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
                   <input
                     v-model.number="bookingForm.guests"
                     type="number"
                     min="1"
                     :max="getRoomCapacity(room)"
                     :class="{ 'border-rose-500 focus:border-rose-500': isCapacityExceeded }"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all"
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all"
                   />
                 </div>
                 <p v-if="isCapacityExceeded" class="text-xs text-rose-500 font-semibold mt-1">
@@ -977,115 +990,120 @@ onMounted(() => {
                 </p>
               </div>
 
+              <!-- Full Name Input -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {{ languageStore.t('full_name', 'Full Name') }}
-                  <span class="text-red-500">*</span>
+                  <span class="text-rose-500">*</span>
                 </label>
-                <div class="flex items-center gap-2">
-                  <User class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="relative flex items-center">
+                  <User class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
                   <input
                     v-model="bookingForm.guestName"
                     type="text"
                     :placeholder="languageStore.t('full_name', 'Full Name')"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all placeholder:text-slate-400"
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
+              <!-- Email Address Input -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {{ languageStore.t('email_address', 'Email Address') }}
-                  <span class="text-red-500">*</span>
+                  <span class="text-rose-500">*</span>
                 </label>
-                <div class="flex items-center gap-2">
-                  <Mail class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="relative flex items-center">
+                  <Mail class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
                   <input
                     v-model="bookingForm.guestEmail"
                     type="email"
                     :placeholder="languageStore.t('email_address', 'Email Address')"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all placeholder:text-slate-400"
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
+              <!-- Phone Number Input -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {{ languageStore.t('phone_number', 'Phone Number') }}
-                  <span class="text-red-500">*</span>
+                  <span class="text-rose-500">*</span>
                 </label>
-                <div class="flex items-center gap-2">
-                  <Phone class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="relative flex items-center">
+                  <Phone class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
                   <input
                     v-model="bookingForm.guestPhone"
                     type="tel"
                     :placeholder="languageStore.t('phone_number', 'Phone Number')"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all placeholder:text-slate-400"
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
+              <!-- Preferred Room Input -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {{ languageStore.t('preferred_room_optional', 'Preferred Room (Optional)') }}
                 </label>
-                <div class="flex items-center gap-2">
-                  <MapPin class="w-4 h-4 text-slate-400 flex-shrink-0" />
+                <div class="relative flex items-center">
+                  <MapPin class="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none" />
                   <input
                     v-model="bookingForm.roomPreference"
                     type="text"
                     placeholder="e.g., 204"
-                    class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all placeholder:text-slate-400"
+                    class="w-full pl-9 pr-3 py-2.5 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                 </div>
               </div>
 
-              <div class="bg-slate-50/80 rounded-xl p-3 space-y-2 border border-slate-200/60">
-                <p class="text-xs font-semibold text-slate-700">
+              <!-- Add-on Services Selection -->
+              <div class="bg-slate-50 dark:bg-[#182235]/60 rounded-xl p-3 sm:p-3.5 space-y-2 border border-slate-200/80 dark:border-[#26354D]">
+                <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   {{ languageStore.t('addon_services', 'Add-on Services') }}
                 </p>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-1.5">
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   <label
-                    class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-amber-300 transition-all cursor-pointer"
+                    class="flex items-center gap-2 bg-white dark:bg-[#182235] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#26354D] hover:border-amber-400 dark:hover:border-amber-400 transition-all cursor-pointer shadow-2xs"
                   >
                     <input
                       v-model="bookingForm.includeBreakfast"
                       type="checkbox"
                       class="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400 cursor-pointer"
                     />
-                    <div class="flex items-center gap-1.5">
-                      <Coffee class="w-3.5 h-3.5 text-amber-600" />
-                      <span class="text-xs font-medium text-slate-700">{{
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <Coffee class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
+                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
                         languageStore.t('breakfast', 'Breakfast')
                       }}</span>
                     </div>
                   </label>
                   <label
-                    class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-amber-300 transition-all cursor-pointer"
+                    class="flex items-center gap-2 bg-white dark:bg-[#182235] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#26354D] hover:border-amber-400 dark:hover:border-amber-400 transition-all cursor-pointer shadow-2xs"
                   >
                     <input
                       v-model="bookingForm.includeDinner"
                       type="checkbox"
                       class="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400 cursor-pointer"
                     />
-                    <div class="flex items-center gap-1.5">
-                      <Utensils class="w-3.5 h-3.5 text-amber-600" />
-                      <span class="text-xs font-medium text-slate-700">{{
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <Utensils class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
+                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
                         languageStore.t('dinner', 'Dinner')
                       }}</span>
                     </div>
                   </label>
                   <label
-                    class="flex items-center gap-2 bg-white px-3 py-2 rounded-lg border border-slate-200 hover:border-amber-300 transition-all cursor-pointer"
+                    class="flex items-center gap-2 bg-white dark:bg-[#182235] px-3 py-2 rounded-xl border border-slate-200 dark:border-[#26354D] hover:border-amber-400 dark:hover:border-amber-400 transition-all cursor-pointer shadow-2xs"
                   >
                     <input
                       v-model="bookingForm.includeSpa"
                       type="checkbox"
                       class="w-4 h-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400 cursor-pointer"
                     />
-                    <div class="flex items-center gap-1.5">
-                      <Sparkles class="w-3.5 h-3.5 text-amber-600" />
-                      <span class="text-xs font-medium text-slate-700">{{
+                    <div class="flex items-center gap-1.5 min-w-0">
+                      <Sparkles class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
+                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
                         languageStore.t('spa', 'Spa')
                       }}</span>
                     </div>
@@ -1093,24 +1111,25 @@ onMounted(() => {
                 </div>
               </div>
 
+              <!-- Special Requests Textarea -->
               <div>
-                <label class="block text-xs font-semibold text-slate-700 mb-0.5">
+                <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
                   {{ languageStore.t('special_requests_optional', 'Special Requests (Optional)') }}
                 </label>
                 <textarea
                   v-model="bookingForm.specialRequests"
-                  placeholder="e.g., Ground floor, extra pillows, etc."
+                  placeholder="e.g., Ground floor, extra pillows, quiet room..."
                   rows="2"
-                  class="w-full px-3 py-2 border-2 border-slate-200 rounded-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-400/20 focus:outline-none text-sm transition-all placeholder:text-slate-400 resize-none"
+                  class="w-full px-3 py-2 bg-slate-50 dark:bg-[#182235] border border-slate-300 dark:border-[#26354D] rounded-xl focus:border-[#D6A94F] focus:ring-2 focus:ring-[#D6A94F]/20 focus:outline-none text-sm text-slate-900 dark:text-white transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 resize-none"
                 />
               </div>
 
+              <!-- Confirmation Note -->
               <div
-                class="bg-emerald-50/80 border border-emerald-200/60 rounded-lg p-2.5 text-xs text-emerald-800 flex items-start gap-2"
+                class="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/50 rounded-xl p-2.5 text-xs text-emerald-800 dark:text-emerald-300 flex items-start gap-2"
               >
-                <CheckCircle class="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                 <p>
-                  ✓
                   {{
                     languageStore.t(
                       'referral_code_notice',
@@ -1123,17 +1142,20 @@ onMounted(() => {
           </div>
         </div>
 
+        <!-- Modal Footer Actions -->
         <div
-          class="border-t border-slate-200 bg-slate-50/80 px-4 md:px-6 lg:px-8 py-3 md:py-4 flex gap-3 flex-shrink-0"
+          class="border-t border-slate-200 dark:border-[#26354D] bg-slate-50/90 dark:bg-[#101827] px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 flex flex-col sm:flex-row gap-2.5 sm:gap-3 flex-shrink-0"
         >
           <button
             @click="closeModal"
-            class="flex-1 px-4 py-2.5 md:py-3 bg-white hover:bg-slate-50 text-slate-700 font-semibold rounded-xl border-2 border-slate-200 transition-all duration-200 text-sm hover:border-slate-300 cursor-pointer"
+            type="button"
+            class="order-2 sm:order-1 sm:w-1/3 px-4 py-2.5 sm:py-3 bg-white dark:bg-[#182235] hover:bg-slate-100 dark:hover:bg-[#1f2d44] text-slate-700 dark:text-slate-200 font-semibold rounded-xl border border-slate-300 dark:border-[#26354D] transition-all text-xs sm:text-sm cursor-pointer shadow-2xs"
           >
             {{ languageStore.t('cancel', 'Cancel') }}
           </button>
           <button
             @click="openPaymentDialog"
+            type="button"
             :disabled="
               isBooking ||
               roomStatus !== 'available' ||
@@ -1144,7 +1166,7 @@ onMounted(() => {
               !bookingForm.guestEmail ||
               !bookingForm.guestPhone
             "
-            class="flex-1 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 shadow-lg flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-70 cursor-pointer"
+            class="order-1 sm:order-2 flex-1 px-4 py-3 rounded-xl font-bold text-xs sm:text-sm uppercase tracking-wide transition-all duration-300 shadow-md flex items-center justify-center gap-2 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
             :class="
               isBooking
                 ? 'bg-slate-700 text-white'
@@ -1152,18 +1174,18 @@ onMounted(() => {
                     !isPastDate &&
                     isValidDateRange &&
                     !isCapacityExceeded
-                  ? 'bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold shadow-amber-500/25 hover:scale-[1.02]'
-                  : 'bg-slate-300 text-slate-500'
+                  ? 'bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] shadow-[#D6A94F]/25 active:scale-[0.99]'
+                  : 'bg-slate-200 dark:bg-slate-800 text-slate-400 dark:text-slate-500'
             "
           >
             <template v-if="isBooking">
-              <Loader class="w-5 h-5 animate-spin" />
+              <Loader class="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
               <span>{{ languageStore.t('processing_payment', 'Processing Payment...') }}</span>
             </template>
 
             <template v-else>
-              <Sparkles class="w-5 h-5 text-slate-950" />
-              <span>💳 {{ languageStore.t('proceed_to_payment_btn', 'Proceed to Payment') }}</span>
+              <Sparkles class="w-4 h-4 sm:w-5 sm:h-5" />
+              <span>{{ languageStore.t('proceed_to_payment_btn', 'Proceed to Payment') }}</span>
             </template>
           </button>
         </div>
