@@ -192,103 +192,162 @@
       </div>
     </nav>
 
+    <!-- Floating Luxury Card Modal (< md screens) styled like GuestNavbar -->
     <Teleport to="body">
-      <Transition name="fade">
+      <Transition
+        enter-active-class="transition-opacity duration-300 ease-out"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-200 ease-in"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+      >
         <div
           v-if="showMobileMenu"
-          class="fixed inset-0 bg-black/40 backdrop-blur-xs z-[90] md:hidden transition-opacity"
+          class="fixed inset-0 bg-black/45 backdrop-blur-xs z-[998] md:hidden flex justify-end items-start p-3 sm:p-5"
           @click="closeMobileMenu"
-        ></div>
-      </Transition>
-
-      <Transition name="slide-right">
-        <div
-          v-if="showMobileMenu"
-          class="fixed top-0 right-0 bottom-0 w-72 sm:w-80 max-w-[85vw] bg-white dark:bg-slate-900 md:hidden z-[100] shadow-2xl flex flex-col border-l border-slate-200/80 dark:border-slate-800 transition-colors font-sans"
+          aria-hidden="true"
         >
-          <div
-            class="px-4 py-3.5 border-b border-slate-100 dark:border-slate-800 flex items-center justify-between flex-shrink-0"
+          <Transition
+            enter-active-class="transition-all duration-300 ease-out"
+            enter-from-class="opacity-0 scale-95 -translate-y-2"
+            enter-to-class="opacity-100 scale-100 translate-y-0"
+            leave-active-class="transition-all duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100 translate-y-0"
+            leave-to-class="opacity-0 scale-95 -translate-y-2"
+            appear
           >
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-[#c29353]"></span>
-              <span
-                class="text-xs font-black text-slate-800 dark:text-slate-100 uppercase tracking-wider"
-              >
-                {{ languageStore.t('categories', 'Categories') }}
-              </span>
-            </div>
-            <div class="flex items-center gap-2">
-              <LanguageSelector variant="compact" />
-              <button
-                type="button"
-                @click.stop="closeMobileMenu"
-                class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition cursor-pointer"
-                title="Close menu"
-              >
-                <X class="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-
-          <div class="p-3 space-y-2.5 flex-1 overflow-y-auto">
-            <div class="relative">
-              <input
-                v-model="mobileSearchQuery"
-                @input="handleMobileSearch"
-                type="text"
-                :placeholder="languageStore.t('search_placeholder', 'Search menu...')"
-                class="w-full pl-8 pr-3 py-2 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 text-xs rounded-xl border border-slate-200 dark:border-slate-700 focus:outline-none focus:border-[#c29353] font-medium"
-              />
-              <Search class="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-[#c29353]" />
-            </div>
-
-            <div
-              v-if="loadingCategories && mobileCategories.length === 0"
-              class="flex items-center justify-center py-6 text-slate-400 dark:text-slate-500 text-xs"
+            <aside
+              class="w-full max-w-[340px] sm:max-w-[360px] bg-white dark:bg-[#111A28] text-slate-900 dark:text-white rounded-[26px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-10px_rgba(0,0,0,0.8)] border border-slate-200/90 dark:border-white/10 p-4 sm:p-5 flex flex-col gap-3 overflow-hidden max-h-[calc(100vh-28px)] font-sans"
+              @click.stop
+              role="dialog"
+              aria-modal="true"
+              aria-label="Categories Menu"
             >
+              <!-- Card Header: Brand Identity & Controls -->
               <div
-                class="w-4 h-4 border-2 border-[#c29353] border-t-transparent rounded-full animate-spin mr-2"
-              ></div>
-              Loading...
-            </div>
+                class="flex items-center justify-between pb-1 border-b border-slate-100 dark:border-white/10 shrink-0"
+              >
+                <!-- Brand Identity -->
+                <div class="flex items-center gap-2.5 min-w-0">
+                  <div
+                    class="w-8 h-8 flex items-center justify-center rounded-xl bg-amber-50 dark:bg-white/10 p-1 border border-amber-200/60 dark:border-white/10 shrink-0"
+                  >
+                    <img
+                      v-if="hotelLogoUrl && !imageLoadFailed"
+                      :src="hotelLogoUrl"
+                      :alt="guestHotelStore.hotelName"
+                      class="w-full h-full object-contain"
+                      @error="imageLoadFailed = true"
+                    />
+                    <span v-else class="text-amber-600 dark:text-amber-400 font-serif font-black text-sm">
+                      {{ (guestHotelStore.hotelName || 'H').charAt(0).toUpperCase() }}
+                    </span>
+                  </div>
+                  <div class="flex flex-col min-w-0">
+                    <span
+                      class="font-serif text-[14px] font-bold text-slate-900 dark:text-white tracking-tight truncate leading-tight uppercase"
+                    >
+                      {{ guestHotelStore.hotelName }}
+                    </span>
+                    <span
+                      class="text-[8.5px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase"
+                    >
+                      {{ languageStore.t('digital_menu', 'Digital Menu') }} • {{ languageStore.t('categories', 'Categories') }}
+                    </span>
+                  </div>
+                </div>
 
-            <div class="space-y-1">
-              <button
-                v-for="category in mobileCategories"
-                :key="category.id || category.slug || category.name"
-                type="button"
-                @click.stop="selectCategoryMobile(category)"
-                class="flex items-center gap-2.5 w-full px-3 py-2 rounded-xl transition-all duration-200 text-left cursor-pointer relative z-10"
-                :class="[
-                  isCategoryActive(category)
-                    ? 'bg-[#c29353] text-white font-black shadow-xs'
-                    : 'bg-slate-50/80 dark:bg-slate-800/50 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 font-medium',
-                ]"
+                <!-- Right Controls: Language Selector & Circular Close Button -->
+                <div class="flex items-center gap-2 shrink-0">
+                  <LanguageSelector variant="compact" />
+                  <button
+                    @click="closeMobileMenu"
+                    type="button"
+                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none"
+                    aria-label="Close navigation menu"
+                  >
+                    <X class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <!-- Compact Search Bar -->
+              <div class="relative shrink-0">
+                <input
+                  v-model="mobileSearchQuery"
+                  @input="handleMobileSearch"
+                  type="text"
+                  :placeholder="languageStore.t('search_placeholder', 'Search delicious meals, drinks...')"
+                  class="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 text-xs rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:border-[#c29353] font-medium"
+                />
+                <Search class="absolute left-2.5 top-2 w-3.5 h-3.5 text-[#c29353]" />
+              </div>
+
+              <!-- Loading Indicator -->
+              <div
+                v-if="loadingCategories && mobileCategories.length === 0"
+                class="flex items-center justify-center py-4 text-slate-400 dark:text-slate-500 text-xs"
               >
                 <div
-                  class="flex items-center justify-center flex-shrink-0 w-5"
-                  :class="{
-                    'text-white': isCategoryActive(category),
-                    'text-slate-500 dark:text-slate-400': !isCategoryActive(category),
-                  }"
-                >
-                  <component :is="getCategoryIcon(category)" :size="16" :stroke-width="2" />
-                </div>
-                <span class="text-xs flex-1 truncate">{{ category.name }}</span>
-                <span
-                  v-if="category.count !== undefined && category.count !== null"
-                  class="text-[10px] px-1.5 py-0.5 rounded-full font-bold transition-colors"
+                  class="w-4 h-4 border-2 border-[#c29353] border-t-transparent rounded-full animate-spin mr-2"
+                ></div>
+                Loading...
+              </div>
+
+              <!-- Compact Minimized-Height Categories List -->
+              <div class="space-y-1 overflow-y-auto max-h-[56vh] pr-0.5 custom-scrollbar flex-1">
+                <button
+                  v-for="category in mobileCategories"
+                  :key="category.id || category.slug || category.name"
+                  type="button"
+                  @click.stop="selectCategoryMobile(category)"
+                  class="flex items-center gap-2.5 w-full px-2.5 py-1.5 rounded-xl transition-all duration-150 text-left cursor-pointer relative"
                   :class="[
                     isCategoryActive(category)
-                      ? 'bg-white/20 text-white'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300',
+                      ? 'bg-gradient-to-r from-[#c29353] to-[#b08244] text-white font-bold shadow-xs'
+                      : 'bg-slate-50/80 dark:bg-white/5 hover:bg-slate-100 dark:hover:bg-white/10 text-slate-700 dark:text-slate-200 font-medium',
                   ]"
                 >
-                  {{ category.count }}
+                  <div
+                    class="flex items-center justify-center flex-shrink-0 w-4 h-4"
+                    :class="{
+                      'text-white': isCategoryActive(category),
+                      'text-[#c29353] dark:text-[#D6A94F]': !isCategoryActive(category),
+                    }"
+                  >
+                    <component :is="getCategoryIcon(category)" :size="14" :stroke-width="2.2" />
+                  </div>
+                  <span class="text-[12px] flex-1 truncate leading-tight">{{ category.name }}</span>
+                  <span
+                    v-if="category.count !== undefined && category.count !== null"
+                    class="text-[9.5px] px-1.5 py-0.5 rounded-full font-bold transition-colors"
+                    :class="[
+                      isCategoryActive(category)
+                        ? 'bg-white/25 text-white'
+                        : 'bg-slate-200/80 dark:bg-white/10 text-slate-600 dark:text-slate-300',
+                    ]"
+                  >
+                    {{ category.count }}
+                  </span>
+                </button>
+              </div>
+
+              <!-- Card Footer: Room & Guest Info -->
+              <div
+                v-if="guestName || currentRoom"
+                class="pt-2 border-t border-slate-100 dark:border-white/10 flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 shrink-0"
+              >
+                <div class="flex items-center gap-1.5 truncate">
+                  <User class="w-3.5 h-3.5 text-[#c29353]" />
+                  <span class="truncate font-semibold text-slate-700 dark:text-slate-300">{{ guestName }}</span>
+                </div>
+                <span v-if="currentRoom" class="font-bold text-[#c29353] shrink-0">
+                  {{ languageStore.t('room', 'Room') }} {{ currentRoom }}
                 </span>
-              </button>
-            </div>
-          </div>
+              </div>
+            </aside>
+          </Transition>
         </div>
       </Transition>
     </Teleport>
