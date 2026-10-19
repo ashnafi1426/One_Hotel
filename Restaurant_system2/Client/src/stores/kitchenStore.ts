@@ -87,7 +87,6 @@ export const useKitchenStore = defineStore('kitchen', () => {
     try {
       const updatedOrder = await action()
       updateOrder(updatedOrder)
-      syncStatistics()
       return updatedOrder
     } catch (err: any) {
       console.error(`[kitchenStore] ${fallbackMsg}:`, err)
@@ -126,7 +125,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
     kitchenService
       .getStatistics()
       .then((stats) => {
-        if (stats) statistics.value = stats
+        if (stats) statisticsFromApi.value = stats
       })
       .catch(() => {})
   }
@@ -135,66 +134,69 @@ export const useKitchenStore = defineStore('kitchen', () => {
     const index = orders.value.findIndex((order) => order.id === updatedOrder.id)
 
     if (index !== -1) {
-      orders.value[index] = updatedOrder
+      orders.value.splice(index, 1, updatedOrder)
     } else {
-      orders.value.unshift(updatedOrder)
+      orders.value = [updatedOrder, ...orders.value]
     }
   }
 
   function receiveOrderUpdate(data: any) {
     console.log('[kitchenStore] ? Received order update via WebSocket:', data)
     
-    // Extract order ID - backend sends 'id' field in broadcast
     const orderId = data.id || data.order_id
     if (!orderId) {
-      console.warn('[kitchenStore] ? No order id in WebSocket data, doing full refresh')
-      console.log('[kitchenStore] Data received:', data)
+      console.warn('[kitchenStore] ? No order ID in WebSocket data, doing full refresh')
       fetchDashboard()
       return
     }
     
-    console.log('[kitchenStore] Processing update for order:', orderId)
+    console.log('[kitchenStore] ?? Processing update for order:', orderId)
     
-    // If backend sends full order data in 'order' field, use it
-    // Otherwise, we need to fetch full data to avoid partial updates
     if (data.order && typeof data.order === 'object') {
-      // Use the full order object from backend
       const fullOrder = data.order as KitchenOrder
-      console.log('[kitchenStore] ? Full order data received from WebSocket')
+      
+      console.log('[kitchenStore] ?? Order data:', {
+        id: fullOrder.id,
+        order_number: fullOrder.order_number,
+        status: fullOrder.status,
+        room: fullOrder.room?.room_number,
+        table: fullOrder.table?.table_number,
+        guest: fullOrder.guest?.full_name,
+        items: fullOrder.items?.length || 0,
+      })
+      
+      if (!fullOrder.room && !fullOrder.table) {
+        console.warn('[kitchenStore] ?? Order missing location:', orderId)
+      }
+      if (!fullOrder.items || fullOrder.items.length === 0) {
+        console.warn('[kitchenStore] ?? Order missing items:', orderId)
+      }
       
       const existingIndex = orders.value.findIndex((o) => o.id === orderId)
+      
       if (existingIndex !== -1) {
-        // Replace the entire order to ensure all fields are updated
-        orders.value[existingIndex] = fullOrder
+        orders.value.splice(existingIndex, 1, fullOrder)
         console.log('[kitchenStore] ? Order updated:', orderId, '?', fullOrder.status)
       } else {
-        // New order - add it to the list
-        orders.value.unshift(fullOrder)
+        orders.value = [fullOrder, ...orders.value]
         console.log('[kitchenStore] ? New order added:', orderId, '?', fullOrder.status)
       }
     } else {
-      // Backend only sent partial data (status change) - do full refresh to be safe
       console.log('[kitchenStore] ?? Partial data received, doing full refresh')
       fetchDashboard()
       return
     }
     
-    // Always sync statistics after update
-    syncStatistics()
+    console.log('[kitchenStore] ?? Statistics will auto-compute')
   }
 
-  /**
-   * Subscribe to real-time kitchen order updates via WebSocket
-   */
   function subscribeToUpdates() {
     console.log('[kitchenStore] Subscribing to WebSocket updates')
 
-    // Unsubscribe from previous subscription if it exists
     if (unsubscribe) {
       unsubscribe()
     }
 
-    // Subscribe to kitchen order updates and capture the unsubscribe function
     unsubscribe = echoService.subscribeToKitchenOrderUpdates(
       (data: any) => {
         receiveOrderUpdate(data)
@@ -205,9 +207,6 @@ export const useKitchenStore = defineStore('kitchen', () => {
     )
   }
 
-  /**
-   * Unsubscribe from WebSocket updates
-   */
   function unsubscribeFromUpdates() {
     console.log('[kitchenStore] Unsubscribing from WebSocket updates')
     if (unsubscribe) {
@@ -218,31 +217,20 @@ export const useKitchenStore = defineStore('kitchen', () => {
 
   function clearStore() {
     orders.value = []
-
     statisticsFromApi.value = null
-
     error.value = null
-
     loading.value = false
-
     actionLoading.value = null
-
     unsubscribeFromUpdates()
   }
 
   return {
     orders,
-
     statistics,
-
     loading,
-
     actionLoading,
-
     error,
-
     pendingOrders,
-
     preparingOrders,
     readyOrders,
     completedOrders,
