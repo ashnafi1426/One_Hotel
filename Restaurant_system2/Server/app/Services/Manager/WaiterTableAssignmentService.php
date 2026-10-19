@@ -147,7 +147,17 @@ class WaiterTableAssignmentService
                             'shift_id' => $assignmentData['shift_id'] ?? $existing->shift_id,
                             'priority' => $assignmentData['priority'] ?? $existing->priority ?? WaiterTableAssignment::PRIORITY_PRIMARY,
                         ]);
-                        $existing->load(['waiter.user', 'table', 'shift', 'assignedByUser']);
+                        try {
+                            $existing->load(['waiter.user', 'table', 'shift']);
+                            if ($existing->assigned_by) {
+                                $existing->load('assignedByUser');
+                            }
+                        } catch (\Exception $loadEx) {
+                            Log::warning('Failed to load relations for existing assignment', [
+                                'assignment_id' => $existing->id,
+                                'error' => $loadEx->getMessage()
+                            ]);
+                        }
                         $created[] = $existing;
                         continue;
                     }
@@ -168,7 +178,17 @@ class WaiterTableAssignmentService
 
                     $assignment = WaiterTableAssignment::create($createPayload);
 
-                    $assignment->load(['waiter.user', 'table', 'shift', 'assignedByUser']);
+                    try {
+                        $assignment->load(['waiter.user', 'table', 'shift']);
+                        if ($assignment->assigned_by) {
+                            $assignment->load('assignedByUser');
+                        }
+                    } catch (\Exception $loadEx) {
+                        Log::warning('Failed to load relations for new assignment', [
+                            'assignment_id' => $assignment->id,
+                            'error' => $loadEx->getMessage()
+                        ]);
+                    }
                     $created[] = $assignment;
 
                     Log::info('Table assignment created', [
