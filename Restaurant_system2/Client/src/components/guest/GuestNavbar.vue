@@ -126,12 +126,9 @@ onUnmounted(() => {
         : 'shadow-none',
     ]"
   >
-    <!-- Top signature gold accent hairline -->
     <div
       class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#9A7418] dark:via-[#D6A94F] to-transparent opacity-80"
     />
-
-    <!-- Fixed 76px navbar height across all pages and viewports to prevent layout jump -->
     <div
       class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[76px] flex items-center justify-between"
     >
