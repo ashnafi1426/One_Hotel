@@ -164,7 +164,11 @@ class WaiterTableAssignmentService
 
                     $resolvedShiftId = !empty($assignmentData['shift_id'])
                         ? $assignmentData['shift_id']
-                        : HotelShift::where('is_active', true)->value('id');
+                        : (HotelShift::where('is_active', true)->value('id') ?? null);
+                    
+                    if (!$resolvedShiftId) {
+                        Log::warning('No active shift found for table assignment');
+                    }
 
                     $createPayload = [
                         'waiter_id' => $assignmentData['waiter_id'],
@@ -215,7 +219,7 @@ class WaiterTableAssignmentService
 
             if (count($created) === 0 && count($errors) > 0) {
                 DB::rollBack();
-                throw new \Exception('No assignments were created');
+                throw new \Exception('No assignments were created. Errors: ' . json_encode(\));
             }
 
             DB::commit();
