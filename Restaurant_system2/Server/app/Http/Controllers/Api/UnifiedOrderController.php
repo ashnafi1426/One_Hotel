@@ -31,12 +31,14 @@ class UnifiedOrderController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         } catch (Throwable $e) {
-            \Log::error('[UNIFIED ORDER] Error creating order: ' . $e->getMessage());
+            \Log::error('[UNIFIED ORDER] Error creating order: ' . $e->getMessage() . ' at ' . $e->getFile() . ':' . $e->getLine(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
 
             return response()->json([
                 'success' => false,
                 'error' => 'Server error',
-                'message' => 'Unable to create order.',
+                'message' => config('app.debug') ? $e->getMessage() : 'Unable to create order.',
             ], 500);
         }
     }

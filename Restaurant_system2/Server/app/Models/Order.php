@@ -62,34 +62,40 @@ class Order extends Model
 
     public static function generateOrderNumber(?string $hotelId = null): string
     {
-        // Use database-level locking to prevent race conditions when generating order numbers
-        return \DB::transaction(function () {
-            $datePrefix = 'ORD-' . now()->format('Ymd');
-            
-            // Use lockForUpdate() to prevent concurrent access
-            $latest = static::withoutGlobalScopes()
-                ->where('order_number', 'like', "{$datePrefix}-%")
-                ->orderByDesc('order_number')
-                ->lockForUpdate()
-                ->value('order_number');
+        $datePrefix = 'ORD-' . now()->format('Ymd');
 
-            $nextSeq = 1;
-            if ($latest && preg_match('/-(\d{4})$/', $latest, $matches)) {
-                $nextSeq = ((int) $matches[1]) + 1;
-            }
+        // Fast non-locking read of the latest order number for today
+        $latest = static::withoutGlobalScopes()
+            ->where('order_number', 'like', "{$datePrefix}-%")
+            ->orderByDesc('order_number')
+            ->value('order_number');
 
-            $orderNumber = sprintf('%s-%04d', $datePrefix, $nextSeq);
-            
-            // Double-check uniqueness before returning
-            $retries = 0;
-            while (static::withoutGlobalScopes()->where('order_number', $orderNumber)->exists() && $retries < 5) {
+        $nextSeq = 1;
+        if ($latest && preg_match('/-(\d{4,})/', $latest, $matches)) {
+            $nextSeq = ((int) $matches[1]) + 1;
+        }
+
+        $orderNumber = sprintf('%s-%04d', $datePrefix, $nextSeq);
+
+        // Under high concurrency, verify uniqueness and apply random entropy if a collision occurs
+        $attempts = 0;
+        while (static::withoutGlobalScopes()->where('order_number', $orderNumber)->exists()) {
+            $attempts++;
+            if ($attempts <= 3) {
                 $nextSeq++;
                 $orderNumber = sprintf('%s-%04d', $datePrefix, $nextSeq);
-                $retries++;
+            } else {
+                // High concurrency collision protection: add random entropy suffix
+                $orderNumber = sprintf('%s-%04d-%s', $datePrefix, $nextSeq, strtoupper(\Illuminate\Support\Str::random(3)));
             }
-            
-            return $orderNumber;
-        });
+
+            if ($attempts > 10) {
+                $orderNumber = sprintf('%s-%s-%s', $datePrefix, now()->format('His'), strtoupper(\Illuminate\Support\Str::random(4)));
+                break;
+            }
+        }
+
+        return $orderNumber;
     }
 
     public function reservation()
