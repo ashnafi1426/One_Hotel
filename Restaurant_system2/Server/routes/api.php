@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ReservationPaymentController;
 use App\Http\Controllers\Api\GuestOrderPaymentController;
 use App\Http\Controllers\Api\WalkInOrderPaymentController;
+use App\Http\Controllers\Api\MigrationController;
 use App\Http\Controllers\Api\Cashier\CashierDashboardController;
 use App\Http\Controllers\Api\Cashier\CashierPaymentController;
 use App\Http\Controllers\Api\Cashier\CashierReportController;
@@ -193,7 +194,12 @@ Route::prefix('guest')->group(function () {
     Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 });
 
+use App\Http\Controllers\Api\MigrationController;
+
 // Broadcasting Auth Route - Required for Laravel Echo WebSocket authorization
+// Migration endpoint (temporary - for fixing shift_id column)
+Route::get('/run-migrations', [MigrationController::class, 'runMigrations']);
+
 Route::post('/broadcasting/auth', [\App\Http\Controllers\Api\BroadcastAuthController::class, 'authenticate'])->middleware('api');
 
 Route::prefix('guest/bookings')->middleware('qr.token')->group(function () {
