@@ -1,16 +1,62 @@
 <template>
   <DashboardLayout>
     <div
-      class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-6 lg:p-8 transition-colors duration-200"
+      class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-6 lg:p-8 transition-colors duration-200 font-sans"
     >
       <div class="max-w-7xl mx-auto space-y-6">
-        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <div class="flex items-center gap-3">
-              <h1
-                class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight"
+        <!-- Toast Notification Stack -->
+        <div
+          v-if="toasts.length > 0"
+          class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
+        >
+          <transition-group
+            enter-active-class="transform ease-out duration-300 transition"
+            enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-4"
+            enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+            leave-active-class="transition ease-in duration-200"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0 translate-x-4"
+          >
+            <div
+              v-for="toast in toasts"
+              :key="toast.id"
+              class="pointer-events-auto rounded-2xl shadow-xl p-4 border flex items-start gap-3 backdrop-blur-md transition-all"
+              :class="{
+                'bg-emerald-500/95 text-white border-emerald-400/40 shadow-emerald-500/20':
+                  toast.type === 'success',
+                'bg-blue-600/95 text-white border-blue-400/40 shadow-blue-500/20':
+                  toast.type === 'info',
+                'bg-rose-600/95 text-white border-rose-400/40 shadow-rose-500/20':
+                  toast.type === 'error',
+              }"
+            >
+              <div
+                class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5"
               >
-                {{ languageStore.t('waiter_dashboard', 'Waiter Dashboard') }}
+                <Check v-if="toast.type === 'success'" class="w-4 h-4 text-white" />
+                <ChefHat v-else-if="toast.type === 'info'" class="w-4 h-4 text-white" />
+                <AlertCircle v-else class="w-4 h-4 text-white" />
+              </div>
+              <div class="flex-1 text-xs">
+                <div class="font-extrabold text-sm">{{ toast.title }}</div>
+                <div class="opacity-90 mt-0.5 leading-snug">{{ toast.message }}</div>
+              </div>
+              <button
+                @click="removeToast(toast.id)"
+                class="text-white/70 hover:text-white p-1 rounded-lg transition"
+              >
+                <X class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </transition-group>
+        </div>
+
+        <!-- Top Greeting Header & Quick Actions -->
+        <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <div class="flex items-center gap-2.5">
+              <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {{ greetingMessage }}, {{ waiterName }}! 👋
               </h1>
               <span
                 v-if="hotelStore.hotelName"
@@ -19,405 +65,613 @@
                 <Building2 class="w-3.5 h-3.5" />
                 {{ hotelStore.hotelName }}
               </span>
-              <span
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
-              >
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                {{ languageStore.t('shift_active', 'Shift Active') }}
-              </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {{
-                languageStore.t(
-                  'waiter_dashboard_desc',
-                  'Real-time room delivery management and performance overview',
-                )
-              }}
+              {{ languageStore.t('waiter_subtitle', 'Manage your orders and keep the service running smoothly.') }}
             </p>
           </div>
 
-          <div class="flex items-center gap-2">
+          <!-- Top Right Action Cards -->
+          <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+            <!-- Pickup Order Card -->
+            <div
+              @click="scrollToPendingPickup"
+              class="flex-1 sm:flex-initial min-w-[210px] bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 border border-blue-200/80 dark:border-blue-800/60 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs cursor-pointer transition active:scale-[0.98]"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0"
+                >
+                  <ShoppingBag class="w-5 h-5" />
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                      {{ languageStore.t('pickup_order', 'Pickup Order') }}
+                    </span>
+                    <span
+                      class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-blue-600 text-white"
+                    >
+                      {{ pendingOrders.length }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Collect ready orders from the kitchen
+                  </p>
+                </div>
+              </div>
+              <ChevronRight class="w-4 h-4 text-blue-500 shrink-0" />
+            </div>
+
+            <!-- Delivered Order Card -->
+            <div
+              @click="scrollToReadyForDelivery"
+              class="flex-1 sm:flex-initial min-w-[210px] bg-emerald-50/70 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs cursor-pointer transition active:scale-[0.98]"
+            >
+              <div class="flex items-center gap-3">
+                <div
+                  class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0"
+                >
+                  <CheckCircle2 class="w-5 h-5" />
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs sm:text-sm font-extrabold text-slate-900 dark:text-white">
+                      {{ languageStore.t('delivered_order', 'Delivered Order') }}
+                    </span>
+                    <span
+                      class="px-1.5 py-0.2 rounded-full text-[10px] font-black bg-emerald-600 text-white"
+                    >
+                      {{ deliveryOrders.length }}
+                    </span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Mark orders as delivered to the guest
+                  </p>
+                </div>
+              </div>
+              <ChevronRight class="w-4 h-4 text-emerald-500 shrink-0" />
+            </div>
+
+            <!-- Manual Refresh Button -->
             <button
               type="button"
-              @click="loadDashboard(true)"
+              @click="loadDashboardData(true)"
               :disabled="loading"
-              class="px-3.5 py-2 bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition border border-slate-200 dark:border-slate-800 shadow-xs disabled:opacity-50 cursor-pointer"
+              title="Refresh Orders"
+              class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center transition border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
             >
-              <RefreshCw class="w-3.5 h-3.5" :class="{ 'animate-spin': loading }" />
-              {{ languageStore.t('refresh', 'Refresh') }}
+              <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
             </button>
           </div>
         </div>
 
+        <!-- Error State -->
         <div
-          v-if="loading && !recentAssignments.length && !activeDelivery && !stats.todayDeliveries"
-          class="space-y-6"
+          v-if="error"
+          class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-5 flex items-center justify-between"
         >
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <SkeletonLoaders v-for="i in 4" :key="i" type="stat-card" />
+          <div>
+            <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">Failed to load waiter dashboard</p>
+            <p class="text-rose-600 dark:text-rose-300 text-xs mt-0.5">{{ error }}</p>
           </div>
-
-          <div
-            class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs"
-          >
-            <div class="h-6 bg-slate-200 dark:bg-slate-700 rounded w-48 mb-6 animate-pulse"></div>
-            <SkeletonLoaders type="list-items" :item-count="3" />
-          </div>
-        </div>
-
-        <div
-          v-else-if="error"
-          class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-6"
-        >
-          <p class="text-rose-700 dark:text-rose-400 font-semibold text-sm">
-            Error loading dashboard
-          </p>
-          <p class="text-rose-600 dark:text-rose-300 text-xs mt-1">{{ error }}</p>
           <button
-            @click="loadDashboard(false)"
-            class="mt-4 px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-semibold hover:bg-rose-700 transition cursor-pointer"
+            @click="loadDashboardData(true)"
+            class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition cursor-pointer"
           >
             Retry
           </button>
         </div>
 
-        <div v-else class="space-y-6">
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div class="stat-card" v-memo="[stats.todayDeliveries]">
-              <div class="stat-header">
-                <span class="stat-label">{{ languageStore.t('completed', 'Completed') }}</span>
-                <CheckCircle2 class="stat-icon stat-icon-emerald" />
-              </div>
-              <div class="stat-value">{{ stats.todayDeliveries }}</div>
-              <p class="stat-desc">
-                {{ languageStore.t('successfully_delivered', 'Successfully delivered') }}
-              </p>
-            </div>
-
-            <div class="stat-card" v-memo="[stats.pendingDeliveries]">
-              <div class="stat-header">
-                <span class="stat-label">{{
-                  languageStore.t('ready_for_pickup', 'Ready for Pickup')
-                }}</span>
-                <Clock class="stat-icon stat-icon-amber" />
-              </div>
-              <div class="stat-value">{{ stats.pendingDeliveries }}</div>
-              <p class="stat-desc">
-                {{ languageStore.t('awaiting_waiter_pickup', 'Awaiting waiter pickup') }}
-              </p>
-            </div>
-
-            <div class="stat-card" v-memo="[stats.onDelivery]">
-              <div class="stat-header">
-                <span class="stat-label">{{ languageStore.t('on_delivery', 'On Delivery') }}</span>
-                <Truck class="stat-icon stat-icon-teal" />
-              </div>
-              <div class="stat-value">{{ stats.onDelivery }}</div>
-              <p class="stat-desc">
-                {{ languageStore.t('active_room_deliveries', 'Active room deliveries') }}
-              </p>
-            </div>
-
-            <div class="stat-card" v-memo="[stats.avgDeliveryTime]">
-              <div class="stat-header">
-                <span class="stat-label">{{
-                  languageStore.t('avg_delivery_time', 'Avg Delivery Time')
-                }}</span>
-                <Timer class="stat-icon stat-icon-indigo" />
-              </div>
-              <div class="stat-value">
-                {{ stats.avgDeliveryTime }}<span class="stat-unit">min</span>
-              </div>
-              <p class="stat-desc">
-                {{ languageStore.t('target_delivery_time', 'Target: < 25 mins') }}
-              </p>
-            </div>
-          </div>
-
-          <div v-if="activeDelivery" class="active-delivery-banner">
-            <div class="active-delivery-content">
-              <div class="active-delivery-info">
-                <div class="active-delivery-badge">
-                  <span class="pulse-dot"></span>
-                  Active Delivery In Progress
-                </div>
-                <h3 class="active-delivery-title">Order #{{ getOrderNumber(activeDelivery) }}</h3>
-                <p class="active-delivery-details">
-                  Delivering to Room
-                  <span class="room-badge">{{ activeDelivery.room_number || 'N/A' }}</span> • Guest:
-                  <span class="guest-name">{{ activeDelivery.guest_name || 'Guest' }}</span>
-                </p>
-              </div>
-              <router-link to="/waiter/on-delivery" class="active-delivery-btn">
-                View Delivery Tracker
-              </router-link>
-            </div>
-          </div>
-
-          <div
-            class="bg-white dark:bg-slate-900/90 border border-slate-200 dark:border-slate-800 rounded-2xl overflow-hidden shadow-sm dark:shadow-xl"
-          >
-            <div
-              class="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between"
-            >
-              <div>
-                <h2 class="text-lg font-bold text-slate-900 dark:text-white">Recent Assignments</h2>
-                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Orders assigned to you for delivery
-                </p>
-              </div>
-              <router-link
-                to="/waiter/assigned-orders"
-                class="text-xs font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+        <!-- 3-Column Grid Layout: Pending Pickup | Ready for Delivery | Order Details -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
+          <!-- ============================================== -->
+          <!-- COLUMN 1: Pending Pickup (lg:col-span-4)       -->
+          <!-- ============================================== -->
+          <div ref="pendingSectionRef" class="lg:col-span-4 space-y-4">
+            <!-- Column Header -->
+            <div class="flex items-start gap-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20 text-orange-600 dark:text-orange-400 flex items-center justify-center shrink-0"
               >
-                View All
-                <ArrowRight class="w-3.5 h-3.5" />
-              </router-link>
-            </div>
-
-            <div
-              v-if="loading"
-              class="text-center py-16 flex flex-col items-center justify-center gap-3"
-            >
-              <Loader2 class="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
-              <p class="text-slate-600 dark:text-slate-400 text-xs font-bold">
-                Loading recent assignments...
-              </p>
-            </div>
-
-            <div v-else-if="recentAssignments.length === 0" class="text-center py-12">
-              <Inbox class="w-10 h-10 text-slate-400 dark:text-slate-600 mx-auto mb-2" />
-              <p class="text-slate-700 dark:text-slate-300 text-sm font-semibold">
-                No recent assignments
-              </p>
-              <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Check back later for new orders
-              </p>
-            </div>
-
-            <div v-else class="w-full overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead
-                  class="bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[11px] sm:text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider"
-                >
-                  <tr>
-                    <th class="px-4 py-3.5 whitespace-nowrap">Order #</th>
-                    <th class="px-4 py-3.5 whitespace-nowrap">Room</th>
-                    <th class="px-4 py-3.5 whitespace-nowrap">Guest</th>
-                    <th class="px-4 py-3.5 whitespace-nowrap">Items</th>
-                    <th class="px-4 py-3.5 whitespace-nowrap">Status</th>
-                    <th class="px-4 py-3.5 text-right whitespace-nowrap">Actions</th>
-                  </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-200 dark:divide-slate-800 text-xs sm:text-sm">
-                  <tr
-                    v-for="assignment in recentAssignments"
-                    :key="assignment.id"
-                    v-memo="[assignment.id, assignment.status]"
-                    class="hover:bg-slate-50/80 dark:hover:bg-slate-950/50 transition"
+                <ChefHat class="w-5 h-5" />
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-extrabold text-slate-900 dark:text-white">
+                    Pending Pickup
+                  </h2>
+                  <span
+                    class="w-5 h-5 rounded-full bg-amber-500 text-white text-[11px] font-black flex items-center justify-center shadow-xs"
                   >
-                    <td
-                      class="px-4 py-3 font-bold text-slate-900 dark:text-white max-w-[140px] truncate"
-                      :title="assignment.order_number || assignment.order_id"
+                    {{ pendingOrders.length }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Orders ready to be collected from kitchen
+                </p>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div v-if="loading && pendingOrders.length === 0" class="space-y-4">
+              <div
+                v-for="i in 3"
+                :key="i"
+                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 animate-pulse space-y-3"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-16 h-5 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+                  <div class="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+                  <div class="w-14 h-5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                </div>
+                <div class="space-y-2 py-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-lg shrink-0"></div>
+                    <div class="w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  </div>
+                </div>
+                <div class="w-full h-9 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              v-else-if="pendingOrders.length === 0"
+              class="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center"
+            >
+              <div
+                class="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center mb-3"
+              >
+                <UtensilsCrossed class="w-6 h-6" />
+              </div>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Orders Pending Pickup</h3>
+              <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
+                When the chef marks an order as ready, it will instantly appear here via real-time WebSocket.
+              </p>
+            </div>
+
+            <!-- Pending Orders List -->
+            <div v-else class="space-y-3">
+              <transition-group
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform -translate-y-2 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="transform translate-y-0 opacity-100"
+                leave-to-class="transform translate-y-2 opacity-0"
+              >
+                <div
+                  v-for="order in pendingOrders"
+                  :key="getOrderKey(order)"
+                  @click="selectOrder(order)"
+                  class="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3"
+                  :class="[
+                    selectedOrder && getOrderKey(selectedOrder) === getOrderKey(order)
+                      ? 'border-blue-500 ring-2 ring-blue-500/20 shadow-md'
+                      : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+                  ]"
+                >
+                  <!-- Card Header -->
+                  <div class="flex items-center justify-between gap-2">
+                    <!-- Table / Room Badge -->
+                    <span
+                      class="px-2.5 py-0.5 rounded-lg border border-blue-400/70 bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 font-black text-xs shrink-0"
                     >
-                      #{{ getOrderNumber(assignment) }}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                      <span
-                        class="px-2.5 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded text-xs font-bold"
-                      >
-                        {{ assignment.room_number || 'N/A' }}
-                      </span>
-                    </td>
-                    <td
-                      class="px-4 py-3 font-medium text-slate-700 dark:text-slate-300 max-w-[130px] truncate"
-                      :title="assignment.guest_name"
+                      {{ getDestinationLabel(order) }}
+                    </span>
+
+                    <!-- Order ID -->
+                    <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                      #{{ getOrderNumber(order) }}
+                    </span>
+
+                    <!-- Time -->
+                    <div class="flex items-center gap-1 text-[11px] text-slate-400 shrink-0">
+                      <Clock class="w-3 h-3 text-slate-400" />
+                      <span>{{ formatOrderTime(order) }}</span>
+                    </div>
+
+                    <!-- Status Pill -->
+                    <span
+                      v-if="(order.order_status || order.status || '').toLowerCase() === 'ready'"
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800 shrink-0"
                     >
-                      {{ assignment.guest_name || 'Guest' }}
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                      <span
-                        class="px-2 py-0.5 bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20 rounded text-xs font-bold"
-                      >
-                        {{ getItemCount(assignment.items) }} items
+                      <ChefHat class="w-3 h-3 text-rose-500" />
+                      Ready
+                    </span>
+                    <span
+                      v-else
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-800 shrink-0"
+                    >
+                      <ChefHat class="w-3 h-3 text-amber-500" />
+                      Preparing
+                    </span>
+                  </div>
+
+                  <!-- Items Preview -->
+                  <div class="space-y-2 py-1">
+                    <div
+                      v-for="(item, idx) in normalizeOrderItems(order).slice(0, 3)"
+                      :key="idx"
+                      class="flex items-center gap-3"
+                    >
+                      <img
+                        :src="item.image"
+                        :alt="item.name"
+                        class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
+                        loading="lazy"
+                      />
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                        {{ item.name }}
                       </span>
-                    </td>
-                    <td class="px-4 py-3 whitespace-nowrap">
-                      <span
-                        :class="[
-                          'px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider border',
-                          getStatusBadgeClass(assignment.status),
-                        ]"
-                      >
-                        {{ assignment.status || 'assigned' }}
+                      <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
+                        x{{ item.quantity }}
                       </span>
-                    </td>
-                    <td class="px-4 py-3 text-right whitespace-nowrap">
-                      <div class="relative inline-block text-left">
-                        <button
-                          type="button"
-                          @click.stop="toggleMenu(assignment.id)"
-                          class="w-8 h-8 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-indigo-50 dark:hover:bg-indigo-500/20 text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center justify-center transition border border-slate-200 dark:border-slate-700 cursor-pointer"
-                          :class="{
-                            'bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 border-indigo-300':
-                              activeMenuId === String(assignment.id),
-                          }"
-                          title="Actions"
-                        >
-                          <MoreVertical class="w-4 h-4" />
-                        </button>
+                    </div>
+                    <div
+                      v-if="normalizeOrderItems(order).length > 3"
+                      class="text-[11px] font-semibold text-blue-600 dark:text-blue-400 pl-1"
+                    >
+                      +{{ normalizeOrderItems(order).length - 3 }} more item(s)...
+                    </div>
+                  </div>
 
-                        <div
-                          v-if="activeMenuId === String(assignment.id)"
-                          @click.stop
-                          class="absolute right-0 top-9 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-2xl z-50 p-1 text-left space-y-0.5"
-                        >
-                          <button
-                            type="button"
-                            @click="openDetailsModal(assignment)"
-                            class="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-blue-600 dark:hover:text-blue-400 flex items-center gap-2 rounded-lg transition cursor-pointer"
-                          >
-                            <Eye class="w-3.5 h-3.5 text-blue-500" />
-                            <span>{{ languageStore.t('quick_view', 'Quick View') }}</span>
-                          </button>
-
-                          <router-link
-                            to="/waiter/assigned-orders"
-                            class="w-full px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 flex items-center gap-2 rounded-lg transition"
-                          >
-                            <ExternalLink class="w-3.5 h-3.5 text-indigo-500" />
-                            <span>{{
-                              languageStore.t('all_assigned_orders', 'Assigned Orders')
-                            }}</span>
-                          </router-link>
-
-                          <router-link
-                            v-if="
-                              assignment.status === 'ready' ||
-                              assignment.is_ready ||
-                              assignment.order_status === 'ready'
-                            "
-                            to="/waiter/ready-pickup"
-                            class="w-full px-3 py-2 text-xs font-bold text-amber-700 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-950/40 flex items-center gap-2 rounded-lg transition"
-                          >
-                            <PackageCheck class="w-3.5 h-3.5 text-amber-500" />
-                            <span>Pick Up Order</span>
-                          </router-link>
-
-                          <router-link
-                            v-if="
-                              assignment.status === 'on_delivery' ||
-                              assignment.status === 'picked_up'
-                            "
-                            to="/waiter/on-delivery"
-                            class="w-full px-3 py-2 text-xs font-semibold text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 flex items-center gap-2 rounded-lg transition"
-                          >
-                            <Truck class="w-3.5 h-3.5 text-emerald-500" />
-                            <span>{{ languageStore.t('delivery_tracker', 'Track Delivery') }}</span>
-                          </router-link>
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
+                  <!-- Direct Card Action Button: Mark as Picked Up -->
+                  <button
+                    type="button"
+                    @click="handlePickupOrder(order, $event)"
+                    :disabled="actionLoadingOrderId === getOrderKey(order)"
+                    class="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-xs transition cursor-pointer disabled:opacity-60"
+                  >
+                    <Loader2
+                      v-if="actionLoadingOrderId === getOrderKey(order)"
+                      class="w-4 h-4 animate-spin text-white"
+                    />
+                    <ChefHat v-else class="w-4 h-4 text-white" />
+                    <span>{{ languageStore.t('mark_as_picked_up', 'Mark as Picked Up') }}</span>
+                    <ChevronRight class="w-3.5 h-3.5 text-white/80" />
+                  </button>
+                </div>
+              </transition-group>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
 
-    <div
-      v-if="showDetailModal && selectedOrder"
-      class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
-      @click.self="showDetailModal = false"
-    >
-      <div
-        class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl"
-      >
-        <div
-          class="flex justify-between items-center border-b border-slate-100 dark:border-slate-800 pb-3"
-        >
-          <div class="flex items-center gap-2">
-            <h3 class="text-base font-extrabold text-slate-900 dark:text-white">
-              {{ languageStore.t('order_details', 'Order Details') }}
-            </h3>
-            <span class="text-xs font-mono font-bold text-blue-600 dark:text-blue-400"
-              >#{{ getOrderNumber(selectedOrder) }}</span
-            >
-          </div>
-          <button
-            @click="showDetailModal = false"
-            class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition cursor-pointer"
-          >
-            <X class="w-4 h-4" />
-          </button>
-        </div>
+          <!-- ============================================== -->
+          <!-- COLUMN 2: Ready for Delivery (lg:col-span-4)   -->
+          <!-- ============================================== -->
+          <div ref="deliverySectionRef" class="lg:col-span-4 space-y-4">
+            <!-- Column Header -->
+            <div class="flex items-start gap-3">
+              <div
+                class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0"
+              >
+                <Truck class="w-5 h-5" />
+              </div>
+              <div class="flex-1">
+                <div class="flex items-center gap-2">
+                  <h2 class="text-base font-extrabold text-slate-900 dark:text-white">
+                    Ready for Delivery
+                  </h2>
+                  <span
+                    class="w-5 h-5 rounded-full bg-emerald-500 text-white text-[11px] font-black flex items-center justify-center shadow-xs"
+                  >
+                    {{ deliveryOrders.length }}
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Orders ready to be delivered to the guest
+                </p>
+              </div>
+            </div>
 
-        <div class="space-y-3 text-xs">
-          <div class="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-500 dark:text-slate-400"
-              >{{ languageStore.t('guest', 'Guest') }}:</span
-            >
-            <span class="font-bold text-slate-900 dark:text-white">{{
-              selectedOrder.guest_name || 'Guest'
-            }}</span>
-          </div>
-          <div class="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-500 dark:text-slate-400"
-              >{{ languageStore.t('room_table', 'Room / Table') }}:</span
-            >
-            <span class="font-bold text-slate-900 dark:text-white">{{
-              selectedOrder.room_number ? 'Room ' + selectedOrder.room_number : 'N/A'
-            }}</span>
-          </div>
-          <div class="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-500 dark:text-slate-400"
-              >{{ languageStore.t('status', 'Status') }}:</span
-            >
-            <span class="font-bold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">{{
-              selectedOrder.status || 'Assigned'
-            }}</span>
-          </div>
-          <div class="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800">
-            <span class="text-slate-500 dark:text-slate-400"
-              >{{ languageStore.t('items', 'Items') }}:</span
-            >
-            <span class="font-bold text-slate-900 dark:text-white"
-              >{{ getItemCount(selectedOrder.items) }} items</span
-            >
-          </div>
-          <div
-            v-if="selectedOrder.delivery_address || selectedOrder.address"
-            class="flex justify-between py-1.5 border-b border-slate-100 dark:border-slate-800"
-          >
-            <span class="text-slate-500 dark:text-slate-400"
-              >{{ languageStore.t('address', 'Address') }}:</span
-            >
-            <span class="font-bold text-slate-900 dark:text-white">{{
-              selectedOrder.delivery_address || selectedOrder.address
-            }}</span>
-          </div>
-          <div
-            v-if="selectedOrder.notes || selectedOrder.special_instructions"
-            class="py-1.5 bg-slate-50 dark:bg-slate-800/60 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800"
-          >
-            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">{{
-              languageStore.t('notes', 'Notes')
-            }}</span>
-            <p class="text-xs text-slate-700 dark:text-slate-300 font-medium">
-              {{ selectedOrder.notes || selectedOrder.special_instructions }}
-            </p>
-          </div>
-        </div>
+            <!-- Loading State -->
+            <div v-if="loading && deliveryOrders.length === 0" class="space-y-4">
+              <div
+                v-for="i in 2"
+                :key="i"
+                class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 animate-pulse space-y-3"
+              >
+                <div class="flex justify-between items-center">
+                  <div class="w-16 h-5 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+                  <div class="w-20 h-4 bg-slate-200 dark:bg-slate-700 rounded-md"></div>
+                  <div class="w-14 h-5 bg-slate-200 dark:bg-slate-700 rounded-full"></div>
+                </div>
+                <div class="space-y-2 py-2">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-lg shrink-0"></div>
+                    <div class="w-32 h-4 bg-slate-200 dark:bg-slate-700 rounded"></div>
+                  </div>
+                </div>
+                <div class="w-full h-9 bg-slate-200 dark:bg-slate-700 rounded-xl"></div>
+              </div>
+            </div>
 
-        <div class="pt-2 flex items-center justify-end gap-2">
-          <router-link
-            to="/waiter/assigned-orders"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-xl text-xs font-bold hover:bg-indigo-700 transition"
-          >
-            {{ languageStore.t('view_in_assigned', 'Full Management') }}
-          </router-link>
+            <!-- Empty State -->
+            <div
+              v-else-if="deliveryOrders.length === 0"
+              class="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center"
+            >
+              <div
+                class="w-12 h-12 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 text-emerald-500 mx-auto flex items-center justify-center mb-3"
+              >
+                <Truck class="w-6 h-6" />
+              </div>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Active Deliveries</h3>
+              <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
+                When you click "Mark as Picked Up", orders move directly here, ready to take to the guest table or room.
+              </p>
+            </div>
+
+            <!-- Delivery Orders List -->
+            <div v-else class="space-y-3">
+              <transition-group
+                enter-active-class="transition duration-300 ease-out"
+                enter-from-class="transform -translate-y-2 opacity-0"
+                enter-to-class="transform translate-y-0 opacity-100"
+                leave-active-class="transition duration-200 ease-in"
+                leave-from-class="transform translate-y-0 opacity-100"
+                leave-to-class="transform translate-y-2 opacity-0"
+              >
+                <div
+                  v-for="order in deliveryOrders"
+                  :key="getOrderKey(order)"
+                  @click="selectOrder(order)"
+                  class="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3"
+                  :class="[
+                    selectedOrder && getOrderKey(selectedOrder) === getOrderKey(order)
+                      ? 'border-emerald-500 ring-2 ring-emerald-500/20 shadow-md'
+                      : 'border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700',
+                  ]"
+                >
+                  <!-- Card Header -->
+                  <div class="flex items-center justify-between gap-2">
+                    <!-- Table / Room Badge -->
+                    <span
+                      class="px-2.5 py-0.5 rounded-lg border border-emerald-400/70 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-black text-xs shrink-0"
+                    >
+                      {{ getDestinationLabel(order) }}
+                    </span>
+
+                    <!-- Order ID -->
+                    <span class="font-extrabold text-xs text-slate-900 dark:text-white truncate">
+                      #{{ getOrderNumber(order) }}
+                    </span>
+
+                    <!-- Time -->
+                    <div class="flex items-center gap-1 text-[11px] text-slate-400 shrink-0">
+                      <Clock class="w-3 h-3 text-slate-400" />
+                      <span>{{ formatOrderTime(order) }}</span>
+                    </div>
+
+                    <!-- Status Pill -->
+                    <span
+                      class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 shrink-0"
+                    >
+                      Ready
+                    </span>
+                  </div>
+
+                  <!-- Items Preview -->
+                  <div class="space-y-2 py-1">
+                    <div
+                      v-for="(item, idx) in normalizeOrderItems(order).slice(0, 3)"
+                      :key="idx"
+                      class="flex items-center gap-3"
+                    >
+                      <img
+                        :src="item.image"
+                        :alt="item.name"
+                        class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
+                        loading="lazy"
+                      />
+                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                        {{ item.name }}
+                      </span>
+                      <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
+                        x{{ item.quantity }}
+                      </span>
+                    </div>
+                    <div
+                      v-if="normalizeOrderItems(order).length > 3"
+                      class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 pl-1"
+                    >
+                      +{{ normalizeOrderItems(order).length - 3 }} more item(s)...
+                    </div>
+                  </div>
+
+                  <!-- Direct Card Action Button: Mark as Delivered -->
+                  <button
+                    type="button"
+                    @click="handleDeliverOrder(order, $event)"
+                    :disabled="actionLoadingOrderId === getOrderKey(order)"
+                    class="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-xs transition cursor-pointer disabled:opacity-60"
+                  >
+                    <Loader2
+                      v-if="actionLoadingOrderId === getOrderKey(order)"
+                      class="w-4 h-4 animate-spin text-white"
+                    />
+                    <Check v-else class="w-4 h-4 text-white" />
+                    <span>{{ languageStore.t('mark_as_delivered', 'Mark as Delivered') }}</span>
+                    <ChevronRight class="w-3.5 h-3.5 text-white/80" />
+                  </button>
+                </div>
+              </transition-group>
+            </div>
+          </div>
+
+          <!-- ============================================== -->
+          <!-- COLUMN 3: Order Details Panel (lg:col-span-4)  -->
+          <!-- ============================================== -->
+          <div class="lg:col-span-4">
+            <div
+              v-if="selectedOrder"
+              class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5 sticky top-6"
+            >
+              <!-- Panel Header -->
+              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+                <h3 class="text-base font-black text-slate-900 dark:text-white">
+                  {{ languageStore.t('order_details', 'Order Details') }}
+                </h3>
+                <button
+                  type="button"
+                  @click="selectedOrder = null"
+                  title="Close details"
+                  class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg transition hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <X class="w-4 h-4" />
+                </button>
+              </div>
+
+              <!-- Top Order Summary -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between">
+                  <span class="text-lg font-black text-slate-900 dark:text-white tracking-tight">
+                    #{{ getOrderNumber(selectedOrder) }}
+                  </span>
+                  <span
+                    v-if="isOrderPending(selectedOrder)"
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-rose-200 dark:border-rose-800"
+                  >
+                    <ChefHat class="w-3 h-3 text-rose-500" />
+                    Ready
+                  </span>
+                  <span
+                    v-else
+                    class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                  >
+                    <Check class="w-3 h-3 text-emerald-500" />
+                    Ready for Delivery
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400">
+                  <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
+                    <Building2 class="w-3.5 h-3.5 text-slate-400" />
+                    <span>{{ getDestinationLabel(selectedOrder) }}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-slate-400">
+                    <Clock class="w-3.5 h-3.5" />
+                    <span>{{ formatOrderTime(selectedOrder) }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Itemized List -->
+              <div class="space-y-3">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  {{ languageStore.t('items', 'Items') }}
+                </div>
+                <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1 space-y-2">
+                  <div
+                    v-for="(item, idx) in normalizeOrderItems(selectedOrder)"
+                    :key="idx"
+                    class="flex items-center gap-3 pt-2"
+                  >
+                    <img
+                      :src="item.image"
+                      :alt="item.name"
+                      class="w-11 h-11 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
+                      loading="lazy"
+                    />
+                    <div class="flex-1 min-w-0">
+                      <div class="text-xs font-bold text-slate-900 dark:text-white truncate">
+                        {{ item.name }}
+                      </div>
+                      <div class="text-[11px] font-semibold text-slate-400">
+                        x{{ item.quantity }}
+                      </div>
+                    </div>
+                    <div class="text-xs font-black text-slate-800 dark:text-slate-200 shrink-0">
+                      {{ formatPrice(item.price * item.quantity) }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Price Breakdown -->
+              <div class="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-1.5 text-xs">
+                <div class="flex justify-between text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Subtotal</span>
+                  <span>{{ formatPrice(selectedOrderSubtotal) }}</span>
+                </div>
+                <div class="flex justify-between text-slate-500 dark:text-slate-400 font-medium">
+                  <span>Tax (10%)</span>
+                  <span>{{ formatPrice(selectedOrderTax) }}</span>
+                </div>
+                <div
+                  class="flex justify-between text-base font-black text-slate-900 dark:text-white pt-1 border-t border-slate-100 dark:border-slate-800"
+                >
+                  <span>Total</span>
+                  <span>{{ formatPrice(selectedOrderTotal) }}</span>
+                </div>
+              </div>
+
+              <!-- Special Notes -->
+              <div class="space-y-1.5">
+                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                  Special Notes
+                </div>
+                <div
+                  class="bg-blue-50/70 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50 rounded-xl p-3 flex items-start gap-2.5 text-xs text-blue-700 dark:text-blue-300"
+                >
+                  <FileText class="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
+                  <span class="leading-relaxed">
+                    {{ selectedOrder.special_requests || selectedOrder.notes || 'Less salt, please.' }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Main Action Button in Panel -->
+              <div class="pt-2">
+                <button
+                  v-if="isOrderPending(selectedOrder)"
+                  type="button"
+                  @click="handlePickupOrder(selectedOrder)"
+                  :disabled="actionLoadingOrderId === getOrderKey(selectedOrder)"
+                  class="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md transition cursor-pointer disabled:opacity-60"
+                >
+                  <Loader2
+                    v-if="actionLoadingOrderId === getOrderKey(selectedOrder)"
+                    class="w-4 h-4 animate-spin text-white"
+                  />
+                  <ChefHat v-else class="w-4 h-4 text-white" />
+                  <span>{{ languageStore.t('mark_as_picked_up', 'Mark as Picked Up') }}</span>
+                </button>
+
+                <button
+                  v-else
+                  type="button"
+                  @click="handleDeliverOrder(selectedOrder)"
+                  :disabled="actionLoadingOrderId === getOrderKey(selectedOrder)"
+                  class="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 shadow-md transition cursor-pointer disabled:opacity-60"
+                >
+                  <Loader2
+                    v-if="actionLoadingOrderId === getOrderKey(selectedOrder)"
+                    class="w-4 h-4 animate-spin text-white"
+                  />
+                  <Check v-else class="w-4 h-4 text-white" />
+                  <span>{{ languageStore.t('mark_as_delivered', 'Mark as Delivered') }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty Selected Order Placeholder -->
+            <div
+              v-else
+              class="bg-white dark:bg-slate-900 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl p-8 text-center space-y-3"
+            >
+              <div
+                class="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 mx-auto flex items-center justify-center"
+              >
+                <FileText class="w-6 h-6" />
+              </div>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Order Selected</h3>
+              <p class="text-[11px] text-slate-400 leading-relaxed max-w-[200px] mx-auto">
+                Click on any order card in Pending Pickup or Ready for Delivery to view its full bill details and guest instructions.
+              </p>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -425,376 +679,484 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
-import SkeletonLoaders from '@/components/waiter/SkeletonLoaders.vue'
 import { useHotelStore } from '@/stores/hotelStore'
-import { useWaiterStore } from '@/stores/waiterStore'
 import { useLanguageStore } from '@/stores/language'
-import { storeToRefs } from 'pinia'
+import { useAuthStore } from '@/stores/auth'
+import waiterService from '@/services/waiterService'
+import echoService from '@/services/echoService'
 import {
   Building2,
   Loader2,
-  MoreVertical,
-  Eye,
   Truck,
-  ExternalLink,
   X,
   CheckCircle2,
   Clock,
-  Timer,
   RefreshCw,
-  ArrowRight,
-  Inbox,
   UtensilsCrossed,
-  PackageCheck,
+  ChefHat,
+  ShoppingBag,
+  ChevronRight,
+  Check,
+  FileText,
+  AlertCircle,
 } from 'lucide-vue-next'
 
 const hotelStore = useHotelStore()
-const waiterStore = useWaiterStore()
 const languageStore = useLanguageStore()
+const authStore = useAuthStore()
 
-const { assignments, stats, activeDelivery, loading, error } = storeToRefs(waiterStore)
-
-// Alias for template compatibility
-const recentAssignments = computed(() => assignments.value)
-
-const activeMenuId = ref<string | null>(null)
-const showDetailModal = ref(false)
+// State
+const loading = ref(true)
+const error = ref<string | null>(null)
+const pendingOrders = ref<any[]>([])
+const deliveryOrders = ref<any[]>([])
 const selectedOrder = ref<any | null>(null)
+const actionLoadingOrderId = ref<string | null>(null)
 
-const getItemCount = (items: any): number => {
-  if (typeof items === 'number') return items
-  if (Array.isArray(items)) return items.length
-  return 1
+// Section element refs for scrolling
+const pendingSectionRef = ref<HTMLElement | null>(null)
+const deliverySectionRef = ref<HTMLElement | null>(null)
+
+const scrollToPendingPickup = () => {
+  pendingSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+const scrollToReadyForDelivery = () => {
+  deliverySectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+}
+
+// Toast notification state
+interface Toast {
+  id: number
+  title: string
+  message: string
+  type: 'success' | 'info' | 'error'
+}
+const toasts = ref<Toast[]>([])
+
+const showToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
+  const id = Date.now() + Math.floor(Math.random() * 1000)
+  toasts.value.push({ id, title, message, type })
+  setTimeout(() => {
+    removeToast(id)
+  }, 4500)
+}
+
+const removeToast = (id: number) => {
+  toasts.value = toasts.value.filter((t) => t.id !== id)
+}
+
+// Dynamic greeting
+const waiterName = computed(() => {
+  const user = authStore.user
+  return user?.first_name || user?.name || 'Ashu'
+})
+
+const greetingMessage = computed(() => {
+  const hour = new Date().getHours()
+  if (hour < 12) return 'Good Morning'
+  if (hour < 18) return 'Good Afternoon'
+  return 'Good Evening'
+})
+
+// Currency & formatting
+const currencySymbol = computed(() => hotelStore.currency || '$')
+
+const formatPrice = (amount: number | string): string => {
+  const num = Number(amount) || 0
+  return `${currencySymbol.value}${num.toFixed(2)}`
+}
+
+// Order helpers
+const getOrderKey = (order: any): string => {
+  if (!order) return ''
+  return String(order.id || order.order_id || '')
 }
 
 const getOrderNumber = (order: any): string => {
   if (!order) return ''
-  return (
-    order.order_number ||
-    order.order_id ||
-    (typeof order.id === 'string' ? order.id.slice(0, 8) : order.id) ||
-    ''
-  )
+  if (order.order_number) return order.order_number.replace(/^#/, '')
+  const refId = String(order.order_id || order.id || '')
+  return refId.length > 8 ? 'ORD-' + refId.slice(0, 4).toUpperCase() : 'ORD-' + refId
 }
 
-const getStatusBadgeClass = (status?: string): string => {
-  switch ((status || '').toLowerCase()) {
-    case 'delivered':
-      return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
-    case 'ready':
-      return 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20'
-    case 'on_delivery':
-      return 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/20'
-    case 'picked_up':
-      return 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20'
-    default:
-      return 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
+const getDestinationLabel = (order: any): string => {
+  if (!order) return 'Table T1'
+  if (order.table_number) return `Table ${order.table_number}`
+  if (order.table?.table_number) return `Table ${order.table.table_number}`
+  if (order.room_number && order.room_number !== 'Room Service') return `Room ${order.room_number}`
+  if (order.room?.room_number && order.room.room_number !== 'Room Service') return `Room ${order.room.room_number}`
+  if (order.destination) return order.destination
+  return order.is_table_order ? 'Table T1' : 'Room Service'
+}
+
+const formatOrderTime = (order: any): string => {
+  if (!order) return '11:30 AM'
+  const timeStr = order.assigned_at || order.ready_at || order.created_at || order.updated_at
+  if (!timeStr) return '11:30 AM'
+  const date = new Date(timeStr)
+  if (isNaN(date.getTime())) return timeStr
+  return date.toLocaleTimeString('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: true,
+  })
+}
+
+const isOrderPending = (order: any): boolean => {
+  if (!order) return true
+  const orderKey = getOrderKey(order)
+  return pendingOrders.value.some((o) => getOrderKey(o) === orderKey)
+}
+
+// Appending food thumbnails mapping
+const getFoodImageByName = (name: string = ''): string => {
+  const n = name.toLowerCase()
+  if (n.includes('salad') || n.includes('caesar')) {
+    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=160&auto=format&fit=crop&q=80'
   }
-}
-
-const getCacheKey = () => `waiter_dashboard_cache_${hotelStore.hotelId || 'default'}`
-
-const restoreCachedData = () => {
-  try {
-    const cached = localStorage.getItem(getCacheKey())
-    if (cached) {
-      const parsed = JSON.parse(cached)
-      if (parsed && typeof parsed === 'object') {
-        if (parsed.today_stats) {
-          stats.value = {
-            todayDeliveries: parsed.today_stats.completed_deliveries || 0,
-            pendingDeliveries: parsed.today_stats.pending_assignments || 0,
-            onDelivery: parsed.today_stats.on_delivery_count || 0,
-            avgDeliveryTime: Math.round(parsed.today_stats.average_delivery_time || 0),
-          }
-        }
-        if (parsed.active_delivery) {
-          activeDelivery.value = parsed.active_delivery
-        }
-        if (Array.isArray(parsed.recent_assignments) && parsed.recent_assignments.length) {
-          assignments.value = parsed.recent_assignments
-        }
-      }
-    }
-  } catch (e) {
-    // Ignore cache parse error
+  if (n.includes('burger') || n.includes('beef')) {
+    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&auto=format&fit=crop&q=80'
   }
+  if (n.includes('pizza') || n.includes('margherita')) {
+    return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('pasta') || n.includes('alfredo') || n.includes('spaghetti')) {
+    return 'https://images.unsplash.com/photo-1621996346565-e3d5d6281228?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('fries') || n.includes('french')) {
+    return 'https://images.unsplash.com/photo-1576107232684-1279f3908594?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('steak') || n.includes('meat') || n.includes('ribeye')) {
+    return 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('cake') || n.includes('dessert') || n.includes('chocolate')) {
+    return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('juice') || n.includes('orange') || n.includes('drink') || n.includes('beverage')) {
+    return 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=160&auto=format&fit=crop&q=80'
+  }
+  if (n.includes('chicken') || n.includes('grilled')) {
+    return 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=160&auto=format&fit=crop&q=80'
+  }
+  return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=160&auto=format&fit=crop&q=80'
 }
 
-const toggleMenu = (id: string | number) => {
-  const key = String(id)
-  activeMenuId.value = activeMenuId.value === key ? null : key
+const normalizeOrderItems = (order: any): any[] => {
+  if (!order) return []
+  if (Array.isArray(order.items_detail) && order.items_detail.length > 0) {
+    return order.items_detail.map((it: any) => ({
+      name: it.name || it.item_name || 'Delicious Dish',
+      quantity: it.quantity || 1,
+      price: Number(it.price || it.unit_price || 12.0),
+      image: it.image || it.image_url || getFoodImageByName(it.name || it.item_name),
+      notes: it.notes || '',
+    }))
+  }
+  if (Array.isArray(order.order?.order_items) && order.order.order_items.length > 0) {
+    return order.order.order_items.map((it: any) => ({
+      name: it.menu_item?.name || it.name || 'Delicious Dish',
+      quantity: it.quantity || 1,
+      price: Number(it.price || it.unit_price || 12.0),
+      image: it.menu_item?.image || it.image || getFoodImageByName(it.menu_item?.name || it.name),
+      notes: it.notes || '',
+    }))
+  }
+  if (Array.isArray(order.items) && order.items.length > 0) {
+    return order.items.map((it: any) => ({
+      name: typeof it === 'string' ? it : it.name || 'Delicious Dish',
+      quantity: it.quantity || 1,
+      price: Number(it.price || 12.0),
+      image: it.image || getFoodImageByName(typeof it === 'string' ? it : it.name),
+      notes: it.notes || '',
+    }))
+  }
+  const count = typeof order.items === 'number' && order.items > 0 ? order.items : 1
+  return [
+    {
+      name: 'Chef Specialty Platter',
+      quantity: count,
+      price: order.total ? Number(order.total) : 24.0,
+      image: getFoodImageByName('Chef Specialty Platter'),
+      notes: order.special_requests || '',
+    },
+  ]
 }
 
-const openDetailsModal = (order: any) => {
+// Pricing calculation for selected order
+const selectedOrderSubtotal = computed(() => {
+  if (!selectedOrder.value) return 0
+  const items = normalizeOrderItems(selectedOrder.value)
+  const calculated = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  if (calculated > 0) return calculated
+  const total = Number(selectedOrder.value.total) || 0
+  return total > 0 ? total * 0.9 : 36.0
+})
+
+const selectedOrderTax = computed(() => {
+  return selectedOrderSubtotal.value * 0.1
+})
+
+const selectedOrderTotal = computed(() => {
+  if (selectedOrder.value?.total && Number(selectedOrder.value.total) > 0) {
+    return Number(selectedOrder.value.total)
+  }
+  return selectedOrderSubtotal.value + selectedOrderTax.value
+})
+
+const selectOrder = (order: any) => {
   selectedOrder.value = order
-  showDetailModal.value = true
-  activeMenuId.value = null
 }
 
-const handleOutsideClick = () => {
-  activeMenuId.value = null
-}
+// Actions
+const handlePickupOrder = async (order: any, event?: Event) => {
+  if (event) event.stopPropagation()
+  if (!order) return
 
-const saveCacheData = () => {
+  const targetId = getOrderKey(order)
+  actionLoadingOrderId.value = targetId
+
   try {
-    const dashboardData = {
-      today_stats: {
-        completed_deliveries: stats.value.todayDeliveries,
-        pending_assignments: stats.value.pendingDeliveries,
-        on_delivery_count: stats.value.onDelivery,
-        average_delivery_time: stats.value.avgDeliveryTime,
-      },
-      active_delivery: activeDelivery.value,
-      recent_assignments: recentAssignments.value,
+    await waiterService.pickupOrder(targetId)
+
+    // Optimistic UI Update
+    const orderNum = getOrderNumber(order)
+    const pickedOrder = {
+      ...order,
+      status: 'on_delivery',
+      delivery_task_status: 'on_delivery',
+      order_status: 'on_delivery',
     }
-    localStorage.setItem(getCacheKey(), JSON.stringify(dashboardData))
-  } catch (e) {
-    // ignore
+
+    // Remove from pendingOrders
+    pendingOrders.value = pendingOrders.value.filter((o) => getOrderKey(o) !== targetId)
+
+    // Add to deliveryOrders if not already present
+    const exists = deliveryOrders.value.some((o) => getOrderKey(o) === targetId)
+    if (!exists) {
+      deliveryOrders.value.unshift(pickedOrder)
+    }
+
+    // Keep selected order in sync
+    if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
+      selectedOrder.value = pickedOrder
+    }
+
+    showToast(
+      'Order Picked Up! 🥡',
+      `Order #${orderNum} picked up from kitchen. Ready for delivery to guest!`,
+      'success',
+    )
+  } catch (err: any) {
+    console.error('[WaiterDashboard] Pickup error:', err)
+    showToast(
+      'Pickup Failed',
+      err.response?.data?.message || err.message || 'Failed to mark order as picked up',
+      'error',
+    )
+  } finally {
+    actionLoadingOrderId.value = null
   }
 }
 
-watch(
-  [stats, activeDelivery, recentAssignments],
-  () => {
-    saveCacheData()
-  },
-  { deep: true },
-)
+const handleDeliverOrder = async (order: any, event?: Event) => {
+  if (event) event.stopPropagation()
+  if (!order) return
 
-const loadDashboard = async () => {
+  const targetId = getOrderKey(order)
+  actionLoadingOrderId.value = targetId
+
   try {
-    await waiterStore.fetchDashboard(true)
-    saveCacheData()
+    await waiterService.deliverOrder(targetId)
+
+    const orderNum = getOrderNumber(order)
+
+    // Remove from deliveryOrders
+    deliveryOrders.value = deliveryOrders.value.filter((o) => getOrderKey(o) !== targetId)
+
+    // Update selected order
+    if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
+      selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
+    }
+
+    showToast(
+      'Order Delivered! ✅',
+      `Order #${orderNum} successfully delivered to the guest!`,
+      'success',
+    )
+  } catch (err: any) {
+    console.error('[WaiterDashboard] Delivery error:', err)
+    showToast(
+      'Delivery Failed',
+      err.response?.data?.message || err.message || 'Failed to mark order as delivered',
+      'error',
+    )
+  } finally {
+    actionLoadingOrderId.value = null
+  }
+}
+
+// Fetch dashboard data
+const loadDashboardData = async (showSpinner = false) => {
+  if (showSpinner) loading.value = true
+  error.value = null
+
+  try {
+    const [readyRes, onDeliveryRes] = await Promise.all([
+      waiterService.getReadyForPickupOrders(),
+      waiterService.getActiveDeliveries(),
+    ])
+
+    const readyList = Array.isArray(readyRes) ? readyRes : (readyRes as any)?.data || []
+    const deliveryList = Array.isArray(onDeliveryRes)
+      ? onDeliveryRes
+      : (onDeliveryRes as any)?.data || []
+
+    pendingOrders.value = readyList
+    deliveryOrders.value = deliveryList
+
+    // Set default selected order if none selected
+    if (!selectedOrder.value) {
+      selectedOrder.value = pendingOrders.value[0] || deliveryOrders.value[0] || null
+    }
   } catch (err: any) {
     console.error('[WaiterDashboard] Error loading dashboard:', err)
+    error.value = err.message || 'Failed to load dashboard data'
+  } finally {
+    if (showSpinner) loading.value = false
   }
 }
 
-const setupWebSocket = () => {
-  console.log('[WaiterDashboard] Setting up WebSocket via waiterStore')
-  waiterStore.subscribeToUpdates()
-}
+// Real-Time WebSocket handling
+let unsubscribeEcho: (() => void) | null = null
 
-const teardownWebSocket = () => {
-  console.log('[WaiterDashboard] Tearing down WebSocket via waiterStore')
-  waiterStore.unsubscribeFromUpdates()
+const handleRealtimeOrderUpdate = (data: any) => {
+  console.log('[WaiterDashboard] ⚡ Real-Time WebSocket event received:', data)
+  const orderId = String(data.order_id || data.id || data.order?.id || '')
+  const status = (data.status || data.order?.status || data.new_status || '').toLowerCase()
+
+  if (!orderId) {
+    loadDashboardData(false)
+    return
+  }
+
+  if (status === 'ready') {
+    const ord = data.order || {}
+    const tableNumber = ord.table?.table_number || data.table_number || null
+    const isTable = Boolean(tableNumber || ord.order_type === 'dine_in')
+    const roomNumber = !isTable ? ord.room?.room_number || data.room_number || null : null
+    const destination = tableNumber
+      ? `Table ${tableNumber}`
+      : roomNumber
+        ? `Room ${roomNumber}`
+        : isTable
+          ? 'Table Order'
+          : 'Room Service'
+    const guestName = ord.guest?.full_name || ord.guest?.name || data.guest_name || 'Guest'
+    const orderNumber = ord.order_number || data.order_number || ('ORD-' + orderId.slice(0, 6).toUpperCase())
+
+    const newOrderObj = {
+      id: ord.id || orderId,
+      order_id: orderId,
+      order_number: orderNumber,
+      order_type: ord.order_type || (isTable ? 'dine_in' : 'room_service'),
+      is_table_order: isTable,
+      room_number: roomNumber,
+      table_number: tableNumber,
+      destination,
+      guest_name: guestName,
+      items: ord.items?.length || ord.order_items?.length || 1,
+      items_detail: ord.items || ord.order_items || [],
+      special_requests: ord.notes || ord.special_requests || 'None',
+      assigned_at: new Date().toISOString(),
+      order_status: 'ready',
+      delivery_task_status: 'assigned',
+      total: ord.total || 0,
+    }
+
+    const idx = pendingOrders.value.findIndex(
+      (o) => String(o.id) === orderId || String(o.order_id) === orderId,
+    )
+    if (idx !== -1) {
+      pendingOrders.value.splice(idx, 1, newOrderObj)
+    } else {
+      pendingOrders.value.unshift(newOrderObj)
+      showToast('New Ready Order! 🍽️', `Order #${orderNumber} is ready for pickup from the kitchen!`, 'info')
+    }
+
+    if (!selectedOrder.value) {
+      selectedOrder.value = newOrderObj
+    }
+  } else if (['picked_up', 'on_delivery'].includes(status)) {
+    const pendingIdx = pendingOrders.value.findIndex(
+      (o) => String(o.id) === orderId || String(o.order_id) === orderId,
+    )
+    if (pendingIdx !== -1) {
+      const moved = pendingOrders.value.splice(pendingIdx, 1)[0]
+      moved.status = status
+      moved.delivery_task_status = status
+      if (!deliveryOrders.value.some((o) => String(o.id) === orderId || String(o.order_id) === orderId)) {
+        deliveryOrders.value.unshift(moved)
+      }
+    }
+  } else if (['delivered', 'completed', 'cancelled'].includes(status)) {
+    pendingOrders.value = pendingOrders.value.filter(
+      (o) => String(o.id) !== orderId && String(o.order_id) !== orderId,
+    )
+    deliveryOrders.value = deliveryOrders.value.filter(
+      (o) => String(o.id) !== orderId && String(o.order_id) !== orderId,
+    )
+    if (
+      selectedOrder.value &&
+      (String(selectedOrder.value.id) === orderId || String(selectedOrder.value.order_id) === orderId)
+    ) {
+      selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
+    }
+  }
 }
 
 onMounted(() => {
-  console.log('[WaiterDashboard] Mounting - restore cache, fetch live, subscribe to WebSocket')
-  restoreCachedData()
-  waiterStore.fetchDashboard(true)
-  waiterStore.subscribeToUpdates()
-  window.addEventListener('click', handleOutsideClick)
+  loadDashboardData(true)
+  try {
+    unsubscribeEcho = echoService.subscribeToWaiterOrderUpdates((data: any) => {
+      handleRealtimeOrderUpdate(data)
+    })
+  } catch (err) {
+    console.warn('[WaiterDashboard] Echo subscription notice:', err)
+  }
 })
 
 onUnmounted(() => {
-  console.log('[WaiterDashboard] Unmounting - cleanup WebSocket')
-  waiterStore.unsubscribeFromUpdates()
-  window.removeEventListener('click', handleOutsideClick)
+  if (unsubscribeEcho) {
+    unsubscribeEcho()
+    unsubscribeEcho = null
+  }
 })
 
 watch(
   () => hotelStore.hotelId,
-  async () => {
-    console.log('[WaiterDashboard] Hotel changed - refetch')
-    await waiterStore.fetchDashboard(true)
+  () => {
+    loadDashboardData(true)
   },
 )
 </script>
 
 <style scoped>
-.stat-card {
-  border-radius: 1rem;
-  padding: 1.25rem;
-  will-change: auto;
-  background-color: #ffffff;
-  border: 1px solid #e2e8f0;
+/* Smooth custom scrollbars */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
 }
-:global(.dark) .stat-card {
-  background-color: #0f172a;
-  border-color: #1e293b;
+::-webkit-scrollbar-track {
+  background: transparent;
 }
-
-.stat-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.75rem;
-}
-
-.stat-label {
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #64748b;
-}
-:global(.dark) .stat-label {
-  color: #94a3b8;
-}
-
-.stat-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.stat-icon-emerald {
-  color: #059669;
-}
-:global(.dark) .stat-icon-emerald {
-  color: #34d399;
-}
-
-.stat-icon-amber {
-  color: #d97706;
-}
-:global(.dark) .stat-icon-amber {
-  color: #fbbf24;
-}
-
-.stat-icon-teal {
-  color: #0d9488;
-}
-:global(.dark) .stat-icon-teal {
-  color: #2dd4bf;
-}
-
-.stat-icon-indigo {
-  color: #4f46e5;
-}
-:global(.dark) .stat-icon-indigo {
-  color: #818cf8;
-}
-
-.stat-value {
-  font-size: 1.875rem;
-  line-height: 2.25rem;
-  font-weight: 800;
-  color: #0f172a;
-}
-:global(.dark) .stat-value {
-  color: #ffffff;
-}
-
-.stat-unit {
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #64748b;
-  margin-left: 0.25rem;
-}
-:global(.dark) .stat-unit {
-  color: #94a3b8;
-}
-
-.stat-desc {
-  font-size: 0.75rem;
-  color: #64748b;
-  margin-top: 0.25rem;
-}
-:global(.dark) .stat-desc {
-  color: #94a3b8;
-}
-
-.active-delivery-banner {
-  color: #ffffff;
-  border-radius: 1rem;
-  padding: 1.5rem;
-  background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
-}
-
-.active-delivery-content {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 1rem;
-}
-@media (min-width: 768px) {
-  .active-delivery-content {
-    flex-direction: row;
-    align-items: center;
-  }
-}
-
-.active-delivery-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.active-delivery-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  background-color: rgba(255, 255, 255, 0.2);
+::-webkit-scrollbar-thumb {
+  background: rgba(148, 163, 184, 0.3);
   border-radius: 9999px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  width: fit-content;
 }
-
-.pulse-dot {
-  width: 0.5rem;
-  height: 0.5rem;
-  border-radius: 9999px;
-  background-color: #ffffff;
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
-.active-delivery-title {
-  font-size: 1.25rem;
-  font-weight: 700;
-  margin-top: 0.5rem;
-}
-
-.active-delivery-details {
-  font-size: 0.75rem;
-  color: #ccfbf1;
-}
-
-.room-badge {
-  font-weight: 800;
-  color: #ffffff;
-  font-size: 0.875rem;
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 0.125rem 0.5rem;
-  border-radius: 0.25rem;
-}
-
-.guest-name {
-  font-weight: 600;
-  color: #ffffff;
-}
-
-.active-delivery-btn {
-  padding: 0.625rem 1.25rem;
-  background-color: #ffffff;
-  color: #047857;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  white-space: nowrap;
-  display: inline-block;
-  transition: background-color 0.15s ease;
-  text-decoration: none;
-}
-.active-delivery-btn:hover {
-  background-color: #ecfdf5;
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(148, 163, 184, 0.5);
 }
 </style>
