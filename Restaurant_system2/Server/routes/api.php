@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\Manager\FloorAssignmentController;
 use App\Http\Controllers\Api\Manager\FloorManagementController;
 use App\Http\Controllers\Api\Manager\ShiftManagementController;
 use App\Http\Controllers\Api\Manager\WaiterTableAssignmentController;
+use App\Http\Controllers\Api\Manager\TableAssignmentTestController;
 use App\Http\Controllers\Api\Manager\ManagerDeliveryManagementController;
 use App\Http\Controllers\Api\Waiter\WaiterDashboardController;
 use App\Http\Controllers\Api\Waiter\WaiterAssignmentController;
@@ -516,6 +517,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}', [WaiterTableAssignmentController::class, 'destroy']);
             Route::get('/table/{tableId}/assigned-waiter', [WaiterTableAssignmentController::class, 'getAssignedWaiter']);
             Route::get('/waiter/{waiterId}/tables', [WaiterTableAssignmentController::class, 'getWaiterTables']);
+            Route::post('/test-assignment', [TableAssignmentTestController::class, 'testAssignment']);
         });
         
         Route::prefix('shifts')->group(function () {
