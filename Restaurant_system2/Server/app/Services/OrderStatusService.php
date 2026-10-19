@@ -298,12 +298,28 @@ class OrderStatusService
                 ->where('status', '!=', 'cancelled')
                 ->first();
 
+            // If task doesn't exist or doesn't have a waiter assigned yet, run assignment first
+            if (!$deliveryTask || !$deliveryTask->waiter_id) {
+                $assignResult = $this->waiterAssignmentService->assignWaiterToReadyOrder($order);
+                Log::info("[ORDER_STATUS] Executed automatic waiter assignment on ready order #{$order->order_number}", $assignResult);
+
+                // Reload fresh task after assignment
+                $deliveryTask = DeliveryTask::withoutGlobalScopes()
+                    ->where('order_id', $order->id)
+                    ->where('status', '!=', 'cancelled')
+                    ->first();
+            }
+
             if ($deliveryTask && $deliveryTask->waiter_id) {
                 $waiter = Waiter::find($deliveryTask->waiter_id);
                 if ($waiter) {
                     $waiterUser = $waiter->user ?? User::find($waiter->user_id);
                     if ($waiterUser) {
-                        $this->waiterNotificationService->notifyOrderReady($waiterUser, $deliveryTask);
+                        try {
+                            $this->waiterNotificationService->notifyOrderReady($waiterUser, $deliveryTask);
+                        } catch (\Throwable $ne) {
+                            Log::warning("[ORDER_STATUS] Failed waiterNotificationService: " . $ne->getMessage());
+                        }
                     }
 
                     WaiterNotification::create([
@@ -333,12 +349,8 @@ class OrderStatusService
                     } catch (\Throwable $broadcastEx) {
                         Log::warning('[ORDER_STATUS] Failed to broadcast to waiter dashboard', ['error' => $broadcastEx->getMessage()]);
                     }
-                    // Continue to check if waiter needs to be assigned to delivery task
                 }
             }
-
-            $assignResult = $this->waiterAssignmentService->assignWaiterToReadyOrder($order);
-            Log::info("[ORDER_STATUS] Executed automatic waiter assignment on ready order #{$order->order_number}", $assignResult);
 
         } catch (\Throwable $e) {
             Log::error("[ORDER_STATUS] Failed notifying waiter on order ready: {$e->getMessage()}", [

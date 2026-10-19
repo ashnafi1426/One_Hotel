@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import waiterService from '@/services/waiterService'
+import echoService from '@/services/echoService'
 import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
 import {
@@ -203,7 +204,25 @@ const pickupOrder = async (orderId: string | number) => {
   }
 }
 
-onMounted(loadOrders)
+let unsubscribe: (() => void) | null = null
+
+onMounted(() => {
+  loadOrders()
+  try {
+    unsubscribe = echoService.subscribeToManagerOrderUpdates(() => {
+      loadOrders()
+    })
+  } catch (e) {
+    console.warn('[ReadyPickup] WebSocket subscription error:', e)
+  }
+})
+
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe()
+  }
+})
+
 watch(() => hotelStore.hotelId, loadOrders)
 </script>
 

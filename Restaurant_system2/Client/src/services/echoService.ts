@@ -165,7 +165,7 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
  * Subscribe to all waiter order updates
  * Fired when any order is assigned or status changes
  */
-export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): void {
+export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
 
@@ -173,6 +173,10 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
       .channel('waiter.orders.update')
       .listen('OrderStatusUpdated', (data: any) => {
         console.log('[Echo] Waiter order update:', data)
+        onUpdate(data)
+      })
+      .listen('order.ready', (data: any) => {
+        console.log('[Echo] Waiter order ready:', data)
         onUpdate(data)
       })
       .listen('.order.created', (data: any) => {
@@ -185,9 +189,15 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
       })
 
     console.log('[Echo] Subscribed to waiter order updates')
+
+    return () => {
+      echo.leave('waiter.orders.update')
+      console.log('[Echo] Unsubscribed from waiter order updates')
+    }
   } catch (error: any) {
     console.error('[Echo] Failed to subscribe to waiter updates:', error)
     onError?.(error)
+    return () => {}
   }
 }
 

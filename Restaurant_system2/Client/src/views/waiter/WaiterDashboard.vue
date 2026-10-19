@@ -449,6 +449,66 @@ const activeMenuId = ref<string | null>(null)
 const showDetailModal = ref(false)
 const selectedOrder = ref<any | null>(null)
 
+const getItemCount = (items: any): number => {
+  if (typeof items === 'number') return items
+  if (Array.isArray(items)) return items.length
+  return 1
+}
+
+const getOrderNumber = (order: any): string => {
+  if (!order) return ''
+  return (
+    order.order_number ||
+    order.order_id ||
+    (typeof order.id === 'string' ? order.id.slice(0, 8) : order.id) ||
+    ''
+  )
+}
+
+const getStatusBadgeClass = (status?: string): string => {
+  switch ((status || '').toLowerCase()) {
+    case 'delivered':
+      return 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20'
+    case 'ready':
+      return 'bg-amber-50 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20'
+    case 'on_delivery':
+      return 'bg-teal-50 dark:bg-teal-500/10 text-teal-700 dark:text-teal-400 border-teal-200 dark:border-teal-500/20'
+    case 'picked_up':
+      return 'bg-purple-50 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-500/20'
+    default:
+      return 'bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-500/20'
+  }
+}
+
+const getCacheKey = () => `waiter_dashboard_cache_${hotelStore.hotelId || 'default'}`
+
+const restoreCachedData = () => {
+  try {
+    const cached = localStorage.getItem(getCacheKey())
+    if (cached) {
+      const parsed = JSON.parse(cached)
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.today_stats) {
+          stats.value = {
+            todayDeliveries: parsed.today_stats.completed_deliveries || 0,
+            pendingDeliveries: parsed.today_stats.pending_assignments || 0,
+            onDelivery: parsed.today_stats.on_delivery_count || 0,
+            avgDeliveryTime: Math.round(parsed.today_stats.average_delivery_time || 0),
+          }
+        }
+        if (parsed.active_delivery) {
+          activeDelivery.value = parsed.active_delivery
+        }
+        if (Array.isArray(parsed.recent_assignments) && parsed.recent_assignments.length) {
+          assignments.value = parsed.recent_assignments
+        }
+      }
+    }
+  } catch (e) {
+    // Ignore cache parse error
+  }
+}
+
 const toggleMenu = (id: string | number) => {
   const key = String(id)
   activeMenuId.value = activeMenuId.value === key ? null : key

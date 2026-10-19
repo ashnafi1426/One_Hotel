@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, computed, watch } from 'vue'
+import { ref, onMounted, onUnmounted, computed, watch } from 'vue'
 import DashboardLayout from '@/Layouts/DashboardLayout.vue'
 import waiterService from '@/services/waiterService'
+import echoService from '@/services/echoService'
 import { useHotelStore } from '@/stores/hotelStore'
 import { useLanguageStore } from '@/stores/language'
 import {
@@ -21,6 +22,7 @@ import {
   ShoppingBag,
   Building2,
   UtensilsCrossed,
+  PackageCheck,
 } from 'lucide-vue-next'
 
 const hotelStore = useHotelStore()
@@ -190,9 +192,10 @@ const formatDateTime = (dateStr: string) => {
 }
 
 const statusBadgeClasses: Record<string, string> = {
+  ready: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black ring-1 ring-emerald-500/30',
   assigned: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
   accepted: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
-  picked_up: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  picked_up: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
   on_delivery: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20',
   delivered: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
 }
@@ -204,12 +207,41 @@ const getStatusBadge = (status: string) => {
   )
 }
 
+const loadingOrderId = ref<string | null>(null)
+const pickupOrder = async (orderId: string | number) => {
+  try {
+    loadingOrderId.value = String(orderId)
+    await waiterService.pickupOrder(String(orderId))
+    await loadAssignments()
+  } catch (err: any) {
+    console.error('[AssignedOrders] Error picking up order:', err)
+    alert(err.message || 'Failed to pickup order')
+  } finally {
+    loadingOrderId.value = null
+  }
+}
+
 watch(itemsPerPage, () => {
   currentPage.value = 1
 })
 
+let unsubscribe: (() => void) | null = null
+
 onMounted(() => {
   loadAssignments()
+  try {
+    unsubscribe = echoService.subscribeToManagerOrderUpdates(() => {
+      loadAssignments()
+    })
+  } catch (e) {
+    console.warn('[AssignedOrders] WebSocket subscription error:', e)
+  }
+})
+
+onUnmounted(() => {
+  if (unsubscribe) {
+    unsubscribe()
+  }
 })
 
 watch(
@@ -355,6 +387,7 @@ watch(
                 class="w-full rounded-xl border border-slate-200 dark:border-[#1e3455] bg-slate-50/80 dark:bg-[#13233c] text-slate-900 dark:text-white px-3.5 py-2 text-xs sm:text-sm focus:ring-2 focus:ring-blue-500/40 focus:border-blue-500 dark:focus:border-blue-400 transition cursor-pointer font-medium outline-none"
               >
                 <option value="">{{ languageStore.t('all_statuses', 'All Statuses') }}</option>
+                <option value="ready">{{ languageStore.t('ready', 'Ready for Pickup') }}</option>
                 <option value="assigned">{{ languageStore.t('assigned', 'Assigned') }}</option>
                 <option value="accepted">{{ languageStore.t('accepted', 'Accepted') }}</option>
                 <option value="picked_up">{{ languageStore.t('picked_up', 'Picked Up') }}</option>
@@ -530,13 +563,27 @@ watch(
                   </td>
 
                   <td class="py-3 px-4 text-right pr-5 whitespace-nowrap">
-                    <button
-                      @click="viewDetails(order)"
-                      class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition"
-                    >
-                      <Eye class="w-3.5 h-3.5" />
-                      <span>{{ languageStore.t('details', 'Details') }}</span>
-                    </button>
+                    <div class="flex items-center justify-end gap-1.5">
+                      <button
+                        v-if="(order.order_status || order.status) === 'ready' || order.is_ready"
+                        type="button"
+                        @click="pickupOrder(order.id)"
+                        :disabled="loadingOrderId === String(order.id)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold bg-[#1257A2] hover:bg-[#0e4884] text-white rounded-lg transition disabled:opacity-50 cursor-pointer shadow-xs"
+                      >
+                        <PackageCheck class="w-3.5 h-3.5" />
+                        <span>{{ languageStore.t('pickup', 'Pickup') }}</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        @click="viewDetails(order)"
+                        class="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-bold text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 rounded-lg transition cursor-pointer"
+                      >
+                        <Eye class="w-3.5 h-3.5" />
+                        <span>{{ languageStore.t('details', 'Details') }}</span>
+                      </button>
+                    </div>
                   </td>
                 </tr>
 

@@ -98,57 +98,57 @@ class RoleUserSeeder extends Seeder
 //         );
 
         // 6. Hotel Staff Users
-        $receptionist = User::firstOrCreate(
-            ['email' => 'receptionist@hotel.com'],
-            [
-                'id' => (string) Str::uuid(),
-                'first_name' => 'John',
-                'last_name' => 'Reception',
-                'phone' => '0922222222',
-                'password_hash' => Hash::make('Reception123@'),
-                'role' => 'receptionist',
-                'is_active' => true
-            ]
-        );
+        // $receptionist = User::firstOrCreate(
+        //     ['email' => 'receptionist@hotel.com'],
+        //     [
+        //         'id' => (string) Str::uuid(),
+        //         'first_name' => 'John',
+        //         'last_name' => 'Reception',
+        //         'phone' => '0922222222',
+        //         'password_hash' => Hash::make('Reception123@'),
+        //         'role' => 'receptionist',
+        //         'is_active' => true
+        //     ]
+        // );
 
-        $cashier = User::firstOrCreate(
-            ['email' => 'cashier@hotel.com'],
-            [
-                'id' => (string) Str::uuid(),
-                'first_name' => 'Sarah',
-                'last_name' => 'Cashier',
-                'phone' => '0933333333',
-                'password_hash' => Hash::make('Cashier123@'),
-                'role' => 'cashier',
-                'is_active' => true,
-            ]
-        );
+        // $cashier = User::firstOrCreate(
+        //     ['email' => 'cashier@hotel.com'],
+        //     [
+        //         'id' => (string) Str::uuid(),
+        //         'first_name' => 'Sarah',
+        //         'last_name' => 'Cashier',
+        //         'phone' => '0933333333',
+        //         'password_hash' => Hash::make('Cashier123@'),
+        //         'role' => 'cashier',
+        //         'is_active' => true,
+        //     ]
+        // );
 
-        $manager = User::firstOrCreate(
-            ['email' => 'manager@hotel.com'],
+        $waiter= User::firstOrCreate(
+            ['email' => 'waiter@hotel.com'],
             [
                 'id' => (string) Str::uuid(),
                 'first_name' => 'David',
-                'last_name' => 'Manager',
+                'last_name' => 'waiter',
                 'phone' => '0944444444',
-                'password_hash' => Hash::make('Manager123@'),
-                'role' => 'manager',
+                'password_hash' => Hash::make('waiter123@'),
+                'role' => 'waiter',
                 'is_active' => true,
             ]
         );
 
-        $chef = User::firstOrCreate(
-            ['email' => 'chef@hotel.com'],
-            [
-                'id' => (string) Str::uuid(),
-                'first_name' => 'Michael',
-                'last_name' => 'Chef',
-                'phone' => '0955555555',
-                'password_hash' => Hash::make('Chef123@'),
-                'role' => 'chef',
-                'is_active' => true,
-            ]
-        );
+        // $chef = User::firstOrCreate(
+        //     ['email' => 'chef@hotel.com'],
+        //     [
+        //         'id' => (string) Str::uuid(),
+        //         'first_name' => 'Michael',
+        //         'last_name' => 'Chef',
+        //         'phone' => '0955555555',
+        //         'password_hash' => Hash::make('Chef123@'),
+        //         'role' => 'chef',
+        //         'is_active' => true,
+        //     ]
+        // );
 
 //         // 7. Bind memberships in hotel_users
 //         if (Schema::hasTable('hotel_users')) {

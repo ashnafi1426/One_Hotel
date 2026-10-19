@@ -98,23 +98,48 @@ export const useWaiterStore = defineStore('waiter', () => {
   /**
    * Subscribe to real-time order updates via WebSocket
    */
+  let unsubscribers: (() => void)[] = []
+
+  /**
+   * Subscribe to real-time order updates via WebSocket
+   */
   function subscribeToUpdates() {
     console.log('[waiterStore] Subscribing to WebSocket updates')
 
-    // Unsubscribe from previous subscription if it exists
-    if (unsubscribe) {
-      unsubscribe()
+    // Unsubscribe from previous subscriptions if they exist
+    unsubscribeFromUpdates()
+
+    try {
+      const unsubManager = echoService.subscribeToManagerOrderUpdates(
+        (data: any) => {
+          receiveOrderUpdate(data)
+        },
+        (error: any) => {
+          console.error('[waiterStore] Manager WebSocket error:', error)
+        }
+      )
+      if (typeof unsubManager === 'function') {
+        unsubscribers.push(unsubManager)
+      }
+    } catch (e) {
+      console.warn('[waiterStore] Error subscribing to manager channel:', e)
     }
 
-    // Subscribe to manager order updates (covers all orders for waiters)
-    unsubscribe = echoService.subscribeToManagerOrderUpdates(
-      (data: any) => {
-        receiveOrderUpdate(data)
-      },
-      (error: any) => {
-        console.error('[waiterStore] WebSocket error:', error)
+    try {
+      const unsubWaiter = echoService.subscribeToWaiterOrderUpdates(
+        (data: any) => {
+          receiveOrderUpdate(data)
+        },
+        (error: any) => {
+          console.error('[waiterStore] Waiter WebSocket error:', error)
+        }
+      )
+      if (typeof unsubWaiter === 'function') {
+        unsubscribers.push(unsubWaiter)
       }
-    )
+    } catch (e) {
+      console.warn('[waiterStore] Error subscribing to waiter channel:', e)
+    }
   }
 
   /**
@@ -122,9 +147,13 @@ export const useWaiterStore = defineStore('waiter', () => {
    */
   function unsubscribeFromUpdates() {
     console.log('[waiterStore] Unsubscribing from WebSocket updates')
-    if (unsubscribe) {
-      unsubscribe()
-      unsubscribe = null
+    while (unsubscribers.length > 0) {
+      const unsub = unsubscribers.pop()
+      try {
+        unsub?.()
+      } catch (e) {
+        // ignore cleanup error
+      }
     }
   }
 

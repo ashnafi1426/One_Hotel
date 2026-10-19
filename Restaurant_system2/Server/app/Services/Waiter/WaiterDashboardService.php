@@ -23,7 +23,7 @@ class WaiterDashboardService
 
         $cacheKey = "waiter_floor_ids:{$waiterId}";
 
-        return Cache::remember($cacheKey, 60, function () use ($waiterId, $hotelId) {
+        return Cache::remember($cacheKey, 60, function () use ($waiterId) {
             try {
                 $query = WaiterFloorAssignment::where('waiter_id', $waiterId);
 
@@ -58,7 +58,7 @@ class WaiterDashboardService
 
         $cacheKey = "waiter_table_ids:{$waiterId}";
 
-        return Cache::remember($cacheKey, 60, function () use ($waiterId, $hotelId) {
+        return Cache::remember($cacheKey, 60, function () use ($waiterId) {
             try {
                 $query = \App\Models\WaiterTableAssignment::withoutGlobalScope(\App\Models\Scopes\TenantScope::class)
                     ->where('waiter_id', $waiterId)
@@ -418,7 +418,7 @@ class WaiterDashboardService
                     'room:id,room_number,floor_id',
                     'floor:id,floor_number',
                     'table:id,table_number,section',
-                    'order:id,order_number,room_id,table_id,order_type,guest_id,notes,special_requests',
+                    'order:id,order_number,room_id,table_id,order_type,guest_id,status,notes,special_requests',
                     'order.table:id,table_number,section',
                     'order.guest:id,first_name,last_name',
                     'order.orderItems:id,order_id,quantity'
@@ -465,7 +465,9 @@ class WaiterDashboardService
                         'order_number' => $orderNumber,
                         'items' => $itemCount,
                         'status' => $delivery->status,
-                        'order_status' => $delivery->status,
+                        'delivery_status' => $delivery->status,
+                        'order_status' => $delivery->order?->status ?? $delivery->status,
+                        'is_ready' => ($delivery->order?->status === 'ready'),
                         'assignment_type' => $delivery->assignment_type ?? 'manual',
                         'assigned_at' => ($delivery->assigned_at ?? $delivery->created_at)?->format('Y-m-d H:i:s'),
                         'accepted_at' => $delivery->accepted_at?->format('Y-m-d H:i:s'),
@@ -837,7 +839,7 @@ class WaiterDashboardService
             $hasAssignments = !empty($assignedTableIds) || !empty($assignedFloorIds);
 
             $query = DeliveryTask::withoutGlobalScope(TenantScope::class)
-                ->whereIn('status', ['assigned', 'waiting_assignment']);
+                ->whereIn('status', ['assigned', 'waiting_assignment', 'accepted']);
 
             // Single hotel installation
 

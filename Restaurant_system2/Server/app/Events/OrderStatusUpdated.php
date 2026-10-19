@@ -62,6 +62,8 @@ class OrderStatusUpdated implements ShouldBroadcastNow
     {
         return [
             new Channel('kitchen.orders.update'),
+            new Channel('waiter.orders.update'),
+            new Channel('manager.orders.update'),
         ];
     }
 

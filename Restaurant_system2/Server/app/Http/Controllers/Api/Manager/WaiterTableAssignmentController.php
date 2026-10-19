@@ -212,14 +212,28 @@ class WaiterTableAssignmentController extends Controller
         } catch (\Exception $e) {
             Log::error('Failed to create table assignments', [
                 'error' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString(),
                 'request' => $request->all()
             ]);
 
-            return response()->json([
+            $errorResponse = [
                 'success' => false,
                 'message' => 'Failed to create assignments: ' . $e->getMessage(),
-                'error' => $e->getMessage()
-            ], 500);
+                'error' => $e->getMessage(),
+            ];
+
+            // Add debug info in non-production
+            if (config('app.debug')) {
+                $errorResponse['debug'] = [
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => explode("\n", $e->getTraceAsString()),
+                ];
+            }
+
+            return response()->json($errorResponse, 500);
         }
     }
 

@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 
 namespace App\Events;
 
@@ -26,6 +26,8 @@ class WaiterOrderReadyEvent implements ShouldBroadcastNow
     {
         return [
             new Channel("waiter.{$this->waiterId}"),
+            new Channel('waiter.orders.update'),
+            new Channel('manager.orders.update'),
         ];
     }
 

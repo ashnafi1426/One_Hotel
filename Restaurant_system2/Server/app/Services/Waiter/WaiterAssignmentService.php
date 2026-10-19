@@ -220,7 +220,6 @@ class WaiterAssignmentService
         if ($shiftEnd < $shiftStart) {
             $shiftEnd = $shiftEnd->addDay();
         }
-
         return $now >= $shiftStart && $now <= $shiftEnd;
     }
 
