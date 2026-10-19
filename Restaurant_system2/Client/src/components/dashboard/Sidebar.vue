@@ -67,7 +67,7 @@ const sidebarStore = useSidebarStore()
 const languageStore = useLanguageStore()
 
 const currentHotelName = computed(() => {
-  return hotelStore.hotelName || guestHotelStore.hotelName || 'Grand Horizon Hotel'
+  return hotelStore.hotelName || guestHotelStore.hotelName || 'Executive Hotel'
 })
 
 const currentHotelCity = computed(() => {

@@ -115,7 +115,7 @@ watch(
           {{ languageStore.t('culinary_experience', 'An Exceptional Culinary Journey') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+        <p class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
           {{
             languageStore.t(
               'culinary_experience_desc',
@@ -125,7 +125,7 @@ watch(
         </p>
 
         <!-- Hours & Dining Location info -->
-        <div class="flex items-center justify-center gap-6 pt-2 text-xs font-semibold text-slate-500 dark:text-slate-400">
+        <div class="flex items-center justify-center gap-6 pt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
           <span class="flex items-center gap-1.5">
             <Clock class="w-3.5 h-3.5 text-[#D6A94F]" />
             {{ guestHotelStore.diningHours }}
@@ -172,7 +172,7 @@ watch(
                 {{ dish.name }}
               </h3>
 
-              <p class="text-xs text-slate-600 dark:text-slate-400 font-light leading-relaxed line-clamp-2">
+              <p class="text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed line-clamp-2">
                 {{ dish.description }}
               </p>
             </div>

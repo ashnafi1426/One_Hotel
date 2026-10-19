@@ -47,28 +47,29 @@ onUnmounted(() => {
       @click.stop="toggleDropdown"
       type="button"
       :class="[
-        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E9A11A] focus-visible:ring-offset-2',
+        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] focus-visible:ring-offset-2',
         variant === 'header'
-          ? 'h-9 sm:h-10 px-2 sm:px-3.5 rounded-full border border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/60 text-slate-700 dark:text-slate-200 hover:text-[#0B1B35] dark:hover:text-white text-[11px] sm:text-[12px] font-semibold'
+          ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full border border-slate-200 dark:border-white/15 bg-white dark:bg-[#182235] hover:bg-slate-50 dark:hover:bg-[#182235]/80 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:border-[#9A7418] dark:hover:border-[#D6A94F]/70 text-[11px] sm:text-[12px] font-semibold'
           : variant === 'pill'
-            ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-[#E9A11A]'
+            ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-[#9A7418] dark:hover:border-[#D6A94F]'
             : variant === 'compact'
-              ? 'h-8 sm:h-9 px-2 sm:px-2.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#E9A11A] text-slate-700 dark:text-slate-200'
-              : 'h-9 sm:h-10 p-1.5 sm:p-2 rounded-full border border-transparent text-slate-600 dark:text-slate-300 hover:text-[#E9A11A]',
+              ? 'h-8 sm:h-9 px-2 sm:px-2.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#9A7418] dark:hover:border-[#D6A94F] text-slate-700 dark:text-slate-200'
+              : 'h-9 sm:h-10 p-1.5 sm:p-2 rounded-full border border-transparent text-slate-600 dark:text-slate-300 hover:text-[#9A7418] dark:hover:text-[#D6A94F]',
       ]"
       :title="`Current language: ${languageStore.currentOption.nativeName}. Click to change.`"
       aria-haspopup="true"
       :aria-expanded="isOpen"
+      aria-label="Select language"
     >
-      <Globe class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E9A11A] shrink-0" />
+      <Globe class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#9A7418] dark:text-[#D6A94F] shrink-0" />
       <span
         v-if="showLabel"
-        class="text-[11px] sm:text-[12px] font-semibold tracking-wider uppercase"
+        class="text-[11px] sm:text-[12px] font-semibold tracking-[0.08em] uppercase"
       >
         {{ languageStore.currentLanguage === 'am' ? 'አማ' : 'EN' }}
       </span>
       <ChevronDown
-        class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 dark:text-slate-500 transition-transform duration-200 shrink-0 hidden sm:inline-block"
+        class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 dark:text-slate-400 transition-transform duration-200 shrink-0 hidden sm:inline-block"
         :class="{ 'rotate-180': isOpen }"
       />
     </button>
@@ -83,12 +84,12 @@ onUnmounted(() => {
     >
       <div
         v-if="isOpen"
-        class="absolute right-0 mt-2 w-44 rounded-2xl bg-white dark:bg-[#0B1B35] border border-slate-200 dark:border-slate-700 shadow-xl py-1.5 z-50 overflow-hidden font-sans"
+        class="absolute right-0 mt-2 w-48 rounded-2xl bg-white dark:bg-[#101827] border border-slate-200 dark:border-[#26354D] shadow-2xl py-1.5 z-50 overflow-hidden font-sans"
       >
         <div
-          class="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-400 border-b border-slate-100 dark:border-slate-800 flex items-center gap-1.5"
+          class="px-3.5 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-400 dark:text-slate-400 border-b border-slate-100 dark:border-[#26354D]/60 flex items-center gap-1.5"
         >
-          <Globe class="w-3 h-3 text-[#E9A11A]" />
+          <Globe class="w-3 h-3 text-[#9A7418] dark:text-[#D6A94F]" />
           <span>{{ languageStore.t('language', 'Language') }}</span>
         </div>
 
@@ -97,16 +98,16 @@ onUnmounted(() => {
             v-for="opt in languageStore.options"
             :key="opt.code"
             @click.stop="selectLanguage(opt.code)"
-            class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
             :class="[
               languageStore.currentLanguage === opt.code
-                ? 'bg-[#E9A11A]/10 text-[#E9A11A] font-semibold'
-                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/60',
+                ? 'bg-[#FAF3E7] dark:bg-[#D6A94F]/15 text-[#9A7418] dark:text-[#D6A94F] font-semibold'
+                : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#182235]/60',
             ]"
           >
             <div class="flex items-center gap-2.5">
               <span
-                class="w-6 h-5 rounded flex items-center justify-center text-[11px] bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-bold"
+                class="w-6 h-5 rounded flex items-center justify-center text-[11px] bg-slate-100 dark:bg-[#182235] border border-slate-200 dark:border-[#26354D] font-bold text-slate-800 dark:text-white"
               >
                 {{ opt.code === 'am' ? 'አማ' : 'EN' }}
               </span>
@@ -118,7 +119,7 @@ onUnmounted(() => {
 
             <Check
               v-if="languageStore.currentLanguage === opt.code"
-              class="w-4 h-4 text-[#E9A11A] shrink-0"
+              class="w-4 h-4 text-[#9A7418] dark:text-[#D6A94F] shrink-0"
             />
           </button>
         </div>

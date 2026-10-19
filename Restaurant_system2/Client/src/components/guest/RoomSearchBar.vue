@@ -48,14 +48,14 @@ const hasActiveFilters = computed(() => {
         <div class="lg:col-span-4 relative">
           <label for="room-keyword-search" class="sr-only">Search rooms</label>
           <div class="relative flex items-center">
-            <Search class="absolute left-3.5 w-4 h-4 text-[#D6A94F] pointer-events-none" />
+            <Search class="absolute left-3.5 w-4 h-4 text-[#F5BD47] pointer-events-none" />
             <input
               id="room-keyword-search"
               :value="modelValue"
               @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
               type="text"
               :placeholder="languageStore.t('search_rooms_guest_placeholder', 'Search by suite name, number…')"
-              class="w-full h-11 pl-10 pr-9 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium placeholder-slate-400 focus:outline-none focus:border-[#D6A94F] focus:ring-1 focus:ring-[#D6A94F] transition"
+              class="w-full h-11 pl-10 pr-9 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium placeholder-slate-300 focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition"
               autocomplete="off"
             />
             <button
@@ -74,12 +74,12 @@ const hasActiveFilters = computed(() => {
         <div class="lg:col-span-3 relative">
           <label for="room-type-filter" class="sr-only">Filter by Room Type</label>
           <div class="relative flex items-center">
-            <BedDouble class="absolute left-3.5 w-4 h-4 text-[#D6A94F] pointer-events-none" />
+            <BedDouble class="absolute left-3.5 w-4 h-4 text-[#F5BD47] pointer-events-none" />
             <select
               id="room-type-filter"
               :value="type"
               @change="$emit('update:type', ($event.target as HTMLSelectElement).value)"
-              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#D6A94F] focus:ring-1 focus:ring-[#D6A94F] transition cursor-pointer [color-scheme:dark]"
+              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark]"
             >
               <option value="All">{{ languageStore.t('all_types', 'All Room Types') }}</option>
               <option
@@ -97,12 +97,12 @@ const hasActiveFilters = computed(() => {
         <div class="lg:col-span-2 relative">
           <label for="room-capacity-filter" class="sr-only">Filter by Capacity</label>
           <div class="relative flex items-center">
-            <Users class="absolute left-3.5 w-4 h-4 text-[#D6A94F] pointer-events-none" />
+            <Users class="absolute left-3.5 w-4 h-4 text-[#F5BD47] pointer-events-none" />
             <select
               id="room-capacity-filter"
               :value="capacity"
               @change="$emit('update:capacity', ($event.target as HTMLSelectElement).value)"
-              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#D6A94F] focus:ring-1 focus:ring-[#D6A94F] transition cursor-pointer [color-scheme:dark]"
+              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark]"
             >
               <option value="All">{{ languageStore.t('all_capacities', 'Any Guests') }}</option>
               <option value="1">1+ {{ languageStore.t('guest_singular', 'Guest') }}</option>
@@ -117,12 +117,12 @@ const hasActiveFilters = computed(() => {
         <div class="lg:col-span-2 relative">
           <label for="room-sort-filter" class="sr-only">Sort rooms</label>
           <div class="relative flex items-center">
-            <ArrowUpDown class="absolute left-3.5 w-4 h-4 text-[#D6A94F] pointer-events-none" />
+            <ArrowUpDown class="absolute left-3.5 w-4 h-4 text-[#F5BD47] pointer-events-none" />
             <select
               id="room-sort-filter"
               :value="sort"
               @change="$emit('update:sort', ($event.target as HTMLSelectElement).value)"
-              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#D6A94F] focus:ring-1 focus:ring-[#D6A94F] transition cursor-pointer [color-scheme:dark]"
+              class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark]"
             >
               <option value="recommended">{{ languageStore.t('recommended', 'Featured') }}</option>
               <option value="price-asc">{{ languageStore.t('price_low_high', 'Price: Low → High') }}</option>
@@ -140,8 +140,8 @@ const hasActiveFilters = computed(() => {
             class="h-11 px-3 w-full rounded-2xl bg-[#101827] hover:bg-slate-800 text-slate-300 hover:text-white border border-[#26354D] hover:border-slate-600 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
             title="Reset all filters"
           >
-            <X class="w-3.5 h-3.5 text-[#D6A94F]" />
-            <span class="lg:hidden">{{ languageStore.t('clear_all', 'Reset') }}</span>
+            <X class="w-3.5 h-3.5 text-[#F5BD47]" />
+            <span class="lg:hidden text-slate-300">{{ languageStore.t('clear_all', 'Reset') }}</span>
           </button>
           <div v-else class="hidden lg:flex items-center justify-center w-full h-11 text-slate-600">
             <SlidersHorizontal class="w-4 h-4" />

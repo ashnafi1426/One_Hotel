@@ -144,7 +144,7 @@ watch(
           @click="goToRooms"
           class="px-6 py-3 rounded-full bg-[#182235] hover:bg-[#101827] text-white dark:bg-[#182235] dark:hover:bg-[#26354D] font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 cursor-pointer self-start md:self-auto border border-[#26354D] shadow-md hover:border-[#D6A94F]/60"
         >
-          <span>{{ languageStore.t('view_all_rooms', 'View All Suites') }}</span>
+          <span class="text-white font-bold">{{ languageStore.t('view_all_rooms', 'View All Suites') }}</span>
           <ArrowRight class="w-4 h-4 text-[#D6A94F]" />
         </button>
       </div>
@@ -170,8 +170,8 @@ watch(
             <div
               class="absolute bottom-3 left-3 px-3 py-1.5 bg-[#101827]/90 backdrop-blur-md text-[#D6A94F] font-bold text-xs rounded-xl border border-[#D6A94F]/40 shadow-lg"
             >
-              <span>{{ getRoomPrice(room) }}</span>
-              <span class="text-[10px] text-slate-300 font-normal"> / {{ languageStore.t('per_night', 'night') }}</span>
+              <span class="text-[#D6A94F] font-bold">{{ getRoomPrice(room) }}</span>
+              <span class="text-[10px] text-slate-200 font-normal"> / {{ languageStore.t('per_night', 'night') }}</span>
             </div>
           </div>
 
@@ -185,7 +185,7 @@ watch(
               </h3>
 
               <div
-                class="flex items-center gap-4 text-xs font-medium text-slate-600 dark:text-slate-400"
+                class="flex items-center gap-4 text-xs font-medium text-slate-700 dark:text-slate-300"
               >
                 <div class="flex items-center gap-1.5">
                   <Users class="w-4 h-4 text-[#D6A94F]" />
@@ -218,7 +218,7 @@ watch(
             <div class="grid grid-cols-2 gap-2.5 pt-4">
               <button
                 @click="openBooking(room)"
-                class="py-2.5 px-3 rounded-xl border border-[#26354D] dark:border-[#26354D] text-[#101827] dark:text-slate-200 font-bold text-xs uppercase tracking-wider hover:border-[#D6A94F] hover:text-[#D6A94F] transition-all cursor-pointer text-center"
+                class="py-2.5 px-3 rounded-xl border border-slate-300 dark:border-[#26354D] text-slate-800 dark:text-slate-200 font-bold text-xs uppercase tracking-wider hover:border-[#D6A94F] hover:text-[#9A7418] dark:hover:text-[#D6A94F] transition-all cursor-pointer text-center"
               >
                 {{ languageStore.t('details', 'Details') }}
               </button>
@@ -227,7 +227,7 @@ watch(
                 @click="openBooking(room)"
                 class="py-2.5 px-3 rounded-xl bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black text-xs uppercase tracking-wider shadow-md shadow-[#D6A94F]/20 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span>{{ languageStore.t('book_now', 'Book Now') }}</span>
+                <span class="text-[#101827] font-extrabold">{{ languageStore.t('book_now', 'Book Now') }}</span>
                 <ArrowRight class="w-3.5 h-3.5" />
               </button>
             </div>

@@ -26,12 +26,12 @@
       <h1
         class="text-3xl font-black text-slate-900 dark:text-white tracking-wider mb-1 animate-fade-in uppercase"
       >
-        Metropolitan Hotels
+        Executive Hotel
       </h1>
       <p
         class="text-sm font-bold tracking-widest text-amber-600 dark:text-amber-400 mb-6 animate-fade-in-delay uppercase"
       >
-        Crafting Premier Stays
+        Luxury Hotel &amp; Restaurant Experience
       </p>
 
       <div class="flex gap-1 mb-8 animate-fade-in-delay-2">

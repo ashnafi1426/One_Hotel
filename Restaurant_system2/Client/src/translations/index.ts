@@ -22,8 +22,8 @@ export const translations = {
     select_language: 'Select Language',
     change_language: 'Change Language',
 
-    hero_badge: 'Grand Horizon Hotel & Resort',
-    hero_title_part1: 'Timeless Luxury &',
+    hero_badge: 'EXECUTIVE HOTEL • ADDIS ABABA',
+    hero_title_part1: 'Timeless Luxury',
     hero_title_part2: 'Unmatched Comfort',
     hero_desc:
       'Experience 5-star Ethiopian hospitality, elegant master suites, fine dining, and personalized concierge service in the heart of Addis Ababa.',
@@ -428,7 +428,7 @@ export const translations = {
     guest_reviews: 'Guest Reviews',
     what_guests_say: 'What Our Guests Say',
     what_guests_say_desc:
-      'Read real reviews from international travelers who experienced the luxury of Grand Horizon Hotel.',
+      'Read real reviews from international travelers who experienced the luxury of Executive Hotel.',
 
     discover_luxury_rooms: 'Discover Our Luxurious Rooms',
     discover_rooms_desc:
@@ -1744,9 +1744,9 @@ export const translations = {
     get_in_touch: 'Get In Touch',
     connect_with_us: 'Connect With Us',
     contact_desc:
-      'Have questions or special requests? Our concierge and reservation teams are available 24/7 to ensure your experience at Grand Horizon is extraordinary.',
+      'Have questions or special requests? Our concierge and reservation teams are available 24/7 to ensure your experience at Executive Hotel is extraordinary.',
     hotel_location: 'Hotel Location',
-    hotel_location_val: 'Grand Horizon Hotel & Resort',
+    hotel_location_val: 'Executive Hotel – Addis Ababa',
     hotel_address_val: 'Bolé Road, Next to Business Center, Addis Ababa, Ethiopia',
     direct_phone_lines: 'Direct Phone Lines',
     reservations_label: 'Reservations',
@@ -1773,7 +1773,7 @@ export const translations = {
     message_sent_success:
       'Thank you! Your message has been received. Our concierge team will contact you shortly.',
     faq_title: 'Frequently Asked Questions',
-    faq_desc: 'Quick answers to common questions about Grand Horizon.',
+    faq_desc: 'Quick answers to common questions about Executive Hotel.',
     faq_q1: 'What are Check-In & Check-Out times?',
     faq_a1:
       'Standard Check-In is at 02:00 PM and Check-Out is at 12:00 PM. Early check-in or late check-out can be requested based on availability.',
@@ -1869,7 +1869,7 @@ export const translations = {
     why_choose_us: 'Why Choose Us',
     what_sets_us_apart: 'What Sets Us Apart',
     why_choose_us_desc:
-      'Discover why thousands of guests choose Grand Horizon for their luxury hospitality experience year after year.',
+      'Discover why thousands of guests choose Executive Hotel for their luxury hospitality experience year after year.',
     'Luxury & Comfort': 'Luxury & Comfort',
     reason_luxury_desc:
       'Experience unmatched comfort in our master suites with premium linen and city views.',
@@ -1909,8 +1909,8 @@ export const translations = {
     select_language: 'ቋንቋ ይምረጡ',
     change_language: 'ቋንቋ ቀይር',
 
-    hero_badge: 'ግራንድ ሆራይዘን ሆቴል እና ሪዞርት',
-    hero_title_part1: 'ዘመን የማይሽረው ቅንጦት እና',
+    hero_badge: 'ኤክስኪዩቲቭ ሆቴል • አዲስ አበባ',
+    hero_title_part1: 'ዘመን የማይሽረው ቅንጦት',
     hero_title_part2: 'ተወዳዳሪ የሌለው ምቾት',
     hero_desc: 'ባለ 5 ኮከብ የኢትዮጵያዊ መስተንግዶ፣ ውብ ስዊቶች፣ ምርጥ ምግቦች እና ግላዊ አገልግሎትን በአዲስ አበባ እምብርት ያግኙ።',
     book_your_stay: 'አሁኑኑ ይያዙ',
@@ -2305,7 +2305,7 @@ export const translations = {
 
     guest_reviews: 'የእንግዶች አስተያየት',
     what_guests_say: 'እንግዶቻችን ምን ይላሉ?',
-    what_guests_say_desc: 'በግራንድ ሆራይዘን ሆቴል ያረፉ እንግዶች የሰጡትን እውነተኛ አስተያየቶች ያንብቡ።',
+    what_guests_say_desc: 'በኤክስኪዩቲቭ ሆቴል ያረፉ እንግዶች የሰጡትን እውነተኛ አስተያየቶች ያንብቡ።',
 
     discover_luxury_rooms: 'የቅንጦት ክፍሎቻችንን ያግኙ',
     discover_rooms_desc: 'በውብ ክፍሎቻችን ውስጥ የማይረሳ ምቾትን ያጣጥሙ። ሁሉም ክፍሎች ዘመናዊ መገልገያዎች እና ድንቅ እይታዎች አሏቸው።',
@@ -3605,9 +3605,9 @@ export const translations = {
     get_in_touch: 'ያግኙን',
     connect_with_us: 'ከእኛ ጋር ይገናኙ',
     contact_desc:
-      'ጥያቄዎች ወይም ልዩ ፍላጎቶች አሉዎት? የእኛ የመስተንግዶ እና የቦታ ማስያዣ ቡድኖች በግራንድ ሆራይዘን ያለዎት ቆይታ አስደናቂ እንዲሆን 24/7 ዝግጁ ናቸው።',
+      'ጥያቄዎች ወይም ልዩ ፍላጎቶች አሉዎት? የእኛ የመስተንግዶ እና የቦታ ማስያዣ ቡድኖች በኤክስኪዩቲቭ ሆቴል ያለዎት ቆይታ አስደናቂ እንዲሆን 24/7 ዝግጁ ናቸው።',
     hotel_location: 'የሆቴሉ አድራሻ',
-    hotel_location_val: 'ግራንድ ሆራይዘን ሆቴል እና ሪዞርት',
+    hotel_location_val: 'ኤክስኪዩቲቭ ሆቴል - አዲስ አበባ',
     hotel_address_val: 'ቦሌ መንገድ፣ ከቢዝነስ ሴንተር አጠገብ፣ አዲስ አበባ፣ ኢትዮጵያ',
     direct_phone_lines: 'የቀጥታ ስልክ መስመሮች',
     reservations_label: 'ቦታ ማስያዣ',
@@ -3632,7 +3632,7 @@ export const translations = {
     sending_message: 'መልዕክቱን በመላክ ላይ...',
     message_sent_success: 'እናመሰግናለን! መልዕክትዎ ደርሶናል። የመስተንግዶ ቡድናችን በቅርቡ ያነጋግርዎታል።',
     faq_title: 'ተደጋግመው የሚጠየቁ ጥያቄዎች',
-    faq_desc: 'ስለ ግራንድ ሆራይዘን ለሚነሱ የተለመዱ ጥያቄዎች ፈጣን ምላሾች።',
+    faq_desc: 'ስለ ኤክስኪዩቲቭ ሆቴል ለሚነሱ የተለመዱ ጥያቄዎች ፈጣን ምላሾች።',
     faq_q1: 'የመግቢያ (Check-In) እና የመውጫ (Check-Out) ሰዓቶች ስንት ናቸው?',
     faq_a1:
       'መደበኛ የመግቢያ ሰዓት 08:00 (2:00 PM) ሲሆን የመውጫ ሰዓት 06:00 (12:00 PM) ነው። ቀድሞ መግባት ወይም ዘግይቶ መውጣት በክፍሎች ክፍትነት ላይ ተመስርቶ መጠየቅ ይቻላል።',
@@ -3710,7 +3710,7 @@ export const translations = {
 
     why_choose_us: 'ለምን እኛን ይመርጣሉ',
     what_sets_us_apart: 'ልዩ የሚያደርገን ምንድን ነው',
-    why_choose_us_desc: 'በሺዎች የሚቆጠሩ እንግዶች ለምን በየዓመቱ ግራንድ ሆራይዘንን እንደሚመርጡ ይወቁ።',
+    why_choose_us_desc: 'በሺዎች የሚቆጠሩ እንግዶች ለምን በየዓመቱ ኤክስኪዩቲቭ ሆቴልን እንደሚመርጡ ይወቁ።',
     'Luxury & Comfort': 'ቅንጦት እና ምቾት',
     reason_luxury_desc: 'በማስተር ሱዊቶቻችን ውስጥ ከምርጥ አንሶላዎች እና ከከተማ እይታ ጋር ወደር የለሽ ምቾትን ይለማመዱ።',
     'Personalized Concierge': 'ግላዊ መስተንግዶ',

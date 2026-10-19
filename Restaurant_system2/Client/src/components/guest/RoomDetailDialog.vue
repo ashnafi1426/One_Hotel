@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import BookingModal from '@/components/guest/BookingModal.vue'
 
 interface Room {
-  id: string
+  id: string | number
   name: string
   room_number?: string
   room_type: string
   price: number
   capacity: number
-  size: number
-  bed_type: string
+  size?: number
+  bed_type?: string
   image: string
-  rating: number
-  reviews: number
+  rating?: number
+  reviews?: number
   available: boolean
-  amenities: string[]
+  amenities?: string[]
   description?: string
 }
 
@@ -27,9 +27,10 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:modelValue', value: boolean): void
   (e: 'close'): void
+  (e: 'reserve', room: Room): void
 }>()
 
-const router = useRouter()
+const showBookingModal = ref(false)
 
 const isOpen = computed({
   get: () => props.modelValue,
@@ -39,15 +40,17 @@ const isOpen = computed({
 })
 
 const formattedPrice = computed(() => {
-  return `${props.room.price.toFixed(2)}`
+  return `$${Number(props.room.price || 0).toLocaleString()}`
 })
 
 const availabilityText = computed(() => {
-  return props.room.available ? 'Available' : 'Fully Booked'
+  return props.room.available ? 'Available' : 'Currently Reserved'
 })
 
 const availabilityClass = computed(() => {
-  return props.room.available ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+  return props.room.available
+    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+    : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
 })
 
 function closeDialog() {
@@ -55,16 +58,17 @@ function closeDialog() {
   emit('close')
 }
 
-function reserveRoom() {
-  emit('update:modelValue', false)
-
-  router.push({
-    path: '/reservation',
-    query: {
-      room: props.room.id,
-    },
-  })
+function handleReserve() {
+  emit('reserve', props.room)
+  showBookingModal.value = true
 }
+
+const roomForModal = computed(() => ({
+  id: String(props.room.id),
+  room_number: props.room.room_number || String(props.room.id),
+  room_type: props.room.room_type,
+  price_per_night: props.room.price,
+}))
 </script>
 
 <template>
@@ -72,422 +76,118 @@ function reserveRoom() {
     <Transition
       enter-active-class="duration-300 ease-out"
       enter-from-class="opacity-0"
-      enter-to-class="opacity-100"
       leave-active-class="duration-200 ease-in"
-      leave-from-class="opacity-100"
       leave-to-class="opacity-0"
     >
-      <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto bg-black/70 backdrop-blur-sm">
-        <div class="flex min-h-screen items-center justify-center p-6">
-          <div class="relative w-full max-w-6xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+      <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto bg-[#070C14]/80 backdrop-blur-md">
+        <div class="flex min-h-screen items-center justify-center p-4 sm:p-6">
+          <div class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-[#101827] border border-white/10 shadow-2xl text-white">
+            <!-- Close button -->
             <button
               @click="closeDialog"
-              class="absolute right-5 top-5 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-lg transition hover:bg-red-500 hover:text-white"
+              aria-label="Close dialog"
+              class="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#182235]/80 text-white/80 backdrop-blur-sm transition hover:bg-[#D6A94F] hover:text-[#101827]"
             >
-              ✕
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
 
-            <div class="relative">
-              <img :src="room.image" :alt="room.name" class="h-[420px] w-full object-cover" />
+            <!-- Hero Image Banner -->
+            <div class="relative h-72 sm:h-96 w-full overflow-hidden">
+              <img :src="room.image" :alt="room.name" class="h-full w-full object-cover" />
+              <div class="absolute inset-0 bg-gradient-to-t from-[#101827] via-[#101827]/40 to-transparent" />
 
               <div
-                class="absolute inset-0 bg-gradient-to-t from-black via-black/30 to-transparent"
-              />
-
-              <div
-                class="absolute left-8 top-8 rounded-full px-5 py-2 text-sm font-semibold"
+                class="absolute left-6 top-6 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider backdrop-blur-md"
                 :class="availabilityClass"
               >
                 {{ availabilityText }}
               </div>
 
-              <div class="absolute bottom-10 left-10 right-10 text-white">
-                <p class="text-sm font-semibold uppercase tracking-[0.3em] text-amber-400">
+              <div class="absolute bottom-6 left-6 right-6">
+                <span class="text-xs font-semibold uppercase tracking-[0.25em] text-[#D6A94F]">
                   {{ room.room_type }}
-                </p>
-
-                <h2 class="mt-3 text-5xl font-bold">
+                </span>
+                <h2 class="mt-2 text-2xl sm:text-4xl font-serif font-light text-white">
                   {{ room.name }}
                 </h2>
-
-                <div class="mt-5 flex flex-wrap items-center gap-4">
-                  <div class="flex items-center gap-2">
-                    <span class="text-yellow-400 text-xl"> ★★★★★ </span>
-
-                    <span class="font-semibold">
-                      {{ room.rating }}
-                    </span>
-
-                    <span class="text-gray-300"> ({{ room.reviews }} Reviews) </span>
-                  </div>
-
-                  <div class="h-5 w-px bg-white/40" />
-
-                  <div class="font-semibold">
-                    {{ formattedPrice }}
-
-                    <span class="font-normal text-gray-300"> / Night </span>
-                  </div>
+                <div class="mt-3 flex items-center gap-4 text-sm text-slate-300">
+                  <span>Room #{{ room.room_number || room.id }}</span>
+                  <span class="text-white/40">•</span>
+                  <span class="text-[#D6A94F] font-semibold text-lg">{{ formattedPrice }} <span class="text-xs font-normal text-slate-400">/ night</span></span>
                 </div>
               </div>
             </div>
 
-            <div class="p-10">
-              <div class="grid gap-6 md:grid-cols-4">
-                <div class="rounded-2xl border border-slate-200 p-6 text-center">
-                  <div class="text-4xl">👥</div>
-
-                  <h4 class="mt-4 font-bold text-slate-900">Capacity</h4>
-
-                  <p class="mt-2 text-slate-500">{{ room.capacity }} Guests</p>
+            <!-- Content Area -->
+            <div class="p-6 sm:p-8 space-y-8">
+              <!-- Key Specs -->
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <div class="rounded-xl bg-[#182235] border border-white/5 p-4 text-center">
+                  <div class="text-xs uppercase tracking-wider text-slate-400">Capacity</div>
+                  <div class="mt-1 font-semibold text-white">{{ room.capacity }} Guests</div>
                 </div>
-
-                <div class="rounded-2xl border border-slate-200 p-6 text-center">
-                  <div class="text-4xl">📐</div>
-
-                  <h4 class="mt-4 font-bold text-slate-900">Room Size</h4>
-
-                  <p class="mt-2 text-slate-500">{{ room.size }} m²</p>
+                <div class="rounded-xl bg-[#182235] border border-white/5 p-4 text-center">
+                  <div class="text-xs uppercase tracking-wider text-slate-400">Room Size</div>
+                  <div class="mt-1 font-semibold text-white">{{ room.size || 35 }} m²</div>
                 </div>
-
-                <div class="rounded-2xl border border-slate-200 p-6 text-center">
-                  <div class="text-4xl">🛏️</div>
-
-                  <h4 class="mt-4 font-bold text-slate-900">Bed Type</h4>
-
-                  <p class="mt-2 text-slate-500">
-                    {{ room.bed_type }}
-                  </p>
+                <div class="rounded-xl bg-[#182235] border border-white/5 p-4 text-center">
+                  <div class="text-xs uppercase tracking-wider text-slate-400">Bed Type</div>
+                  <div class="mt-1 font-semibold text-white">{{ room.bed_type || 'King Bed' }}</div>
                 </div>
-
-                <div class="rounded-2xl border border-slate-200 p-6 text-center">
-                  <div class="text-4xl">💰</div>
-
-                  <h4 class="mt-4 font-bold text-slate-900">Price</h4>
-
-                  <p class="mt-2 text-amber-600 text-xl font-bold">
-                    {{ formattedPrice }}
-                  </p>
+                <div class="rounded-xl bg-[#182235] border border-white/5 p-4 text-center">
+                  <div class="text-xs uppercase tracking-wider text-slate-400">Rate</div>
+                  <div class="mt-1 font-semibold text-[#D6A94F]">{{ formattedPrice }}</div>
                 </div>
               </div>
 
-              <div class="mt-12 grid gap-10 lg:grid-cols-3">
-                <div class="lg:col-span-2">
-                  <section>
-                    <h3 class="text-3xl font-bold text-slate-900">Room Description</h3>
-
-                    <p class="mt-6 leading-8 text-slate-600">
-                      {{
-                        room.description ||
-                        'Experience premium comfort in our beautifully designed room. Featuring modern interiors, luxury bedding, complimentary Wi-Fi, air conditioning, smart television, elegant bathroom facilities, and everything required for a relaxing stay whether travelling for business or leisure.'
-                      }}
-                    </p>
-                  </section>
-
-                  <section class="mt-12">
-                    <h3 class="text-3xl font-bold text-slate-900">Room Amenities</h3>
-
-                    <div class="mt-8 grid gap-4 md:grid-cols-2">
-                      <div
-                        v-for="amenity in room.amenities"
-                        :key="amenity"
-                        class="flex items-center rounded-xl border border-slate-200 p-4"
-                      >
-                        <div
-                          class="mr-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100"
-                        >
-                          ✓
-                        </div>
-
-                        <span class="font-medium text-slate-700">
-                          {{ amenity }}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section class="mt-12">
-                    <h3 class="text-3xl font-bold text-slate-900">Included Services</h3>
-
-                    <div class="mt-8 grid gap-5 md:grid-cols-2">
-                      <div class="rounded-xl bg-slate-50 p-5">Complimentary Breakfast</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">📶 High-Speed Wi-Fi</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🏊 Swimming Pool Access</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🏋️ Fitness Center</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🚗 Free Parking</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🧹 Daily Housekeeping</div>
-                    </div>
-                  </section>
-                </div>
-
-                <aside>
-                  <div class="rounded-2xl border border-slate-200 p-8 shadow-sm">
-                    <h3 class="text-2xl font-bold text-slate-900">Hotel Policies</h3>
-
-                    <div class="mt-8 space-y-6">
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Check-in</h4>
-
-                        <p class="mt-2 text-slate-500">From 2:00 PM</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Check-out</h4>
-
-                        <p class="mt-2 text-slate-500">Before 12:00 PM</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Cancellation</h4>
-
-                        <p class="mt-2 text-slate-500">
-                          Free cancellation up to 24 hours before arrival.
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Smoking</h4>
-
-                        <p class="mt-2 text-slate-500">Non-smoking room.</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Pets</h4>
-
-                        <p class="mt-2 text-slate-500">Pets are not allowed.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-8 rounded-2xl bg-amber-50 p-8">
-                    <h3 class="text-2xl font-bold text-slate-900">Reservation Summary</h3>
-
-                    <div class="mt-8 space-y-5">
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Room Type </span>
-
-                        <strong>
-                          {{ room.room_type }}
-                        </strong>
-                      </div>
-
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Capacity </span>
-
-                        <strong> {{ room.capacity }} Guests </strong>
-                      </div>
-
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Bed </span>
-
-                        <strong>
-                          {{ room.bed_type }}
-                        </strong>
-                      </div>
-
-                      <hr />
-
-                      <div class="flex justify-between text-2xl font-bold">
-                        <span>Total</span>
-
-                        <span class="text-amber-600">
-                          {{ formattedPrice }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
+              <!-- Description -->
+              <div>
+                <h3 class="text-lg font-serif font-medium text-white mb-2">Room Overview</h3>
+                <p class="text-sm sm:text-base leading-relaxed text-slate-300">
+                  {{
+                    room.description ||
+                    'Experience an exceptional standard of sanctuary and comfort. Featuring bespoke furnishings, artisanal linens, spa-inspired bath amenities, high-speed connectivity, and attentive round-the-clock service designed for seamless relaxation.'
+                  }}
+                </p>
               </div>
 
-              <div class="mt-12 grid gap-10 lg:grid-cols-3">
-                <div class="lg:col-span-2">
-                  <section>
-                    <h3 class="text-3xl font-bold text-slate-900">Room Description</h3>
-
-                    <p class="mt-6 leading-8 text-slate-600">
-                      {{
-                        room.description ||
-                        'Experience premium comfort in our beautifully designed room. Featuring modern interiors, luxury bedding, complimentary Wi-Fi, air conditioning, smart television, elegant bathroom facilities, and everything required for a relaxing stay whether travelling for business or leisure.'
-                      }}
-                    </p>
-                  </section>
-
-                  <section class="mt-12">
-                    <h3 class="text-3xl font-bold text-slate-900">Room Amenities</h3>
-
-                    <div class="mt-8 grid gap-4 md:grid-cols-2">
-                      <div
-                        v-for="amenity in room.amenities"
-                        :key="amenity"
-                        class="flex items-center rounded-xl border border-slate-200 p-4"
-                      >
-                        <div
-                          class="mr-4 flex h-10 w-10 items-center justify-center rounded-full bg-emerald-100"
-                        >
-                          ✓
-                        </div>
-
-                        <span class="font-medium text-slate-700">
-                          {{ amenity }}
-                        </span>
-                      </div>
-                    </div>
-                  </section>
-
-                  <section class="mt-12">
-                    <h3 class="text-3xl font-bold text-slate-900">Included Services</h3>
-
-                    <div class="mt-8 grid gap-5 md:grid-cols-2">
-                      <div class="rounded-xl bg-slate-50 p-5">Complimentary Breakfast</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">📶 High-Speed Wi-Fi</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🏊 Swimming Pool Access</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🏋️ Fitness Center</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🚗 Free Parking</div>
-
-                      <div class="rounded-xl bg-slate-50 p-5">🧹 Daily Housekeeping</div>
-                    </div>
-                  </section>
+              <!-- Amenities -->
+              <div v-if="room.amenities && room.amenities.length > 0">
+                <h3 class="text-lg font-serif font-medium text-white mb-3">Room Amenities</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  <div
+                    v-for="amenity in room.amenities"
+                    :key="amenity"
+                    class="flex items-center gap-2.5 rounded-lg bg-[#182235]/60 border border-white/5 px-3 py-2 text-sm text-slate-200"
+                  >
+                    <span class="text-[#D6A94F] text-xs">◆</span>
+                    <span>{{ amenity }}</span>
+                  </div>
                 </div>
-
-                <aside>
-                  <div class="rounded-2xl border border-slate-200 p-8 shadow-sm">
-                    <h3 class="text-2xl font-bold text-slate-900">Hotel Policies</h3>
-
-                    <div class="mt-8 space-y-6">
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Check-in</h4>
-
-                        <p class="mt-2 text-slate-500">From 2:00 PM</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Check-out</h4>
-
-                        <p class="mt-2 text-slate-500">Before 12:00 PM</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Cancellation</h4>
-
-                        <p class="mt-2 text-slate-500">
-                          Free cancellation up to 24 hours before arrival.
-                        </p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Smoking</h4>
-
-                        <p class="mt-2 text-slate-500">Non-smoking room.</p>
-                      </div>
-
-                      <div>
-                        <h4 class="font-semibold text-slate-800">Pets</h4>
-
-                        <p class="mt-2 text-slate-500">Pets are not allowed.</p>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="mt-8 rounded-2xl bg-amber-50 p-8">
-                    <h3 class="text-2xl font-bold text-slate-900">Reservation Summary</h3>
-
-                    <div class="mt-8 space-y-5">
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Room Type </span>
-
-                        <strong>
-                          {{ room.room_type }}
-                        </strong>
-                      </div>
-
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Capacity </span>
-
-                        <strong> {{ room.capacity }} Guests </strong>
-                      </div>
-
-                      <div class="flex justify-between">
-                        <span class="text-slate-500"> Bed </span>
-
-                        <strong>
-                          {{ room.bed_type }}
-                        </strong>
-                      </div>
-
-                      <hr />
-
-                      <div class="flex justify-between text-2xl font-bold">
-                        <span>Total</span>
-
-                        <span class="text-amber-600">
-                          {{ formattedPrice }}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </aside>
               </div>
 
-              <div class="mt-14 border-t border-slate-200 pt-10">
-                <div class="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-                  <div>
-                    <h3 class="text-2xl font-bold text-slate-900">Current Availability</h3>
-
-                    <div
-                      class="mt-4 inline-flex items-center rounded-full px-5 py-3 font-semibold"
-                      :class="availabilityClass"
-                    >
-                      {{ availabilityText }}
-                    </div>
-
-                    <p class="mt-4 max-w-xl text-slate-500">
-                      Room availability is updated in real time. Once your reservation is confirmed,
-                      this room will immediately become unavailable for the selected dates.
-                    </p>
-                  </div>
-
-                  <div class="flex flex-col items-end">
-                    <p class="text-slate-500">Starting From</p>
-
-                    <h2 class="mt-2 text-5xl font-bold text-amber-600">
-                      {{ formattedPrice }}
-                    </h2>
-
-                    <p class="mt-2 text-slate-500">Per Night</p>
-
-                    <div class="mt-8 flex flex-wrap gap-4">
-                      <button
-                        @click="closeDialog"
-                        class="rounded-xl border border-slate-300 px-8 py-4 font-semibold text-slate-700 transition hover:bg-slate-100"
-                      >
-                        Close
-                      </button>
-
-                      <RouterLink
-                        to="/contact"
-                        class="rounded-xl border border-amber-500 px-8 py-4 font-semibold text-amber-600 transition hover:bg-amber-500 hover:text-white"
-                      >
-                        Contact Hotel
-                      </RouterLink>
-
-                      <button
-                        @click="reserveRoom"
-                        :disabled="!room.available"
-                        class="rounded-xl bg-amber-500 px-10 py-4 font-semibold text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300"
-                      >
-                        Reserve Now
-                      </button>
-                    </div>
-                  </div>
+              <!-- Footer CTA -->
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
+                <div>
+                  <div class="text-xs text-slate-400 uppercase tracking-wider">Nightly Stay</div>
+                  <div class="text-2xl font-serif text-[#D6A94F] font-semibold">{{ formattedPrice }}</div>
+                </div>
+                <div class="flex items-center gap-3 w-full sm:w-auto">
+                  <button
+                    @click="closeDialog"
+                    class="flex-1 sm:flex-none px-6 py-3 rounded-lg border border-white/20 text-sm font-medium text-slate-300 hover:bg-white/5 transition"
+                  >
+                    Close
+                  </button>
+                  <button
+                    @click="handleReserve"
+                    :disabled="!room.available"
+                    class="flex-1 sm:flex-none px-8 py-3 rounded-lg bg-[#D6A94F] hover:bg-[#C59B3F] disabled:bg-slate-700 disabled:cursor-not-allowed text-[#101827] font-semibold text-sm transition shadow-lg shadow-[#D6A94F]/20"
+                  >
+                    Reserve This Suite
+                  </button>
                 </div>
               </div>
             </div>
@@ -495,5 +195,12 @@ function reserveRoom() {
         </div>
       </div>
     </Transition>
+
+    <BookingModal
+      v-if="showBookingModal"
+      :isOpen="showBookingModal"
+      :room="roomForModal"
+      @close="showBookingModal = false"
+    />
   </Teleport>
 </template>

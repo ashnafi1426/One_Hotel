@@ -224,12 +224,12 @@ const login = async (): Promise<void> => {
         >
           <img
             src="/images/Hotel logo.png"
-            alt="Metropolitan Hotels Logo"
+            alt="Executive Hotel Logo"
             class="w-full h-full object-contain"
           />
         </div>
         <span class="text-xs sm:text-sm font-black text-slate-900 dark:text-white tracking-tight"
-          >Metropolitan Hotels</span
+          >Executive Hotel</span
         >
         <span
           class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20"
@@ -264,7 +264,7 @@ const login = async (): Promise<void> => {
           >
             <img
               src="/images/Hotel logo.png"
-              alt="Metropolitan Hotels Logo"
+              alt="Executive Hotel Logo"
               class="w-full h-full object-contain"
             />
           </div>
@@ -272,7 +272,7 @@ const login = async (): Promise<void> => {
             {{ languageStore.t('staff_admin_portal', 'Staff & Admin Portal') }}
           </h2>
           <p class="text-xs text-amber-600 dark:text-amber-400 font-bold uppercase tracking-wider">
-            Metropolitan Hotels &mdash; Crafting Premier Stays
+            Executive Hotel &mdash; Luxury Hotel &amp; Restaurant Experience
           </p>
         </div>
 
@@ -408,7 +408,7 @@ const login = async (): Promise<void> => {
     <footer
       class="w-full max-w-lg text-center text-xs text-slate-600 dark:text-slate-400 space-y-0.5 font-medium z-10 py-1 sm:py-2"
     >
-      <p>&copy; 2026 Grand Horizon Luxury Hotel & Dining System.</p>
+      <p>&copy; 2026 Executive Hotel – Addis Ababa. Luxury Hotel &amp; Restaurant Experience.</p>
       <p class="text-[11px] text-slate-500 dark:text-slate-500">
         {{
           languageStore.t('all_systems_operational', 'Enterprise Edition • 256-Bit SSL Encrypted')

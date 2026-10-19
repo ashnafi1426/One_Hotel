@@ -120,7 +120,7 @@ const facilities = computed<Facility[]>(() => [
           {{ languageStore.t('world_class_facilities', 'World-Class Hospitality Facilities') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+        <p class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
           {{
             languageStore.t(
               'facilities_desc',
@@ -151,7 +151,7 @@ const facilities = computed<Facility[]>(() => [
             {{ facility.title }}
           </h3>
 
-          <p class="text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-light">
+          <p class="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-normal">
             {{ facility.description }}
           </p>
         </div>

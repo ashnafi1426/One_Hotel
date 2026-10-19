@@ -42,27 +42,26 @@ html.dark #app {
   color: var(--color-text, #f8fafc);
 }
 
-h1,
-h2,
-h3,
-h4,
-h5,
-h6 {
+h1:not([class*='text-']),
+h2:not([class*='text-']),
+h3:not([class*='text-']),
+h4:not([class*='text-']),
+h5:not([class*='text-']),
+h6:not([class*='text-']) {
   color: #1f2937;
   transition: color 0.3s ease;
 }
 
-html.dark h1,
-html.dark h2,
-html.dark h3,
-html.dark h4,
-html.dark h5,
-html.dark h6 {
+html.dark h1:not([class*='text-']),
+html.dark h2:not([class*='text-']),
+html.dark h3:not([class*='text-']),
+html.dark h4:not([class*='text-']),
+html.dark h5:not([class*='text-']),
+html.dark h6:not([class*='text-']) {
   color: #f1f5f9;
 }
 
 p:not([class*='text-']),
-span:not([class*='text-']),
 label:not([class*='text-']),
 li:not([class*='text-']) {
   color: #4b5563;
@@ -70,10 +69,25 @@ li:not([class*='text-']) {
 }
 
 html.dark p:not([class*='text-']),
-html.dark span:not([class*='text-']),
 html.dark label:not([class*='text-']),
 html.dark li:not([class*='text-']) {
   color: #cbd5e1;
+}
+
+/* Inline spans MUST always inherit their parent element's color unless given an explicit text-* class */
+span:not([class*='text-']) {
+  color: inherit;
+}
+
+/* Any text inside text-white or dark-background containers must retain white/light text and never be forced to dark gray in light mode */
+[class*='text-white'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='text-slate-100'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='text-slate-200'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='text-[#D6A94F]'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='text-[#F5BD47]'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='bg-[#101827]'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']),
+[class*='bg-[#182235]'] :is(h1, h2, h3, h4, h5, h6, p, span, label, li):not([class*='text-']) {
+  color: inherit !important;
 }
 
 html.dark .text-slate-900,
@@ -180,11 +194,10 @@ button {
     border-color 0.3s ease;
 }
 
-input,
-textarea,
-select {
+input:not([class*='bg-']),
+textarea:not([class*='bg-']),
+select:not([class*='bg-']) {
   background-color: #ffffff;
-  color: #1f2937;
   border-color: #d1d5db;
   transition:
     background-color 0.3s ease,
@@ -192,12 +205,23 @@ select {
     border-color 0.3s ease;
 }
 
-html.dark input,
-html.dark textarea,
-html.dark select {
+input:not([class*='text-']),
+textarea:not([class*='text-']),
+select:not([class*='text-']) {
+  color: #1f2937;
+}
+
+html.dark input:not([class*='bg-']),
+html.dark textarea:not([class*='bg-']),
+html.dark select:not([class*='bg-']) {
   background-color: #1e293b;
-  color: #f1f5f9;
   border-color: #334155;
+}
+
+html.dark input:not([class*='text-']),
+html.dark textarea:not([class*='text-']),
+html.dark select:not([class*='text-']) {
+  color: #f1f5f9;
 }
 
 input::placeholder,
@@ -238,8 +262,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
 
-.card,
-[class*='card'] {
+.card {
   background-color: #ffffff;
   color: #1f2937;
   transition:
@@ -247,8 +270,7 @@ html.dark ::-webkit-scrollbar-thumb:hover {
     color 0.3s ease;
 }
 
-html.dark .card,
-html.dark [class*='card'] {
+html.dark .card {
   background-color: #1e293b;
   color: #f1f5f9;
 }

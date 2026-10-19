@@ -50,7 +50,7 @@ function goToReservation() {
           class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/20 text-[#D6A94F] border border-[#D6A94F]/30"
         >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
-          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('gallery', 'Visual Showcase') }}</span>
+          <span class="text-[#D6A94F] font-bold">{{ guestHotelStore.hotelName }} • {{ languageStore.t('gallery', 'Visual Showcase') }}</span>
         </div>
 
         <h1
@@ -80,7 +80,7 @@ function goToReservation() {
             class="rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] px-8 py-3.5 font-black text-[#101827] shadow-lg shadow-[#D6A94F]/20 transition text-xs uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2"
           >
             <Calendar class="w-4 h-4 text-[#101827]" />
-            <span>{{ languageStore.t('book_your_stay', 'Book Your Stay') }}</span>
+            <span class="text-[#101827] font-extrabold">{{ languageStore.t('book_your_stay', 'Book Your Stay') }}</span>
           </button>
 
           <button
@@ -88,7 +88,7 @@ function goToReservation() {
             class="rounded-full border border-[#26354D] bg-[#182235]/80 hover:bg-[#182235] px-8 py-3.5 font-bold text-white transition text-xs uppercase tracking-widest cursor-pointer backdrop-blur-md flex items-center justify-center gap-2"
           >
             <BedDouble class="w-4 h-4 text-[#D6A94F]" />
-            <span>{{ languageStore.t('view_rooms', 'View Suites') }}</span>
+            <span class="text-white font-bold">{{ languageStore.t('view_rooms', 'View Suites') }}</span>
           </button>
         </div>
 

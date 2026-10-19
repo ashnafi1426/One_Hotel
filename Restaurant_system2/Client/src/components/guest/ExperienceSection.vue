@@ -76,7 +76,7 @@ function discoverMore() {
           <p
             class="mt-4 sm:mt-5 md:mt-6 lg:mt-8 text-sm sm:text-base md:text-lg lg:text-lg leading-6 sm:leading-7 md:leading-8 text-slate-500"
           >
-            Every moment at Grand Horizon Hotel is designed to deliver exceptional comfort,
+            Every moment at Executive Hotel is designed to deliver exceptional comfort,
             unforgettable experiences, and genuine hospitality. From elegant rooms to premium dining
             and wellness facilities, your stay becomes a memorable journey.
           </p>

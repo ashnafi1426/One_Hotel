@@ -91,6 +91,25 @@
   --brand-border-rgb: var(--color-border-rgb);
   --brand-border-subtle-rgb: var(--color-border-subtle-rgb);
 
+  /* Accessible Gold (WCAG AA 4.7:1 on Light Backgrounds) */
+  --color-primary-accessible: #9A7418;
+  --color-gold-bright: #F5BD47;
+
+  /* Typography Design Tokens (Two Font Families) */
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans: 'Plus Jakarta Sans', Inter, system-ui, -apple-system, sans-serif;
+  --tracking-tight: -0.015em;
+  --tracking-normal: 0em;
+  --tracking-label: 0.08em;
+  --tracking-menu: 0.08em;
+  --tracking-btn: 0.08em;
+
+  /* Component Shape Tokens (Varied Component Radii) */
+  --radius-btn: 9999px;
+  --radius-card: 16px;
+  --radius-input: 12px;
+  --radius-badge: 9999px;
+
   --shadow-brand-glow: 0 4px 18px -2px rgba(var(--brand-primary-rgb), 0.32);
   --shadow-brand-glow-lg: 0 8px 28px -4px rgba(var(--brand-primary-rgb), 0.45);
   --shadow-brand-surface: 0 4px 20px -2px rgba(15, 23, 42, 0.06);
@@ -201,6 +220,10 @@ html.dark {
   --brand-muted-rgb: var(--color-text-muted-rgb);
   --brand-border-rgb: var(--color-border-rgb);
   --brand-border-subtle-rgb: var(--color-border-subtle-rgb);
+
+  /* Accessible Gold in Dark Mode */
+  --color-primary-accessible: #D6A94F;
+  --color-gold-bright: #F5BD47;
 
   --shadow-brand-glow: 0 4px 22px 0 rgba(var(--brand-primary-rgb), 0.42);
   --shadow-brand-glow-lg: 0 8px 32px 0 rgba(var(--brand-primary-rgb), 0.55);

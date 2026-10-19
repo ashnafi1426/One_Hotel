@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { publicAxios } from '@/services/axios'
 import { useThemeStore } from '@/stores/theme'
+import { HOTEL_CONFIG } from '@/constants/hotelConfig'
 
 export interface PublicHotel {
   id: string
@@ -23,20 +24,20 @@ export interface PublicHotel {
 
 const DEFAULT_GUEST_HOTEL: PublicHotel = {
   id: '41b094f8-7ed2-4af0-bd16-6f0533e34544',
-  name: 'Sheraten Hotel',
-  slug: 'sheraten',
+  name: HOTEL_CONFIG.name,
+  slug: 'executive-hotel',
   logo: null,
-  description: 'Luxury Hotel and Restaurant Experience',
-  address: 'Bole, Addis Ababa',
-  city: 'Addis Ababa',
-  country: 'Ethiopia',
-  phone: '+251 11 555 1234',
-  email: 'info@sheraten.com',
-  reservation_email: 'reservations@sheraten.com',
-  reservation_phone: '+251 91 100 2200',
-  front_desk_hours: 'Open 24/7 / 365 Days',
-  dining_hours: '06:00 AM – 11:00 PM Daily',
-  currency: 'ETB',
+  description: HOTEL_CONFIG.tagline,
+  address: HOTEL_CONFIG.address,
+  city: HOTEL_CONFIG.city,
+  country: HOTEL_CONFIG.country,
+  phone: HOTEL_CONFIG.phone,
+  email: HOTEL_CONFIG.email,
+  reservation_email: HOTEL_CONFIG.reservationEmail,
+  reservation_phone: HOTEL_CONFIG.reservationPhone,
+  front_desk_hours: HOTEL_CONFIG.frontDeskHours,
+  dining_hours: HOTEL_CONFIG.diningHours,
+  currency: HOTEL_CONFIG.currency,
   status: 'active',
 }
 
@@ -46,10 +47,15 @@ function loadInitialHotel(): PublicHotel {
     if (raw) {
       const parsed = JSON.parse(raw)
       if (parsed && (parsed.id || parsed.name)) {
+        let hotelName = parsed.name || DEFAULT_GUEST_HOTEL.name
+        const lower = hotelName.toLowerCase()
+        if (lower.includes('sherat') || lower.includes('grand horizon') || lower.includes('metropolitan')) {
+          hotelName = DEFAULT_GUEST_HOTEL.name
+        }
         return {
           ...DEFAULT_GUEST_HOTEL,
           ...parsed,
-          name: parsed.name || DEFAULT_GUEST_HOTEL.name,
+          name: hotelName,
           slug: parsed.slug || DEFAULT_GUEST_HOTEL.slug,
           currency: parsed.currency || DEFAULT_GUEST_HOTEL.currency,
         }
@@ -73,24 +79,24 @@ export const useGuestHotelStore = defineStore('guestHotel', {
   getters: {
     hotelId: (state): string => state.currentHotel?.id || DEFAULT_GUEST_HOTEL.id,
     hotelName: (state): string => state.currentHotel?.name || DEFAULT_GUEST_HOTEL.name,
-    hotelCity: (state): string => state.currentHotel?.city || 'Addis Ababa',
-    hotelCountry: (state): string => state.currentHotel?.country || 'Ethiopia',
+    hotelCity: (state): string => state.currentHotel?.city || HOTEL_CONFIG.city,
+    hotelCountry: (state): string => state.currentHotel?.country || HOTEL_CONFIG.country,
     hotelAddress: (state): string => {
       if (state.currentHotel?.address) return state.currentHotel.address
-      const city = state.currentHotel?.city || 'Addis Ababa'
-      const country = state.currentHotel?.country || 'Ethiopia'
+      const city = state.currentHotel?.city || HOTEL_CONFIG.city
+      const country = state.currentHotel?.country || HOTEL_CONFIG.country
       return `${city}, ${country}`
     },
-    hotelPhone: (state): string => state.currentHotel?.phone || '+251 11 555 1234',
+    hotelPhone: (state): string => state.currentHotel?.phone || HOTEL_CONFIG.phone,
     reservationPhone: (state): string =>
-      state.currentHotel?.reservation_phone || state.currentHotel?.phone || '+251 91 100 2200',
-    hotelEmail: (state): string => state.currentHotel?.email || 'info@sheraten.com',
+      state.currentHotel?.reservation_phone || state.currentHotel?.phone || HOTEL_CONFIG.reservationPhone,
+    hotelEmail: (state): string => state.currentHotel?.email || HOTEL_CONFIG.email,
     reservationEmail: (state): string =>
-      state.currentHotel?.reservation_email || state.currentHotel?.email || 'reservations@sheraten.com',
+      state.currentHotel?.reservation_email || state.currentHotel?.email || HOTEL_CONFIG.reservationEmail,
     frontDeskHours: (state): string =>
-      state.currentHotel?.front_desk_hours || 'Open 24/7 / 365 Days',
-    diningHours: (state): string => state.currentHotel?.dining_hours || '06:00 AM – 11:00 PM Daily',
-    currency: (state): string => state.currentHotel?.currency || 'ETB',
+      state.currentHotel?.front_desk_hours || HOTEL_CONFIG.frontDeskHours,
+    diningHours: (state): string => state.currentHotel?.dining_hours || HOTEL_CONFIG.diningHours,
+    currency: (state): string => state.currentHotel?.currency || HOTEL_CONFIG.currency,
     hasSelectedHotel: (): boolean => true,
   },
 

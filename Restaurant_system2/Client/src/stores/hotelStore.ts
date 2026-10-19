@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { axiosInstance } from '@/services/axios'
+import { HOTEL_CONFIG } from '@/constants/hotelConfig'
 
 export interface HotelItem {
   id: string
@@ -13,9 +14,9 @@ export interface HotelItem {
 
 const DEFAULT_HOTEL: HotelItem = {
   id: '41b094f8-7ed2-4af0-bd16-6f0533e34544',
-  name: 'Sheraten Hotel',
-  slug: 'sheraten',
-  currency: 'ETB',
+  name: HOTEL_CONFIG.name,
+  slug: 'executive-hotel',
+  currency: HOTEL_CONFIG.currency,
   role: 'admin',
 }
 
@@ -26,9 +27,14 @@ const loadInitialHotelItem = (): HotelItem => {
       if (raw) {
         const parsed = JSON.parse(raw)
         if (parsed && (parsed.id || parsed.name)) {
+          let hotelName = parsed.name || DEFAULT_HOTEL.name
+          const lower = hotelName.toLowerCase()
+          if (lower.includes('sherat') || lower.includes('grand horizon') || lower.includes('metropolitan')) {
+            hotelName = DEFAULT_HOTEL.name
+          }
           return {
             id: String(parsed.id || DEFAULT_HOTEL.id),
-            name: parsed.name || DEFAULT_HOTEL.name,
+            name: hotelName,
             slug: parsed.slug || DEFAULT_HOTEL.slug,
             logo: parsed.logo || undefined,
             role: parsed.role || 'admin',
