@@ -517,7 +517,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/{id}', [WaiterTableAssignmentController::class, 'destroy']);
             Route::get('/table/{tableId}/assigned-waiter', [WaiterTableAssignmentController::class, 'getAssignedWaiter']);
             Route::get('/waiter/{waiterId}/tables', [WaiterTableAssignmentController::class, 'getWaiterTables']);
-            Route::post('/test-assignment', [TableAssignmentTestController::class, 'testAssignment']);
+            Route::get('/test-assignment', [TableAssignmentTestController::class, 'testAssignment']);
         });
         
         Route::prefix('shifts')->group(function () {
