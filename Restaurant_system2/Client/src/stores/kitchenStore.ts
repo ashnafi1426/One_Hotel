@@ -172,7 +172,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
         console.warn('[kitchenStore] ?? Order missing items:', orderId)
       }
       
-      const existingIndex = orders.value.findIndex((o) => o.id === orderId)
+      const existingIndex = orders.value.findIndex((o) => String(o.id) === String(orderId))
       
       if (existingIndex !== -1) {
         orders.value.splice(existingIndex, 1, fullOrder)

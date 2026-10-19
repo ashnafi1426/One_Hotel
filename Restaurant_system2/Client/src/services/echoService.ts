@@ -144,35 +144,67 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
 export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
   try {
     const echo = getEcho()
-    const channel = echo.channel('kitchen.orders.update')
+    const channelNames = ['kitchen.orders.update', 'manager.orders.update']
 
     const events = [
       'OrderStatusUpdated',
       '.OrderStatusUpdated',
       'order.status.changed',
       '.order.status.changed',
+      'OrderStatusChanged',
+      '.OrderStatusChanged',
       'order.created',
       '.order.created',
+      'OrderCreated',
+      '.OrderCreated',
       'order.ready',
       '.order.ready',
     ]
 
-    events.forEach((evt) => {
-      channel.listen(evt, (data: any) => {
-        console.log(`[Echo] Kitchen update [${evt}]:`, data)
-        onUpdate(data)
+    // In-memory deduplicator to prevent duplicate callbacks within 350ms
+    const recentTriggers = new Map<string, number>()
+
+    const handleEvent = (evt: string, ch: string, data: any) => {
+      const id = data?.id || data?.order_id || data?.order?.id
+      const status = data?.status || data?.order?.status || 'created'
+      const key = `${id}_${status}`
+      const now = Date.now()
+
+      if (id && recentTriggers.has(key)) {
+        const last = recentTriggers.get(key)!
+        if (now - last < 350) {
+          return // duplicate from another channel
+        }
+      }
+
+      if (id) {
+        recentTriggers.set(key, now)
+        if (recentTriggers.size > 200) {
+          recentTriggers.clear()
+        }
+      }
+
+      console.log(`[Echo] Kitchen update [${ch} -> ${evt}]:`, data)
+      onUpdate(data)
+    }
+
+    channelNames.forEach((chName) => {
+      const ch = echo.channel(chName)
+      events.forEach((evt) => {
+        ch.listen(evt, (data: any) => handleEvent(evt, chName, data))
+      })
+      ch.error((err: any) => {
+        console.error(`[Echo] Error on ${chName}:`, err)
+        onError?.(err)
       })
     })
 
-    channel.error((error: any) => {
-      console.error('[Echo] Error on kitchen.orders.update:', error)
-      onError?.(error)
-    })
-
-    console.log('[Echo] ✅ Subscribed to kitchen order updates (kitchen.orders.update channel)')
+    console.log('[Echo] Subscribed to kitchen order updates on channels:', channelNames.join(', '))
 
     return () => {
-      echo.leave('kitchen.orders.update')
+      channelNames.forEach((chName) => {
+        echo.leave(chName)
+      })
       console.log('[Echo] Unsubscribed from kitchen order updates')
     }
   } catch (error: any) {

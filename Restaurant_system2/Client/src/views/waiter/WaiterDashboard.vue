@@ -1,13 +1,13 @@
 <template>
   <DashboardLayout>
     <div
-      class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-6 lg:p-8 transition-colors duration-200 font-sans"
+      class="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 p-3 sm:p-5 lg:p-8 transition-colors duration-200 font-sans"
     >
-      <div class="max-w-7xl mx-auto space-y-6">
+      <div class="max-w-7xl mx-auto space-y-5">
         <!-- Toast Notification Stack -->
         <div
           v-if="toasts.length > 0"
-          class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none"
+          class="fixed top-5 right-5 z-50 flex flex-col gap-2.5 max-w-sm w-full pointer-events-none px-3 sm:px-0"
         >
           <transition-group
             enter-active-class="transform ease-out duration-300 transition"
@@ -22,7 +22,7 @@
               :key="toast.id"
               class="pointer-events-auto rounded-2xl shadow-xl p-4 border flex items-start gap-3 backdrop-blur-md transition-all"
               :class="{
-                'bg-emerald-500/95 text-white border-emerald-400/40 shadow-emerald-500/20':
+                'bg-emerald-600/95 text-white border-emerald-400/40 shadow-emerald-500/20':
                   toast.type === 'success',
                 'bg-blue-600/95 text-white border-blue-400/40 shadow-blue-500/20':
                   toast.type === 'info',
@@ -33,8 +33,8 @@
               <div
                 class="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 mt-0.5"
               >
-                <Check v-if="toast.type === 'success'" class="w-4 h-4 text-white" />
-                <ChefHat v-else-if="toast.type === 'info'" class="w-4 h-4 text-white" />
+                <Check v-if="toast.type === 'success'" class="w-4 h-4 text-white stroke-[2.5]" />
+                <Bell v-else-if="toast.type === 'info'" class="w-4 h-4 text-white" />
                 <AlertCircle v-else class="w-4 h-4 text-white" />
               </div>
               <div class="flex-1 text-xs">
@@ -43,7 +43,7 @@
               </div>
               <button
                 @click="removeToast(toast.id)"
-                class="text-white/70 hover:text-white p-1 rounded-lg transition"
+                class="text-white/70 hover:text-white p-1 rounded-lg transition cursor-pointer"
               >
                 <X class="w-3.5 h-3.5" />
               </button>
@@ -54,16 +54,22 @@
         <!-- Top Greeting Header & Quick Actions -->
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <div class="flex items-center gap-2.5">
-              <h1 class="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
-                {{ greetingMessage }}, {{ waiterName }}! 👋
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                {{ greetingMessage }}, {{ waiterName }}!
               </h1>
               <span
                 v-if="hotelStore.hotelName"
-                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
+                class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-blue-50 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-500/20"
               >
                 <Building2 class="w-3.5 h-3.5" />
                 {{ hotelStore.hotelName }}
+              </span>
+              <span
+                class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-50 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20"
+              >
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                Shift Active
               </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
@@ -72,17 +78,17 @@
           </div>
 
           <!-- Top Right Action Cards -->
-          <div class="flex flex-wrap sm:flex-nowrap items-center gap-3">
+          <div class="grid grid-cols-2 sm:flex items-center gap-2.5 sm:gap-3">
             <!-- Pickup Order Card -->
             <div
-              @click="scrollToPendingPickup"
-              class="flex-1 sm:flex-initial min-w-[210px] bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 border border-blue-200/80 dark:border-blue-800/60 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs cursor-pointer transition active:scale-[0.98]"
+              @click="handleQuickFilter('pending')"
+              class="flex-1 sm:flex-initial min-w-[150px] sm:min-w-[210px] bg-blue-50/70 dark:bg-blue-950/30 hover:bg-blue-100/60 dark:hover:bg-blue-900/40 border border-blue-200/80 dark:border-blue-800/60 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2.5 shadow-xs cursor-pointer transition active:scale-[0.98]"
             >
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2.5 sm:gap-3">
                 <div
-                  class="w-11 h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0"
+                  class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-xs shrink-0"
                 >
-                  <ShoppingBag class="w-5 h-5" />
+                  <ShoppingBag class="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
                   <div class="flex items-center gap-1.5">
@@ -95,24 +101,24 @@
                       {{ pendingOrders.length }}
                     </span>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    Collect ready orders from the kitchen
+                  <p class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Collect ready orders from kitchen
                   </p>
                 </div>
               </div>
-              <ChevronRight class="w-4 h-4 text-blue-500 shrink-0" />
+              <ChevronRight class="w-4 h-4 text-blue-500 shrink-0 hidden sm:block" />
             </div>
 
             <!-- Delivered Order Card -->
             <div
-              @click="scrollToReadyForDelivery"
-              class="flex-1 sm:flex-initial min-w-[210px] bg-emerald-50/70 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs cursor-pointer transition active:scale-[0.98]"
+              @click="handleQuickFilter('delivery')"
+              class="flex-1 sm:flex-initial min-w-[150px] sm:min-w-[210px] bg-emerald-50/70 dark:bg-emerald-950/30 hover:bg-emerald-100/60 dark:hover:bg-emerald-900/40 border border-emerald-200/80 dark:border-emerald-800/60 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-2.5 shadow-xs cursor-pointer transition active:scale-[0.98]"
             >
-              <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2.5 sm:gap-3">
                 <div
-                  class="w-11 h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0"
+                  class="w-9 h-9 sm:w-11 sm:h-11 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0"
                 >
-                  <CheckCircle2 class="w-5 h-5" />
+                  <CheckCircle2 class="w-4 h-4 sm:w-5 sm:h-5" />
                 </div>
                 <div>
                   <div class="flex items-center gap-1.5">
@@ -125,12 +131,12 @@
                       {{ deliveryOrders.length }}
                     </span>
                   </div>
-                  <p class="text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
-                    Mark orders as delivered to the guest
+                  <p class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                    Mark orders as delivered to guest
                   </p>
                 </div>
               </div>
-              <ChevronRight class="w-4 h-4 text-emerald-500 shrink-0" />
+              <ChevronRight class="w-4 h-4 text-emerald-500 shrink-0 hidden sm:block" />
             </div>
 
             <!-- Manual Refresh Button -->
@@ -139,17 +145,79 @@
               @click="loadDashboardData(true)"
               :disabled="loading"
               title="Refresh Orders"
-              class="w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center transition border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
+              class="col-span-2 sm:col-auto w-full sm:w-10 h-10 rounded-2xl bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 flex items-center justify-center transition border border-slate-200 dark:border-slate-800 shadow-xs cursor-pointer shrink-0 disabled:opacity-50"
             >
               <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': loading }" />
+              <span class="sm:hidden text-xs font-bold ml-2">Refresh Live Queue</span>
             </button>
           </div>
+        </div>
+
+        <!-- Mobile & Tablet Responsive View Tab Switcher (< lg screens) -->
+        <div class="lg:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
+          <button
+            type="button"
+            @click="activeMobileTab = 'pending'"
+            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            :class="[
+              activeMobileTab === 'pending'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+            ]"
+          >
+            <ShoppingBag class="w-3.5 h-3.5 text-blue-500" />
+            <span>Pending</span>
+            <span
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
+              :class="activeMobileTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+            >
+              {{ pendingOrders.length }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeMobileTab = 'delivery'"
+            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            :class="[
+              activeMobileTab === 'delivery'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+            ]"
+          >
+            <Truck class="w-3.5 h-3.5 text-emerald-500" />
+            <span>Delivery</span>
+            <span
+              class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
+              :class="activeMobileTab === 'delivery' ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+            >
+              {{ deliveryOrders.length }}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            @click="activeMobileTab = 'details'"
+            class="flex-1 py-2 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+            :class="[
+              activeMobileTab === 'details'
+                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-xs'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+            ]"
+          >
+            <FileText class="w-3.5 h-3.5 text-purple-500" />
+            <span>Order Details</span>
+            <span
+              v-if="selectedOrder"
+              class="w-2 h-2 rounded-full bg-purple-500"
+            ></span>
+          </button>
         </div>
 
         <!-- Error State -->
         <div
           v-if="error"
-          class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-5 flex items-center justify-between"
+          class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3"
         >
           <div>
             <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">Failed to load waiter dashboard</p>
@@ -157,18 +225,22 @@
           </div>
           <button
             @click="loadDashboardData(true)"
-            class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition cursor-pointer"
+            class="px-4 py-2 bg-rose-600 text-white rounded-xl text-xs font-bold hover:bg-rose-700 transition cursor-pointer shrink-0"
           >
             Retry
           </button>
         </div>
 
         <!-- 3-Column Grid Layout: Pending Pickup | Ready for Delivery | Order Details -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-6 items-start">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
           <!-- ============================================== -->
           <!-- COLUMN 1: Pending Pickup (lg:col-span-4)       -->
           <!-- ============================================== -->
-          <div ref="pendingSectionRef" class="lg:col-span-4 space-y-4">
+          <div
+            ref="pendingSectionRef"
+            class="lg:col-span-4 space-y-4"
+            :class="{ 'hidden lg:block': activeMobileTab !== 'pending' }"
+          >
             <!-- Column Header -->
             <div class="flex items-start gap-3">
               <div
@@ -227,7 +299,7 @@
               </div>
               <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Orders Pending Pickup</h3>
               <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
-                When the chef marks an order as ready, it will instantly appear here via real-time WebSocket.
+                When the kitchen marks an order as ready, it will instantly appear here via real-time WebSocket.
               </p>
             </div>
 
@@ -244,7 +316,7 @@
                 <div
                   v-for="order in pendingOrders"
                   :key="getOrderKey(order)"
-                  @click="selectOrder(order)"
+                  @click="handleCardSelect(order)"
                   class="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3"
                   :class="[
                     selectedOrder && getOrderKey(selectedOrder) === getOrderKey(order)
@@ -289,7 +361,7 @@
                     </span>
                   </div>
 
-                  <!-- Items Preview -->
+                  <!-- Items Preview with Zero-Fail SVG / Storage URL -->
                   <div class="space-y-2 py-1">
                     <div
                       v-for="(item, idx) in normalizeOrderItems(order).slice(0, 3)"
@@ -299,6 +371,7 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
@@ -340,7 +413,11 @@
           <!-- ============================================== -->
           <!-- COLUMN 2: Ready for Delivery (lg:col-span-4)   -->
           <!-- ============================================== -->
-          <div ref="deliverySectionRef" class="lg:col-span-4 space-y-4">
+          <div
+            ref="deliverySectionRef"
+            class="lg:col-span-4 space-y-4"
+            :class="{ 'hidden lg:block': activeMobileTab !== 'delivery' }"
+          >
             <!-- Column Header -->
             <div class="flex items-start gap-3">
               <div
@@ -416,7 +493,7 @@
                 <div
                   v-for="order in deliveryOrders"
                   :key="getOrderKey(order)"
-                  @click="selectOrder(order)"
+                  @click="handleCardSelect(order)"
                   class="bg-white dark:bg-slate-900 border rounded-2xl p-4 shadow-xs hover:shadow-md transition-all cursor-pointer space-y-3"
                   :class="[
                     selectedOrder && getOrderKey(selectedOrder) === getOrderKey(order)
@@ -452,7 +529,7 @@
                     </span>
                   </div>
 
-                  <!-- Items Preview -->
+                  <!-- Items Preview with Zero-Fail SVG / Storage URL -->
                   <div class="space-y-2 py-1">
                     <div
                       v-for="(item, idx) in normalizeOrderItems(order).slice(0, 3)"
@@ -462,6 +539,7 @@
                       <img
                         :src="item.image"
                         :alt="item.name"
+                        @error="onFoodImageError($event, item.name)"
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
@@ -491,7 +569,7 @@
                       v-if="actionLoadingOrderId === getOrderKey(order)"
                       class="w-4 h-4 animate-spin text-white"
                     />
-                    <Check v-else class="w-4 h-4 text-white" />
+                    <Check v-else class="w-4 h-4 text-white stroke-[2.5]" />
                     <span>{{ languageStore.t('mark_as_delivered', 'Mark as Delivered') }}</span>
                     <ChevronRight class="w-3.5 h-3.5 text-white/80" />
                   </button>
@@ -503,16 +581,30 @@
           <!-- ============================================== -->
           <!-- COLUMN 3: Order Details Panel (lg:col-span-4)  -->
           <!-- ============================================== -->
-          <div class="lg:col-span-4">
+          <div
+            class="lg:col-span-4"
+            :class="{ 'hidden lg:block': activeMobileTab !== 'details' }"
+          >
             <div
               v-if="selectedOrder"
-              class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-5 shadow-xs space-y-5 sticky top-6"
+              class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-5 lg:sticky lg:top-6"
             >
               <!-- Panel Header -->
               <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
-                <h3 class="text-base font-black text-slate-900 dark:text-white">
-                  {{ languageStore.t('order_details', 'Order Details') }}
-                </h3>
+                <div class="flex items-center gap-2">
+                  <button
+                    v-if="activeMobileTab === 'details'"
+                    type="button"
+                    @click="activeMobileTab = isOrderPending(selectedOrder) ? 'pending' : 'delivery'"
+                    class="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1"
+                    title="Back to list"
+                  >
+                    <ArrowLeft class="w-4 h-4" />
+                  </button>
+                  <h3 class="text-base font-black text-slate-900 dark:text-white">
+                    {{ languageStore.t('order_details', 'Order Details') }}
+                  </h3>
+                </div>
                 <button
                   type="button"
                   @click="selectedOrder = null"
@@ -571,6 +663,7 @@
                     <img
                       :src="item.image"
                       :alt="item.name"
+                      @error="onFoodImageError($event, item.name)"
                       class="w-11 h-11 rounded-xl object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                       loading="lazy"
                     />
@@ -650,7 +743,7 @@
                     v-if="actionLoadingOrderId === getOrderKey(selectedOrder)"
                     class="w-4 h-4 animate-spin text-white"
                   />
-                  <Check v-else class="w-4 h-4 text-white" />
+                  <Check v-else class="w-4 h-4 text-white stroke-[2.5]" />
                   <span>{{ languageStore.t('mark_as_delivered', 'Mark as Delivered') }}</span>
                 </button>
               </div>
@@ -686,6 +779,7 @@ import { useLanguageStore } from '@/stores/language'
 import { useAuthStore } from '@/stores/auth'
 import waiterService from '@/services/waiterService'
 import echoService from '@/services/echoService'
+import { resolveFoodImageUrl, onFoodImageError } from '@/utils/foodImages'
 import {
   Building2,
   Loader2,
@@ -701,6 +795,8 @@ import {
   Check,
   FileText,
   AlertCircle,
+  Bell,
+  ArrowLeft,
 } from 'lucide-vue-next'
 
 const hotelStore = useHotelStore()
@@ -714,17 +810,19 @@ const pendingOrders = ref<any[]>([])
 const deliveryOrders = ref<any[]>([])
 const selectedOrder = ref<any | null>(null)
 const actionLoadingOrderId = ref<string | null>(null)
+const activeMobileTab = ref<'pending' | 'delivery' | 'details'>('pending')
 
-// Section element refs for scrolling
+// Section element refs for scrolling on desktop
 const pendingSectionRef = ref<HTMLElement | null>(null)
 const deliverySectionRef = ref<HTMLElement | null>(null)
 
-const scrollToPendingPickup = () => {
-  pendingSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-}
-
-const scrollToReadyForDelivery = () => {
-  deliverySectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+const handleQuickFilter = (tab: 'pending' | 'delivery') => {
+  activeMobileTab.value = tab
+  if (tab === 'pending') {
+    pendingSectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  } else {
+    deliverySectionRef.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 }
 
 // Toast notification state
@@ -751,7 +849,7 @@ const removeToast = (id: number) => {
 // Dynamic greeting
 const waiterName = computed(() => {
   const user = authStore.user
-  return user?.first_name || user?.name || 'Ashu'
+  return user?.first_name || user?.name || 'Waiter'
 })
 
 const greetingMessage = computed(() => {
@@ -811,39 +909,6 @@ const isOrderPending = (order: any): boolean => {
   return pendingOrders.value.some((o) => getOrderKey(o) === orderKey)
 }
 
-// Appending food thumbnails mapping
-const getFoodImageByName = (name: string = ''): string => {
-  const n = name.toLowerCase()
-  if (n.includes('salad') || n.includes('caesar')) {
-    return 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('burger') || n.includes('beef')) {
-    return 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('pizza') || n.includes('margherita')) {
-    return 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('pasta') || n.includes('alfredo') || n.includes('spaghetti')) {
-    return 'https://images.unsplash.com/photo-1621996346565-e3d5d6281228?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('fries') || n.includes('french')) {
-    return 'https://images.unsplash.com/photo-1576107232684-1279f3908594?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('steak') || n.includes('meat') || n.includes('ribeye')) {
-    return 'https://images.unsplash.com/photo-1600891964599-f61ba0e24092?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('cake') || n.includes('dessert') || n.includes('chocolate')) {
-    return 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('juice') || n.includes('orange') || n.includes('drink') || n.includes('beverage')) {
-    return 'https://images.unsplash.com/photo-1613478223719-2ab802602423?w=160&auto=format&fit=crop&q=80'
-  }
-  if (n.includes('chicken') || n.includes('grilled')) {
-    return 'https://images.unsplash.com/photo-1532550907401-a500c9a57435?w=160&auto=format&fit=crop&q=80'
-  }
-  return 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=160&auto=format&fit=crop&q=80'
-}
-
 const normalizeOrderItems = (order: any): any[] => {
   if (!order) return []
   if (Array.isArray(order.items_detail) && order.items_detail.length > 0) {
@@ -851,7 +916,7 @@ const normalizeOrderItems = (order: any): any[] => {
       name: it.name || it.item_name || 'Delicious Dish',
       quantity: it.quantity || 1,
       price: Number(it.price || it.unit_price || 12.0),
-      image: it.image || it.image_url || getFoodImageByName(it.name || it.item_name),
+      image: resolveFoodImageUrl(it.image, it.name || it.item_name),
       notes: it.notes || '',
     }))
   }
@@ -860,7 +925,7 @@ const normalizeOrderItems = (order: any): any[] => {
       name: it.menu_item?.name || it.name || 'Delicious Dish',
       quantity: it.quantity || 1,
       price: Number(it.price || it.unit_price || 12.0),
-      image: it.menu_item?.image || it.image || getFoodImageByName(it.menu_item?.name || it.name),
+      image: resolveFoodImageUrl(it.menu_item?.image || it.image, it.menu_item?.name || it.name),
       notes: it.notes || '',
     }))
   }
@@ -869,7 +934,7 @@ const normalizeOrderItems = (order: any): any[] => {
       name: typeof it === 'string' ? it : it.name || 'Delicious Dish',
       quantity: it.quantity || 1,
       price: Number(it.price || 12.0),
-      image: it.image || getFoodImageByName(typeof it === 'string' ? it : it.name),
+      image: resolveFoodImageUrl(it.image, typeof it === 'string' ? it : it.name),
       notes: it.notes || '',
     }))
   }
@@ -879,7 +944,7 @@ const normalizeOrderItems = (order: any): any[] => {
       name: 'Chef Specialty Platter',
       quantity: count,
       price: order.total ? Number(order.total) : 24.0,
-      image: getFoodImageByName('Chef Specialty Platter'),
+      image: resolveFoodImageUrl(null, 'Chef Specialty Platter'),
       notes: order.special_requests || '',
     },
   ]
@@ -906,8 +971,11 @@ const selectedOrderTotal = computed(() => {
   return selectedOrderSubtotal.value + selectedOrderTax.value
 })
 
-const selectOrder = (order: any) => {
+const handleCardSelect = (order: any) => {
   selectedOrder.value = order
+  if (window.innerWidth < 1024) {
+    activeMobileTab.value = 'details'
+  }
 }
 
 // Actions
@@ -921,7 +989,6 @@ const handlePickupOrder = async (order: any, event?: Event) => {
   try {
     await waiterService.pickupOrder(targetId)
 
-    // Optimistic UI Update
     const orderNum = getOrderNumber(order)
     const pickedOrder = {
       ...order,
@@ -930,22 +997,19 @@ const handlePickupOrder = async (order: any, event?: Event) => {
       order_status: 'on_delivery',
     }
 
-    // Remove from pendingOrders
     pendingOrders.value = pendingOrders.value.filter((o) => getOrderKey(o) !== targetId)
 
-    // Add to deliveryOrders if not already present
     const exists = deliveryOrders.value.some((o) => getOrderKey(o) === targetId)
     if (!exists) {
       deliveryOrders.value.unshift(pickedOrder)
     }
 
-    // Keep selected order in sync
     if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
       selectedOrder.value = pickedOrder
     }
 
     showToast(
-      'Order Picked Up! 🥡',
+      'Order Picked Up',
       `Order #${orderNum} picked up from kitchen. Ready for delivery to guest!`,
       'success',
     )
@@ -973,16 +1037,14 @@ const handleDeliverOrder = async (order: any, event?: Event) => {
 
     const orderNum = getOrderNumber(order)
 
-    // Remove from deliveryOrders
     deliveryOrders.value = deliveryOrders.value.filter((o) => getOrderKey(o) !== targetId)
 
-    // Update selected order
     if (selectedOrder.value && getOrderKey(selectedOrder.value) === targetId) {
       selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
     }
 
     showToast(
-      'Order Delivered! ✅',
+      'Order Delivered',
       `Order #${orderNum} successfully delivered to the guest!`,
       'success',
     )
@@ -1017,7 +1079,6 @@ const loadDashboardData = async (showSpinner = false) => {
     pendingOrders.value = readyList
     deliveryOrders.value = deliveryList
 
-    // Set default selected order if none selected
     if (!selectedOrder.value) {
       selectedOrder.value = pendingOrders.value[0] || deliveryOrders.value[0] || null
     }
@@ -1033,7 +1094,7 @@ const loadDashboardData = async (showSpinner = false) => {
 let unsubscribeEcho: (() => void) | null = null
 
 const handleRealtimeOrderUpdate = (data: any) => {
-  console.log('[WaiterDashboard] ⚡ Real-Time WebSocket event received:', data)
+  console.log('[WaiterDashboard] Live order event received:', data)
   const orderId = String(data.order_id || data.id || data.order?.id || '')
   const status = (data.status || data.order?.status || data.new_status || '').toLowerCase()
 
@@ -1083,7 +1144,7 @@ const handleRealtimeOrderUpdate = (data: any) => {
       pendingOrders.value.splice(idx, 1, newOrderObj)
     } else {
       pendingOrders.value.unshift(newOrderObj)
-      showToast('New Ready Order! 🍽️', `Order #${orderNumber} is ready for pickup from the kitchen!`, 'info')
+      showToast('New Ready Order', `Order #${orderNumber} is ready for pickup from the kitchen!`, 'info')
     }
 
     if (!selectedOrder.value) {
