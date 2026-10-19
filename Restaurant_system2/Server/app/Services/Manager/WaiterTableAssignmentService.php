@@ -219,7 +219,7 @@ class WaiterTableAssignmentService
 
             if (count($created) === 0 && count($errors) > 0) {
                 DB::rollBack();
-                throw new \Exception('No assignments were created. Errors: ' . json_encode(\));
+                throw new \Exception('No assignments were created. First error: ' . ($errors[0]['error'] ?? 'Unknown'));
             }
 
             DB::commit();
