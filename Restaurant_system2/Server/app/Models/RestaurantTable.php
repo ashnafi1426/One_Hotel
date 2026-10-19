@@ -182,11 +182,16 @@ class RestaurantTable extends Model
 
     public function getQRCodeUrlAttribute()
     {
-        if (!$this->qr_image_path) {
+        if (!$this->qr_token) {
             return null;
         }
-        return url("storage/{$this->qr_image_path}");
+        
+        // Use external QR code API instead of local files (works on Render.com)
+        $baseUrl = rtrim(config('app.frontend_url', env('APP_FRONTEND_URL', 'https://one-hotel-lemon.vercel.app')), '/');
+        $orderUrl = "{$baseUrl}/table-order/{$this->qr_token}";
+        return 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=' . urlencode($orderUrl);
     }
+
 
     public function regenerateQRCode($baseUrl = null): string
     {
