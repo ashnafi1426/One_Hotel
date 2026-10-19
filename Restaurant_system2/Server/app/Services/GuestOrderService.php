@@ -185,6 +185,15 @@ class GuestOrderService
 
             $this->createOrderItems($order->id, $orderItems);
 
+            // Load all relations before broadcasting for complete real-time updates
+            $order->load([
+                'guest',
+                'room',
+                'reservation',
+                'orderItems.menuItem',
+                'table',
+            ]);
+
             // Broadcast order creation for real-time kitchen updates
             try {
                 OrderCreated::dispatch($order);
