@@ -194,8 +194,6 @@ Route::prefix('guest')->group(function () {
     Route::post('/contact-messages', [ContactMessageController::class, 'store']);
 });
 
-use App\Http\Controllers\Api\MigrationController;
-
 // Broadcasting Auth Route - Required for Laravel Echo WebSocket authorization
 // Migration endpoint (temporary - for fixing shift_id column)
 Route::get('/run-migrations', [MigrationController::class, 'runMigrations']);
