@@ -326,6 +326,13 @@ class OrderStatusService
                     ]);
 
                     Log::info("[ORDER_STATUS] Notified assigned waiter {$waiter->id} for ready order #{$order->order_number}");
+
+                    // Broadcast to waiter's dashboard for real-time update
+                    try {
+                        \App\Events\WaiterOrderReadyEvent::dispatch($order, $waiter->id);
+                    } catch (\Throwable $broadcastEx) {
+                        Log::warning('[ORDER_STATUS] Failed to broadcast to waiter dashboard', ['error' => $broadcastEx->getMessage()]);
+                    }
                     // Continue to check if waiter needs to be assigned to delivery task
                 }
             }
