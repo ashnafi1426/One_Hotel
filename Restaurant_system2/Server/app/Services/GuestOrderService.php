@@ -129,12 +129,13 @@ class GuestOrderService
         }
 
         // 3. Post-transaction operations: order is already committed in DB, locks are released!
+        $order->setRelation('room', $room);
+        $order->setRelation('reservation', $reservation);
+        if ($reservation->relationLoaded('guest') && $reservation->guest) {
+            $order->setRelation('guest', $reservation->guest);
+        }
         $order->loadMissing([
-            'guest',
-            'room',
-            'reservation',
             'orderItems.menuItem',
-            'table',
         ]);
 
         $dispatchPostTasks = function () use ($order, $room) {
@@ -223,12 +224,9 @@ class GuestOrderService
         }
 
         // 3. Post-transaction operations: order is already committed in DB, locks are released!
+        $order->setRelation('table', $table);
         $order->loadMissing([
-            'guest',
-            'room',
-            'reservation',
             'orderItems.menuItem',
-            'table',
         ]);
 
         $dispatchPostTasks = function () use ($order, $table) {
