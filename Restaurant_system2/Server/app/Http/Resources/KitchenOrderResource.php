@@ -39,26 +39,33 @@ class KitchenOrderResource extends JsonResource
             ] : null,
             'table' => $this->table ? [
                 'id' => $this->table->id,
-                'table_number' => $this->table->table_number,
-                'table_name' => $this->table->table_name ?? ('Table ' . $this->table->table_number),
+                'table_number' => preg_replace('/^(table\s*|t\s*)/i', '', trim($this->table->table_number)),
+                'table_name' => $this->table->table_name ?? ('Table ' . preg_replace('/^(table\s*|t\s*)/i', '', trim($this->table->table_number))),
             ] : null,
             'reservation' => [
                 'id' => $this->reservation?->id,
                 'booking_reference' => $this->reservation?->booking_reference,
             ],
-            'items' => $this->orderItems ? $this->orderItems->map(fn ($item) => [
-                'id' => $item->id,
-                'menu_item_id' => $item->menu_item_id,
-                'name' => $item->menuItem?->name ?? $item->item_name ?? 'Item',
-                'category' => is_string($item->menuItem?->category ?? null)
-                    ? $item->menuItem->category
-                    : ($item->menuItem?->categoryRelation?->name ?? 'General'),
-                'image' => $item->menuItem?->image_url,
-                'quantity' => $item->quantity ?? 1,
-                'unit_price' => $item->item_price_at_order ?? $item->price ?? 0,
-                'line_total' => $item->line_total ?? 0,
-                'notes' => $item->notes,
-            ]) : [],
+            'items' => $this->orderItems ? $this->orderItems->map(function ($item) {
+                $menuItem = $item->menuItem ?? $item->menu_item;
+                $name = $menuItem?->name ?? $item->item_name ?? 'Item';
+                $imageUrl = $menuItem?->image_url ?? ($menuItem?->image ? asset('storage/' . ltrim($menuItem->image, '/')) : null);
+                return [
+                    'id' => $item->id,
+                    'menu_item_id' => $item->menu_item_id,
+                    'name' => $name,
+                    'item_name' => $name,
+                    'category' => is_string($menuItem?->category ?? null)
+                        ? $menuItem->category
+                        : ($menuItem?->categoryRelation?->name ?? 'General'),
+                    'image' => $imageUrl,
+                    'image_url' => $imageUrl,
+                    'quantity' => $item->quantity ?? 1,
+                    'unit_price' => $item->item_price_at_order ?? $item->price ?? 0,
+                    'line_total' => $item->line_total ?? 0,
+                    'notes' => $item->notes,
+                ];
+            }) : [],
             'subtotal' => $this->subtotal,
             'tax' => $this->tax,
             'discount' => $this->discount,

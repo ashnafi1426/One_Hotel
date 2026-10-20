@@ -949,15 +949,27 @@ const getOrderNumber = (order: any): string => {
   return refId.length > 8 ? 'ORD-' + refId.slice(0, 4).toUpperCase() : 'ORD-' + refId
 }
 
+const cleanItemName = (name: any, fallback: string = 'Chef Specialty'): string => {
+  if (!name || typeof name !== 'string') return fallback
+  const trimmed = name.trim()
+  if (!trimmed || trimmed.toLowerCase() === 'unknown item') return fallback
+  return trimmed
+}
+
 const getDestinationLabel = (order: any): string => {
-  if (!order) return 'Table T1'
-  if (order.table?.table_number) return `Table T${order.table.table_number}`
-  if (order.table_number) return `Table T${order.table_number}`
-  if (order.room?.room_number && order.room.room_number !== 'Room Service') {
-    return `Room ${order.room.room_number}`
+  if (!order) return 'Table 1'
+  const rawTable = order.table?.table_number || order.table_number || order.table?.name || ''
+  if (rawTable) {
+    const cleaned = String(rawTable).trim().replace(/^table\s*/i, '').replace(/^t\s*/i, '')
+    return `Table ${cleaned || rawTable}`
   }
-  if (order.room_number && order.room_number !== 'Room Service') {
-    return `Room ${order.room_number}`
+  const rawRoom = order.room?.room_number || order.room_number || ''
+  if (rawRoom && rawRoom !== 'Room Service') {
+    const cleanedRoom = String(rawRoom).trim().replace(/^room\s*/i, '')
+    return `Room ${cleanedRoom || rawRoom}`
+  }
+  if (order.destination) {
+    return String(order.destination).replace(/^Table\s*(T|Table)\s*/i, 'Table ')
   }
   return order.order_type === 'dine_in' ? 'Table Order' : 'Room Service'
 }
@@ -977,34 +989,52 @@ const formatOrderTime = (order: any): string => {
 
 const normalizeItems = (order: any): any[] => {
   if (!order) return []
+  if (Array.isArray(order.items_detail) && order.items_detail.length > 0) {
+    return order.items_detail.map((it: any) => {
+      const name = cleanItemName(it.name || it.item_name)
+      const rawImg = it.image_url || it.image
+      return {
+        name,
+        quantity: it.quantity || 1,
+        price: Number(it.price || it.unit_price || 14.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: it.notes || '',
+      }
+    })
+  }
   if (Array.isArray(order.items) && order.items.length > 0) {
-    return order.items.map((it: any) => ({
-      name: it.name || it.item_name || 'Chef Specialty',
-      quantity: it.quantity || 1,
-      price: Number(it.unit_price || it.price || 14.0),
-      image: resolveFoodImageUrl(it.image, it.name || it.item_name),
-    }))
+    return order.items.map((it: any) => {
+      const name = cleanItemName(typeof it === 'string' ? it : it.name || it.item_name || it.menu_item?.name)
+      const rawImg = typeof it === 'object' ? it.image_url || it.image || it.menu_item?.image_url || it.menu_item?.image : null
+      return {
+        name,
+        quantity: typeof it === 'object' ? it.quantity || 1 : 1,
+        price: Number(typeof it === 'object' ? it.unit_price || it.price || 14.0 : 14.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: typeof it === 'object' ? it.notes || '' : '',
+      }
+    })
   }
   if (Array.isArray(order.order_items) && order.order_items.length > 0) {
-    return order.order_items.map((it: any) => ({
-      name: it.menu_item?.name || it.name || 'Chef Specialty',
-      quantity: it.quantity || 1,
-      price: Number(it.unit_price || it.price || 14.0),
-      image: resolveFoodImageUrl(it.menu_item?.image || it.image, it.menu_item?.name || it.name),
-    }))
+    return order.order_items.map((it: any) => {
+      const name = cleanItemName(it.menu_item?.name || it.item_name || it.name)
+      const rawImg = it.menu_item?.image_url || it.menu_item?.image || it.image_url || it.image
+      return {
+        name,
+        quantity: it.quantity || 1,
+        price: Number(it.unit_price || it.price || 14.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: it.notes || '',
+      }
+    })
   }
   return [
     {
-      name: 'Margherita Pizza',
+      name: 'Chef Specialty Dish',
       quantity: 1,
       price: 14.0,
-      image: resolveFoodImageUrl(null, 'Margherita Pizza'),
-    },
-    {
-      name: 'Pasta Alfredo',
-      quantity: 1,
-      price: 13.0,
-      image: resolveFoodImageUrl(null, 'Pasta Alfredo'),
+      image: resolveFoodImageUrl(null, 'Chef Specialty Dish'),
+      notes: order.notes || '',
     },
   ]
 }

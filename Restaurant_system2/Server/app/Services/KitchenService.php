@@ -27,7 +27,7 @@ class KitchenService
                 'room' => fn($rq) => $rq->withoutGlobalScopes(),
                 'reservation' => fn($rvq) => $rvq->withoutGlobalScopes(),
                 'orderItems',
-                'orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes(),
+                'orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed(),
                 'table' => fn($tq) => $tq->withoutGlobalScopes(),
             ])
             ->whereIn('status', [

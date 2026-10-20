@@ -47,15 +47,28 @@ class MenuItem extends Model
     {
         return $query->where('is_available', true);
     }
+    protected $appends = ['image_url'];
+
     public function scopeCategory($query, $category)
     {
         return $query->where('category', $category);
     }
-    public function getImageUrlAttribute()
+    public function getImageUrlAttribute(): ?string
     {
-        return $this->image
-            ? asset('storage/' . $this->image)
-            : null;
+        if (empty($this->image)) {
+            return null;
+        }
+
+        if (preg_match('/^https?:\/\//i', $this->image)) {
+            return $this->image;
+        }
+
+        $clean = str_replace('\\', '/', ltrim($this->image, '/'));
+        if (str_starts_with($clean, 'storage/')) {
+            return asset($clean);
+        }
+
+        return asset('storage/' . $clean);
     }
     public function getFormattedPriceAttribute()
     {

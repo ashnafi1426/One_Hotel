@@ -82,17 +82,22 @@ class OrderCreated implements ShouldBroadcastNow
                     'booking_reference' => $this->order->reservation->booking_reference,
                 ] : null,
                 'items' => $this->order->orderItems->map(function ($item) {
+                    $menuItem = $item->menuItem ?? $item->menu_item;
+                    $itemName = $menuItem?->name ?? $item->item_name ?? 'Dish';
+                    $imageUrl = $menuItem?->image_url ?? ($menuItem?->image ? asset('storage/' . ltrim($menuItem->image, '/')) : null);
                     return [
                         'id' => $item->id,
                         'menu_item_id' => $item->menu_item_id,
-                        'name' => $item->menu_item?->name ?? 'Unknown Item',
-                        'category' => $item->menu_item?->category ?? 'Other',
+                        'name' => $itemName,
+                        'item_name' => $itemName,
+                        'category' => $menuItem?->category ?? 'Other',
                         'quantity' => (int) $item->quantity,
-                        'unit_price' => (float) $item->unit_price,
-                        'line_total' => (float) $item->line_total,
+                        'unit_price' => (float) ($item->item_price_at_order ?? $item->unit_price ?? $menuItem?->price ?? 0),
+                        'line_total' => (float) ($item->line_total ?? $item->total ?? 0),
                         'notes' => $item->notes,
                         'note' => $item->notes,
-                        'image' => $item->menu_item?->image ?? null,
+                        'image' => $imageUrl,
+                        'image_url' => $imageUrl,
                     ];
                 })->toArray(),
                 'subtotal' => (float) ($this->order->subtotal ?? 0),

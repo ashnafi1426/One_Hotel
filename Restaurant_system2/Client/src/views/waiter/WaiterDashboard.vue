@@ -880,14 +880,29 @@ const getOrderNumber = (order: any): string => {
   return refId.length > 8 ? 'ORD-' + refId.slice(0, 4).toUpperCase() : 'ORD-' + refId
 }
 
+const cleanItemName = (name: any, fallback: string = 'Chef Specialty'): string => {
+  if (!name || typeof name !== 'string') return fallback
+  const trimmed = name.trim()
+  if (!trimmed || trimmed.toLowerCase() === 'unknown item') return fallback
+  return trimmed
+}
+
 const getDestinationLabel = (order: any): string => {
-  if (!order) return 'Table T1'
-  if (order.table_number) return `Table ${order.table_number}`
-  if (order.table?.table_number) return `Table ${order.table.table_number}`
-  if (order.room_number && order.room_number !== 'Room Service') return `Room ${order.room_number}`
-  if (order.room?.room_number && order.room.room_number !== 'Room Service') return `Room ${order.room.room_number}`
-  if (order.destination) return order.destination
-  return order.is_table_order ? 'Table T1' : 'Room Service'
+  if (!order) return 'Table 1'
+  const rawTable = order.table_number || order.table?.table_number || order.table?.name || ''
+  if (rawTable) {
+    const cleaned = String(rawTable).trim().replace(/^table\s*/i, '').replace(/^t\s*/i, '')
+    return `Table ${cleaned || rawTable}`
+  }
+  const rawRoom = order.room_number || order.room?.room_number || ''
+  if (rawRoom && rawRoom !== 'Room Service') {
+    const cleanedRoom = String(rawRoom).trim().replace(/^room\s*/i, '')
+    return `Room ${cleanedRoom || rawRoom}`
+  }
+  if (order.destination) {
+    return String(order.destination).replace(/^Table\s*(T|Table)\s*/i, 'Table ')
+  }
+  return order.is_table_order ? 'Table 1' : 'Room Service'
 }
 
 const formatOrderTime = (order: any): string => {
@@ -912,31 +927,56 @@ const isOrderPending = (order: any): boolean => {
 const normalizeOrderItems = (order: any): any[] => {
   if (!order) return []
   if (Array.isArray(order.items_detail) && order.items_detail.length > 0) {
-    return order.items_detail.map((it: any) => ({
-      name: it.name || it.item_name || 'Delicious Dish',
-      quantity: it.quantity || 1,
-      price: Number(it.price || it.unit_price || 12.0),
-      image: resolveFoodImageUrl(it.image, it.name || it.item_name),
-      notes: it.notes || '',
-    }))
+    return order.items_detail.map((it: any) => {
+      const name = cleanItemName(it.name || it.item_name)
+      const rawImg = it.image_url || it.image
+      return {
+        name,
+        quantity: it.quantity || 1,
+        price: Number(it.price || it.unit_price || 12.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: it.notes || '',
+      }
+    })
   }
   if (Array.isArray(order.order?.order_items) && order.order.order_items.length > 0) {
-    return order.order.order_items.map((it: any) => ({
-      name: it.menu_item?.name || it.name || 'Delicious Dish',
-      quantity: it.quantity || 1,
-      price: Number(it.price || it.unit_price || 12.0),
-      image: resolveFoodImageUrl(it.menu_item?.image || it.image, it.menu_item?.name || it.name),
-      notes: it.notes || '',
-    }))
+    return order.order.order_items.map((it: any) => {
+      const name = cleanItemName(it.menu_item?.name || it.item_name || it.name)
+      const rawImg = it.menu_item?.image_url || it.menu_item?.image || it.image_url || it.image
+      return {
+        name,
+        quantity: it.quantity || 1,
+        price: Number(it.price || it.unit_price || 12.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: it.notes || '',
+      }
+    })
+  }
+  if (Array.isArray(order.order_items) && order.order_items.length > 0) {
+    return order.order_items.map((it: any) => {
+      const name = cleanItemName(it.menu_item?.name || it.item_name || it.name)
+      const rawImg = it.menu_item?.image_url || it.menu_item?.image || it.image_url || it.image
+      return {
+        name,
+        quantity: it.quantity || 1,
+        price: Number(it.price || it.unit_price || 12.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: it.notes || '',
+      }
+    })
   }
   if (Array.isArray(order.items) && order.items.length > 0) {
-    return order.items.map((it: any) => ({
-      name: typeof it === 'string' ? it : it.name || 'Delicious Dish',
-      quantity: it.quantity || 1,
-      price: Number(it.price || 12.0),
-      image: resolveFoodImageUrl(it.image, typeof it === 'string' ? it : it.name),
-      notes: it.notes || '',
-    }))
+    return order.items.map((it: any) => {
+      const name = cleanItemName(typeof it === 'string' ? it : it.name || it.item_name)
+      const rawImg = typeof it === 'object' ? it.image_url || it.image : null
+      return {
+        name,
+        quantity: typeof it === 'object' ? it.quantity || 1 : 1,
+        price: Number(typeof it === 'object' ? it.price || it.unit_price || 12.0 : 12.0),
+        image: resolveFoodImageUrl(rawImg, name),
+        notes: typeof it === 'object' ? it.notes || '' : '',
+      }
+    })
   }
   const count = typeof order.items === 'number' && order.items > 0 ? order.items : 1
   return [

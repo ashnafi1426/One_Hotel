@@ -115,10 +115,10 @@ export function detectFoodCategory(name: string = ''): string {
 export function resolveFoodImageUrl(imagePath?: string | null, itemName: string = ''): string {
   if (imagePath && typeof imagePath === 'string') {
     const trimmed = imagePath.trim()
-    if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
-      return trimmed
-    }
-    if (trimmed.length > 0) {
+    if (trimmed && trimmed !== 'null' && trimmed !== 'undefined') {
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('data:')) {
+        return trimmed
+      }
       return storageUrl(trimmed)
     }
   }

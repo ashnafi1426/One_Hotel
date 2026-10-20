@@ -64,6 +64,11 @@ class OrderItem extends Model
         return $this->belongsTo(MenuItem::class)->withTrashed();
     }
 
+    public function getMenuItemAttribute()
+    {
+        return $this->menuItem;
+    }
+
     public function taxRate(): BelongsTo
     {
         return $this->belongsTo(TaxRate::class, 'tax_rate_id');

@@ -680,8 +680,8 @@ class WaiterDashboardService
                     'guest:id,first_name,last_name',
                     'room:id,room_number,floor_id',
                     'table:id,table_number,section',
-                    'orderItems:id,order_id,menu_item_id,quantity,notes',
-                    'orderItems.menuItem:id,name',
+                    'orderItems:id,order_id,menu_item_id,item_name,quantity,notes,subtotal,total',
+                    'orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed()->select('id', 'name', 'image', 'price'),
                 ])
                 ->orderBy('updated_at', 'asc')
                 ->limit($limit)
@@ -690,7 +690,8 @@ class WaiterDashboardService
                     $tableNumber = $order->table?->table_number ?? null;
                     $isTableOrder = !empty($tableNumber) || !empty($order->table_id) || in_array($order->order_type, ['dine_in', 'walk_in']);
                     $roomNumber = !$isTableOrder ? ($order->room?->room_number ?? null) : null;
-                    $destination = $tableNumber ? "Table {$tableNumber}" : ($roomNumber ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
+                    $cleanTableNumber = $tableNumber ? preg_replace('/^(table\s*|t\s*)/i', '', trim($tableNumber)) : null;
+                    $destination = $cleanTableNumber ? "Table {$cleanTableNumber}" : ($roomNumber ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
 
                     return [
                         'id' => $order->id,
@@ -698,10 +699,10 @@ class WaiterDashboardService
                         'order_type' => $order->order_type ?? ($isTableOrder ? 'dine_in' : 'room_service'),
                         'is_table_order' => $isTableOrder,
                         'room_number' => $roomNumber,
-                        'table_number' => $tableNumber,
+                        'table_number' => $cleanTableNumber ?? $tableNumber,
                         'table_section' => $order->table?->section ?? null,
                         'destination' => $destination,
-                        'guest_name' => ($order->guest ? $order->guest->first_name . ' ' . $order->guest->last_name : ($tableNumber ? "Table {$tableNumber} Guest" : 'Guest')),
+                        'guest_name' => ($order->guest ? $order->guest->first_name . ' ' . $order->guest->last_name : ($cleanTableNumber ? "Table {$cleanTableNumber} Guest" : 'Guest')),
                         'items' => $order->orderItems?->count() ?? 0,
                         'special_requests' => $order->notes ?? $order->special_requests ?? 'None',
                         'priority' => $order->priority ?? 'normal',
@@ -710,8 +711,12 @@ class WaiterDashboardService
                         'wait_time_minutes' => $order->updated_at ? $order->updated_at->diffInMinutes(now()) : 0,
                         'total' => $order->total,
                         'items_detail' => $order->orderItems?->map(fn ($item) => [
-                            'name' => $item->menuItem?->name ?? 'Unknown Item',
-                            'quantity' => $item->quantity,
+                            'name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                            'item_name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                            'quantity' => (int) $item->quantity,
+                            'price' => (float) ($item->menuItem?->price ?? $item->item_price_at_order ?? 0),
+                            'image' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
+                            'image_url' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
                             'notes' => $item->notes ?? 'None',
                         ])->toArray() ?? [],
                     ];
@@ -776,8 +781,8 @@ class WaiterDashboardService
                 'order.guest:id,first_name,last_name',
                 'order.room:id,room_number',
                 'order.table:id,table_number,section',
-                'order.orderItems:id,order_id,menu_item_id,quantity,notes',
-                'order.orderItems.menuItem:id,name',
+                'order.orderItems:id,order_id,menu_item_id,item_name,quantity,notes,subtotal,total',
+                'order.orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed()->select('id', 'name', 'image', 'price'),
                 'floor:id,floor_number',
                 'room:id,room_number',
                 'table:id,table_number,section',
@@ -802,11 +807,12 @@ class WaiterDashboardService
                     ? ($task->room?->room_number ?? $order->room?->room_number ?? null)
                     : null;
 
-                $destination = $tableNumber
-                    ? "Table {$tableNumber}"
+                $cleanTableNumber = $tableNumber ? preg_replace('/^(table\s*|t\s*)/i', '', trim($tableNumber)) : null;
+                $destination = $cleanTableNumber
+                    ? "Table {$cleanTableNumber}"
                     : ($roomNumber ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
 
-                $guestName = $order->guest ? trim($order->guest->first_name . ' ' . $order->guest->last_name) : ($tableNumber ? "Table {$tableNumber} Guest" : 'Guest');
+                $guestName = $order->guest ? trim($order->guest->first_name . ' ' . $order->guest->last_name) : ($cleanTableNumber ? "Table {$cleanTableNumber} Guest" : 'Guest');
 
                 $results[] = [
                     'id' => $task->id,
@@ -815,16 +821,16 @@ class WaiterDashboardService
                     'order_type' => $order->order_type ?? ($isTableOrder ? 'dine_in' : 'room_service'),
                     'is_table_order' => $isTableOrder,
                     'room_number' => $roomNumber,
-                    'table_number' => $tableNumber,
+                    'table_number' => $cleanTableNumber ?? $tableNumber,
                     'table_section' => $tableSection,
                     'destination' => $destination,
                     'table' => $task->table ? [
                         'id' => $task->table->id,
-                        'table_number' => $task->table->table_number,
+                        'table_number' => $cleanTableNumber ?? $task->table->table_number,
                         'section' => $task->table->section,
                     ] : ($order->table ? [
                         'id' => $order->table->id,
-                        'table_number' => $order->table->table_number,
+                        'table_number' => $cleanTableNumber ?? $order->table->table_number,
                         'section' => $order->table->section,
                     ] : null),
                     'guest_name' => $guestName,
@@ -834,8 +840,12 @@ class WaiterDashboardService
                     'order_status' => $order->status,
                     'delivery_task_status' => $task->status,
                     'items_detail' => $order->orderItems?->map(fn ($item) => [
-                        'name' => $item->menuItem?->name ?? 'Unknown Item',
-                        'quantity' => $item->quantity,
+                        'name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'item_name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'quantity' => (int) $item->quantity,
+                        'price' => (float) ($item->menuItem?->price ?? $item->item_price_at_order ?? 0),
+                        'image' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
+                        'image_url' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
                         'notes' => $item->notes ?? 'None',
                     ])->toArray() ?? [],
                     'special_requests' => $order->notes ?? $order->special_requests ?? 'None',
@@ -902,8 +912,8 @@ class WaiterDashboardService
                     'order.guest:id,first_name,last_name',
                     'order.room:id,room_number',
                     'order.table:id,table_number,section',
-                    'order.orderItems:id,order_id,menu_item_id,quantity,notes',
-                    'order.orderItems.menuItem:id,name',
+                    'order.orderItems:id,order_id,menu_item_id,item_name,quantity,notes,subtotal,total',
+                    'order.orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed()->select('id', 'name', 'image', 'price'),
                     'table:id,table_number,section',
                     'assignedBy:id,first_name,last_name'
                 ])
@@ -916,7 +926,8 @@ class WaiterDashboardService
                 $tableNumber = $assignment->table?->table_number ?? $assignment->order?->table?->table_number ?? null;
                 $isTableOrder = !empty($tableNumber) || !empty($assignment->table_id) || !empty($assignment->order?->table_id);
                 $roomNumber = !$isTableOrder ? ($assignment->order?->room?->room_number ?? 'N/A') : null;
-                $destination = $tableNumber ? "Table {$tableNumber}" : ($roomNumber && $roomNumber !== 'N/A' ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
+                $cleanTableNumber = $tableNumber ? preg_replace('/^(table\s*|t\s*)/i', '', trim($tableNumber)) : null;
+                $destination = $cleanTableNumber ? "Table {$cleanTableNumber}" : ($roomNumber && $roomNumber !== 'N/A' ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
 
                 return [
                     'id' => $assignment->id,
@@ -925,9 +936,9 @@ class WaiterDashboardService
                     'order_type' => $assignment->order?->order_type ?? ($isTableOrder ? 'dine_in' : 'room_service'),
                     'is_table_order' => $isTableOrder,
                     'room_number' => $roomNumber,
-                    'table_number' => $tableNumber,
+                    'table_number' => $cleanTableNumber ?? $tableNumber,
                     'destination' => $destination,
-                    'guest_name' => ($assignment->order?->guest ? $assignment->order->guest->first_name . ' ' . $assignment->order->guest->last_name : ($tableNumber ? "Table {$tableNumber} Guest" : 'Guest')),
+                    'guest_name' => ($assignment->order?->guest ? $assignment->order->guest->first_name . ' ' . $assignment->order->guest->last_name : ($cleanTableNumber ? "Table {$cleanTableNumber} Guest" : 'Guest')),
                     'items' => $assignment->order?->orderItems?->count() ?? 0,
                     'priority' => $assignment->order?->priority ?? 'normal',
                     'assigned_at' => $assignment->assigned_at?->format('Y-m-d H:i:s') ?? now()->format('Y-m-d H:i:s'),
@@ -935,8 +946,12 @@ class WaiterDashboardService
                     'is_ready' => $assignment->order?->status === 'ready',
                     'assigned_by_name' => ($assignment->assignedBy ? $assignment->assignedBy->first_name . ' ' . $assignment->assignedBy->last_name : 'System'),
                     'items_detail' => $assignment->order?->orderItems?->map(fn ($item) => [
-                        'name' => $item->menuItem?->name ?? 'Unknown Item',
-                        'quantity' => $item->quantity,
+                        'name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'item_name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'quantity' => (int) $item->quantity,
+                        'price' => (float) ($item->menuItem?->price ?? $item->item_price_at_order ?? 0),
+                        'image' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
+                        'image_url' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
                         'notes' => $item->notes ?? 'None',
                     ])->toArray() ?? [],
                     'special_requests' => $assignment->order?->special_requests ?? 'None',
@@ -974,6 +989,8 @@ class WaiterDashboardService
                     'order.guest:id,first_name,last_name',
                     'order.room:id,room_number',
                     'order.table:id,table_number,section',
+                    'order.orderItems:id,order_id,menu_item_id,item_name,quantity,notes,subtotal,total',
+                    'order.orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed()->select('id', 'name', 'image', 'price'),
                     'table:id,table_number,section',
                 ])
                 ->select([
@@ -987,7 +1004,8 @@ class WaiterDashboardService
                 $tableNumber = $assignment->table?->table_number ?? $assignment->order?->table?->table_number ?? null;
                 $isTableOrder = !empty($tableNumber) || !empty($assignment->table_id) || !empty($assignment->order?->table_id);
                 $roomNumber = !$isTableOrder ? ($assignment->order?->room?->room_number ?? null) : null;
-                $destination = $tableNumber ? "Table {$tableNumber}" : ($roomNumber ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
+                $cleanTableNumber = $tableNumber ? preg_replace('/^(table\s*|t\s*)/i', '', trim($tableNumber)) : null;
+                $destination = $cleanTableNumber ? "Table {$cleanTableNumber}" : ($roomNumber ? "Room {$roomNumber}" : ($isTableOrder ? 'Table Order' : 'Room Service'));
 
                 return [
                     'id' => $assignment->id,
@@ -996,14 +1014,23 @@ class WaiterDashboardService
                     'order_type' => $assignment->order?->order_type ?? ($isTableOrder ? 'dine_in' : 'room_service'),
                     'is_table_order' => $isTableOrder,
                     'room_number' => $roomNumber,
-                    'table_number' => $tableNumber,
+                    'table_number' => $cleanTableNumber ?? $tableNumber,
                     'destination' => $destination,
-                    'guest_name' => ($assignment->order?->guest ? $assignment->order->guest->first_name . ' ' . $assignment->order->guest->last_name : ($tableNumber ? "Table {$tableNumber} Guest" : 'N/A')),
+                    'guest_name' => ($assignment->order?->guest ? $assignment->order->guest->first_name . ' ' . $assignment->order->guest->last_name : ($cleanTableNumber ? "Table {$cleanTableNumber} Guest" : 'N/A')),
                     'priority' => $assignment->order?->priority ?? 'normal',
                     'picked_up_at' => $assignment->picked_up_at?->format('Y-m-d H:i:s'),
                     'on_delivery_at' => $assignment->on_delivery_at?->format('Y-m-d H:i:s'),
                     'delivery_time_minutes' => $assignment->picked_up_at?->diffInMinutes(now()) ?? 0,
                     'special_requests' => $assignment->order?->special_requests ?? 'None',
+                    'items_detail' => $assignment->order?->orderItems?->map(fn ($item) => [
+                        'name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'item_name' => $item->menuItem?->name ?? $item->item_name ?? 'Dish',
+                        'quantity' => (int) $item->quantity,
+                        'price' => (float) ($item->menuItem?->price ?? $item->item_price_at_order ?? 0),
+                        'image' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
+                        'image_url' => $item->menuItem?->image_url ?? ($item->menuItem?->image ? asset('storage/' . ltrim($item->menuItem->image, '/')) : null),
+                        'notes' => $item->notes ?? 'None',
+                    ])->toArray() ?? [],
                     'status' => $assignment->status,
                     'order_status' => $assignment->status,
                 ];
