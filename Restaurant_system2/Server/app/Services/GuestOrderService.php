@@ -64,28 +64,34 @@ class GuestOrderService
      */
     protected function placeRoomOrder(array $data, array $roomData): array
     {
-        $room = Room::withoutGlobalScopes()->findOrFail($roomData['room_id']);
-        $reservation = $room->getCurrentReservation();
+        $roomId = $roomData['room_id'];
+        $roomNumber = $roomData['room_number'] ?? '101';
+        $reservationId = $roomData['reservation_id'] ?? null;
+        $guestId = $roomData['guest']['guest_id'] ?? null;
+        $canOrder = $roomData['can_order'] ?? false;
 
-        if (!$reservation || $reservation->status !== 'checked_in') {
-            $statusText = $reservation ? $reservation->status : 'none';
-            $errorMessage = match ($statusText) {
-                'confirmed' => 'Your reservation is confirmed, but room-service ordering is only available after check-in at the front desk.',
-                'checked_out' => 'This room has been checked out. Room-service ordering is no longer available.',
-                'cancelled' => 'This reservation was cancelled. Room-service ordering is unavailable.',
-                default => 'Room service is only available for checked-in guests. Please contact the front desk.',
-            };
+        if (!$canOrder || !$reservationId) {
+            // Fast fallback: only query database if not in pre-resolved cache
+            $room = Room::withoutGlobalScopes()->findOrFail($roomId);
+            $reservation = $room->getCurrentReservation();
 
-            return [
-                'status_code' => 403,
-                'response' => [
-                    'success' => false,
-                    'error' => 'Ordering not allowed',
-                    'message' => $errorMessage,
-                    'reservation_status' => $statusText,
-                    'can_order' => false,
-                ],
-            ];
+            if (!$reservation || $reservation->status !== 'checked_in') {
+                $statusText = $reservation ? $reservation->status : 'none';
+                return [
+                    'status_code' => 403,
+                    'response' => [
+                        'success' => false,
+                        'error' => 'Ordering not allowed',
+                        'message' => 'Room service is only available for checked-in guests. Please contact the front desk.',
+                        'reservation_status' => $statusText,
+                        'can_order' => false,
+                    ],
+                ];
+            }
+
+            $reservationId = $reservation->id;
+            $guestId = $reservation->guest_id;
+            $roomNumber = $room->room_number;
         }
 
         // 1. Calculate totals and validate menu items outside transaction (zero database locks held)
@@ -95,13 +101,13 @@ class GuestOrderService
         $order = null;
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
-                $order = DB::transaction(function () use ($data, $room, $reservation, $total, $subtotal, $tax, $orderItems) {
+                $order = DB::transaction(function () use ($data, $roomId, $reservationId, $guestId, $total, $subtotal, $tax, $orderItems) {
                     $createdOrder = Order::create([
                         'order_number' => Order::generateOrderNumber(),
-                        'room_id' => $room->id,
+                        'room_id' => $roomId,
                         'table_id' => null,
-                        'guest_id' => $reservation->guest_id,
-                        'reservation_id' => $reservation->id,
+                        'guest_id' => $guestId,
+                        'reservation_id' => $reservationId,
                         'order_type' => Order::TYPE_ROOM_SERVICE,
                         'order_time' => now(),
                         'total' => $total,
@@ -128,29 +134,21 @@ class GuestOrderService
             }
         }
 
-        // 3. Post-transaction operations: order is already committed in DB, locks are released!
-        $order->setRelation('room', $room);
-        $order->setRelation('reservation', $reservation);
-        if ($reservation->relationLoaded('guest') && $reservation->guest) {
-            $order->setRelation('guest', $reservation->guest);
-        }
-        $order->loadMissing([
-            'orderItems.menuItem',
-        ]);
-
-        $dispatchPostTasks = function () use ($order, $room) {
+        $dispatchPostTasks = function () use ($order, $roomNumber) {
             try {
                 OrderCreated::dispatch($order);
             } catch (\Throwable $e) {
                 Log::warning("Failed to broadcast room order creation: {$e->getMessage()}");
             }
 
-            $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
+            try {
+                $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$roomNumber}) has been placed.");
+            } catch (\Throwable $e) {
+                Log::warning("Failed to notify chefs: {$e->getMessage()}");
+            }
         };
 
-        if (function_exists('Illuminate\Support\defer')) {
-            \Illuminate\Support\defer($dispatchPostTasks);
-        } elseif (function_exists('app') && !app()->runningInConsole()) {
+        if (function_exists('app') && !app()->runningInConsole()) {
             app()->terminating($dispatchPostTasks);
         } else {
             $dispatchPostTasks();
@@ -166,7 +164,7 @@ class GuestOrderService
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'order_type' => $order->order_type,
-                    'room_number' => $room->room_number,
+                    'room_number' => $roomNumber,
                     'total' => (float) $order->total,
                     'status' => $order->status,
                     'items' => $orderItems,
@@ -181,7 +179,8 @@ class GuestOrderService
      */
     protected function placeTableOrder(array $data, array $tableData): array
     {
-        $table = RestaurantTable::withoutGlobalScopes()->findOrFail($tableData['table_id']);
+        $tableId = $tableData['table_id'];
+        $tableNumber = $tableData['table_number'] ?? '1';
 
         // 1. Calculate totals outside transaction
         list($total, $subtotal, $tax, $orderItems) = $this->calculateOrderTotal($data['items']);
@@ -190,11 +189,11 @@ class GuestOrderService
         $order = null;
         for ($attempt = 1; $attempt <= 5; $attempt++) {
             try {
-                $order = DB::transaction(function () use ($data, $table, $total, $subtotal, $tax, $orderItems) {
+                $order = DB::transaction(function () use ($data, $tableId, $total, $subtotal, $tax, $orderItems, $tableData) {
                     $createdOrder = Order::create([
                         'order_number' => Order::generateOrderNumber(),
                         'room_id' => null,
-                        'table_id' => $table->id,
+                        'table_id' => $tableId,
                         'guest_id' => null,
                         'reservation_id' => null,
                         'order_type' => Order::TYPE_DINE_IN,
@@ -211,8 +210,8 @@ class GuestOrderService
 
                     $this->createOrderItems($createdOrder->id, $orderItems);
 
-                    if ($table->status !== RestaurantTable::STATUS_OCCUPIED) {
-                        $table->update(['status' => RestaurantTable::STATUS_OCCUPIED]);
+                    if (($tableData['status'] ?? null) !== RestaurantTable::STATUS_OCCUPIED) {
+                        RestaurantTable::where('id', $tableId)->update(['status' => RestaurantTable::STATUS_OCCUPIED]);
                     }
 
                     return $createdOrder;
@@ -227,25 +226,21 @@ class GuestOrderService
             }
         }
 
-        // 3. Post-transaction operations: order is already committed in DB, locks are released!
-        $order->setRelation('table', $table);
-        $order->loadMissing([
-            'orderItems.menuItem',
-        ]);
-
-        $dispatchPostTasks = function () use ($order, $table) {
+        $dispatchPostTasks = function () use ($order, $tableNumber) {
             try {
                 OrderCreated::dispatch($order);
             } catch (\Throwable $e) {
                 Log::warning("Failed to broadcast table order creation: {$e->getMessage()}");
             }
 
-            $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
+            try {
+                $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$tableNumber}) has been placed.");
+            } catch (\Throwable $e) {
+                Log::warning("Failed to notify chefs: {$e->getMessage()}");
+            }
         };
 
-        if (function_exists('Illuminate\Support\defer')) {
-            \Illuminate\Support\defer($dispatchPostTasks);
-        } elseif (function_exists('app') && !app()->runningInConsole()) {
+        if (function_exists('app') && !app()->runningInConsole()) {
             app()->terminating($dispatchPostTasks);
         } else {
             $dispatchPostTasks();
@@ -261,7 +256,7 @@ class GuestOrderService
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'order_type' => $order->order_type,
-                    'table_number' => $table->table_number,
+                    'table_number' => $tableNumber,
                     'total' => (float) $order->total,
                     'status' => $order->status,
                     'items' => $orderItems,
@@ -389,7 +384,7 @@ class GuestOrderService
     protected function notifyChefs(Order $order, string $message): void
     {
         try {
-            $chefIds = Cache::remember('active_chef_ids', 600, function () {
+            $chefIds = Cache::store('file')->remember('active_chef_ids', 600, function () {
                 return User::where('role', 'chef')->pluck('id')->toArray();
             });
 

@@ -750,6 +750,8 @@ const placeOrderWithRoomCharge = async () => {
     // Use cash for table dine-in orders (pay after meal) or room_charge for hotel rooms
     const orderResponse = await unifiedOrderService.createOrder({
       qr_token: qrToken.value,
+      table_id: isTable ? String(orderContext.value?.id) : undefined,
+      room_id: !isTable ? String(orderContext.value?.id) : undefined,
       items: orderItems,
       special_requests: '',
       payment_type: paymentType,

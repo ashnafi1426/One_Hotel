@@ -26,10 +26,10 @@ class QRResolutionService
             $cacheKey = "qr_token_res:" . md5($upperToken);
 
             if ($forceRefresh) {
-                Cache::forget($cacheKey);
+                Cache::store('file')->forget($cacheKey);
             }
 
-            return Cache::remember($cacheKey, 300, function () use ($rawToken, $upperToken, $qrToken) {
+            return Cache::store('file')->remember($cacheKey, 300, function () use ($rawToken, $upperToken, $qrToken) {
                 $lowerToken = strtolower($rawToken);
 
                 // 1. Fast Table check (table QR tokens are fast 8-char codes)
@@ -47,7 +47,7 @@ class QRResolutionService
                         ->first();
                 }
 
-                $hotelInfo = Cache::remember('default_hotel_info', 3600, function () {
+                $hotelInfo = Cache::store('file')->remember('default_hotel_info', 3600, function () {
                     $hotel = \App\Models\Hotel::first();
                     return [
                         'id' => $hotel?->id,

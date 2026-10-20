@@ -55,6 +55,14 @@ class GuestStoreOrderRequest extends FormRequest
                 'string',
                 'in:room_charge,cash,card,chapa',
             ],
+            'table_id' => [
+                'nullable',
+                'string',
+            ],
+            'room_id' => [
+                'nullable',
+                'string',
+            ],
         ];
     }
 
