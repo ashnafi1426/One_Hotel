@@ -137,19 +137,26 @@ class GuestOrderService
             'table',
         ]);
 
-        // Broadcast order creation for real-time kitchen updates
-        try {
-            OrderCreated::dispatch($order);
-        } catch (\Throwable $e) {
-            Log::warning("Failed to broadcast room order creation: {$e->getMessage()}");
-        }
+        $dispatchPostTasks = function () use ($order, $room) {
+            try {
+                OrderCreated::dispatch($order);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to broadcast room order creation: {$e->getMessage()}");
+            }
 
-        $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
+            $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
 
-        try {
-            app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
-        } catch (\Throwable $e) {
-            Log::warning("Automatic waiter assignment failed for room order #{$order->id}: {$e->getMessage()}");
+            try {
+                app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
+            } catch (\Throwable $e) {
+                Log::warning("Automatic waiter assignment failed for room order #{$order->id}: {$e->getMessage()}");
+            }
+        };
+
+        if (function_exists('app') && !app()->runningInConsole()) {
+            app()->terminating($dispatchPostTasks);
+        } else {
+            $dispatchPostTasks();
         }
 
         return [
@@ -230,19 +237,26 @@ class GuestOrderService
             'table',
         ]);
 
-        // Broadcast order creation for real-time kitchen updates
-        try {
-            OrderCreated::dispatch($order);
-        } catch (\Throwable $e) {
-            Log::warning("Failed to broadcast table order creation: {$e->getMessage()}");
-        }
+        $dispatchPostTasks = function () use ($order, $table) {
+            try {
+                OrderCreated::dispatch($order);
+            } catch (\Throwable $e) {
+                Log::warning("Failed to broadcast table order creation: {$e->getMessage()}");
+            }
 
-        $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
+            $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
 
-        try {
-            app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
-        } catch (\Throwable $e) {
-            Log::warning("Automatic waiter assignment failed for table order #{$order->id}: {$e->getMessage()}");
+            try {
+                app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
+            } catch (\Throwable $e) {
+                Log::warning("Automatic waiter assignment failed for table order #{$order->id}: {$e->getMessage()}");
+            }
+        };
+
+        if (function_exists('app') && !app()->runningInConsole()) {
+            app()->terminating($dispatchPostTasks);
+        } else {
+            $dispatchPostTasks();
         }
 
         return [

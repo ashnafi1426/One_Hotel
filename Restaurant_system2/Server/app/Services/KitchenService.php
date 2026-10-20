@@ -21,7 +21,9 @@ class KitchenService
      */
     public function getKitchenOrders($authUser = null): array
     {
-        $orders = $this->getBaseKitchenQuery($authUser)
+        $base = $this->getBaseKitchenQuery($authUser);
+
+        $activeOrders = (clone $base)
             ->with([
                 'guest' => fn($gq) => $gq->withoutGlobalScopes(),
                 'room' => fn($rq) => $rq->withoutGlobalScopes(),
@@ -34,16 +36,33 @@ class KitchenService
                 Order::STATUS_PENDING,
                 Order::STATUS_PREPARING,
                 Order::STATUS_READY,
-                Order::STATUS_SERVED,
             ])
             ->latest('order_time')
             ->get();
 
+        $servedOrders = (clone $base)
+            ->with([
+                'guest' => fn($gq) => $gq->withoutGlobalScopes(),
+                'room' => fn($rq) => $rq->withoutGlobalScopes(),
+                'reservation' => fn($rvq) => $rvq->withoutGlobalScopes(),
+                'orderItems',
+                'orderItems.menuItem' => fn($mq) => $mq->withoutGlobalScopes()->withTrashed(),
+                'table' => fn($tq) => $tq->withoutGlobalScopes(),
+            ])
+            ->where('status', Order::STATUS_SERVED)
+            ->where(function ($q) {
+                $q->whereDate('served_at', today())
+                  ->orWhereDate('created_at', today());
+            })
+            ->latest('served_at')
+            ->limit(30)
+            ->get();
+
         return [
-            'pending' => $orders->where('status', Order::STATUS_PENDING)->values(),
-            'preparing' => $orders->where('status', Order::STATUS_PREPARING)->values(),
-            'ready' => $orders->where('status', Order::STATUS_READY)->values(),
-            'served' => $orders->where('status', Order::STATUS_SERVED)->values(),
+            'pending' => $activeOrders->where('status', Order::STATUS_PENDING)->values(),
+            'preparing' => $activeOrders->where('status', Order::STATUS_PREPARING)->values(),
+            'ready' => $activeOrders->where('status', Order::STATUS_READY)->values(),
+            'served' => $servedOrders->values(),
         ];
     }
 

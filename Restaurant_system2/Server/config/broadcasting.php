@@ -58,6 +58,8 @@ return [
                 'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
                 'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+                'timeout' => 2,
+                'connect_timeout' => 1.5,
             ],
             'client_options' => [
                 'timeout' => 2.0,
