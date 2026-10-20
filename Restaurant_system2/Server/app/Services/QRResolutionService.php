@@ -47,13 +47,21 @@ class QRResolutionService
                         ->first();
                 }
 
+                $hotelInfo = Cache::remember('default_hotel_info', 3600, function () {
+                    $hotel = \App\Models\Hotel::first();
+                    return [
+                        'id' => $hotel?->id,
+                        'name' => $hotel?->name ?? 'Sheraten Hotel',
+                    ];
+                });
+
                 if ($table && $table->is_active !== false) {
                     return [
                         'success' => true,
                         'context' => 'table',
                         'data' => [
-                            'hotel_id' => \App\Models\Hotel::first()?->id,
-                            'hotel_name' => \App\Models\Hotel::first()?->name ?? 'Sheraten Hotel',
+                            'hotel_id' => $hotelInfo['id'],
+                            'hotel_name' => $hotelInfo['name'],
                             'table_id' => $table->id,
                             'table_number' => $table->table_number,
                             'table_name' => $table->table_name ?? ('Table ' . $table->table_number),
@@ -112,8 +120,8 @@ class QRResolutionService
                         'success' => true,
                         'context' => 'room',
                         'data' => [
-                            'hotel_id' => \App\Models\Hotel::first()?->id,
-                            'hotel_name' => \App\Models\Hotel::first()?->name ?? 'Sheraten Hotel',
+                            'hotel_id' => $hotelInfo['id'],
+                            'hotel_name' => $hotelInfo['name'],
                             'room_id' => $room->id,
                             'room_number' => $room->room_number,
                             'floor' => $room->floor,

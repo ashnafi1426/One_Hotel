@@ -28,7 +28,6 @@ class GuestStoreOrderRequest extends FormRequest
             'items.*.menu_item_id' => [
                 'required',
                 'uuid',
-                'exists:menu_items,id',
             ],
             'items.*.quantity' => [
                 'required',

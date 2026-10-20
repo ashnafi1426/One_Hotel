@@ -441,6 +441,39 @@
       </Transition>
     </Teleport>
 
+    <!-- Instant Full-Screen Order Submitting Feedback Overlay -->
+    <Teleport to="body">
+      <Transition name="fade">
+        <div
+          v-if="isPlacingOrder"
+          class="fixed inset-0 bg-slate-950/75 backdrop-blur-sm z-[9999] flex items-center justify-center p-4"
+        >
+          <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-8 text-center space-y-5 animate-in fade-in zoom-in-95 duration-200">
+            <div class="relative w-20 h-20 mx-auto flex items-center justify-center">
+              <div class="absolute inset-0 rounded-full bg-amber-400/20 animate-ping"></div>
+              <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-amber-500 to-amber-400 flex items-center justify-center shadow-lg shadow-amber-500/30 text-white text-3xl">
+                🍽️
+              </div>
+            </div>
+            <div>
+              <h3 class="text-xl font-black text-slate-900 tracking-tight">
+                {{ languageStore.t('placing_order', 'Placing Your Order...') }}
+              </h3>
+              <p class="text-sm font-medium text-slate-500 mt-1">
+                {{ orderContext?.type === 'table' ? `Sending to Table ${orderContext?.displayName || ''} & Kitchen` : 'Sending to Room & Kitchen' }}
+              </p>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+              <div class="bg-amber-500 h-full w-2/3 rounded-full animate-pulse"></div>
+            </div>
+            <p class="text-xs text-slate-400 font-medium">
+              {{ languageStore.t('please_wait_moment', 'Connecting to kitchen in milliseconds...') }}
+            </p>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
+
     <Teleport to="body">
       <Transition name="fade">
         <div
@@ -701,6 +734,8 @@ const placeOrderWithRoomCharge = async () => {
     return
   }
 
+  // Instant 0ms response: close cart drawer and display modern full-screen placing overlay
+  showCartModal.value = false
   isPlacingOrder.value = true
 
   try {
@@ -787,6 +822,7 @@ const placeOrderWithRoomCharge = async () => {
     }
   } catch (error: any) {
     console.error('[QRMenu] Error placing order with room charge:', error)
+    showCartModal.value = true
     alert(error.message || 'Failed to place order. Please try again.')
   } finally {
     isPlacingOrder.value = false

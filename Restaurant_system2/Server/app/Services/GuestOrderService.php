@@ -12,7 +12,7 @@ use App\Models\User;
 use App\Events\OrderCreated;
 use App\Services\QRResolutionService;
 use App\Services\TenantContext;
-use App\Services\Waiter\AutomaticWaiterAssignmentService;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
