@@ -23,14 +23,7 @@ class UnifiedOrderController extends Controller
         try {
             $result = $this->guestOrderService->placeOrder($request->validated());
 
-            $response = response()->json($result['response'], $result['status_code']);
-
-            if (function_exists('fastcgi_finish_request')) {
-                $response->send();
-                fastcgi_finish_request();
-            }
-
-            return $response;
+            return response()->json($result['response'], $result['status_code']);
         } catch (InvalidArgumentException $e) {
             return response()->json([
                 'success' => false,
