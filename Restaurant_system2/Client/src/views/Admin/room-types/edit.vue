@@ -38,14 +38,18 @@ const loadData = async () => {
   try {
     loading.value = true
     const res = await roomTypeService.getRoomType(id as any)
-    const data = res.data.data
+    const data = res.data?.data || res.data
+
+    if (!data) {
+      throw new Error('Room type data could not be found.')
+    }
 
     form.value = {
       id: data.id,
       name: data.name ?? '',
       description: data.description ?? '',
       base_price_per_night: Number(data.base_price_per_night) || 0,
-      capacity: parseInt(String(data.capacity), 10) || 0,
+      capacity: parseInt(String(data.capacity), 10) || 2,
       amenities: Array.isArray(data.amenities)
         ? data.amenities.map((a: any) => (typeof a === 'string' ? a : String(a)))
         : [],
@@ -61,26 +65,35 @@ const loadData = async () => {
 
 onMounted(loadData)
 
-watch(() => hotelStore.hotelId, loadData)
+watch(
+  () => hotelStore.hotelId,
+  (newId, oldId) => {
+    if (newId && oldId && newId !== oldId) {
+      loadData()
+    }
+  },
+)
 
-const submit = async () => {
+const submit = async (formData?: RoomType) => {
   isSubmitting.value = true
   serverErrors.value = {}
   error.value = null
   successMessage.value = null
 
+  const dataToSubmit = formData || form.value
+
   try {
     const payload: RoomType = {
-      name: form.value.name,
-      description: form.value.description,
-      base_price_per_night: Number(form.value.base_price_per_night),
-      capacity: parseInt(String(form.value.capacity), 10),
-      amenities: form.value.amenities,
-      is_active: Boolean(form.value.is_active),
+      name: dataToSubmit.name,
+      description: dataToSubmit.description,
+      base_price_per_night: Number(dataToSubmit.base_price_per_night),
+      capacity: parseInt(String(dataToSubmit.capacity), 10) || 1,
+      amenities: dataToSubmit.amenities,
+      is_active: Boolean(dataToSubmit.is_active),
     }
 
     await store.updateRoomType(id, payload)
-    successMessage.value = `Room type "${form.value.name}" updated successfully!`
+    successMessage.value = `Room type "${dataToSubmit.name}" updated successfully!`
 
     setTimeout(() => {
       router.push('/admin/room-types')

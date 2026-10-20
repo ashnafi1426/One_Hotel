@@ -28,18 +28,20 @@ let form = reactive<RoomType>({
   is_active: true,
 })
 
-const submit = async () => {
+const submit = async (formData?: RoomType) => {
   isSubmitting.value = true
   serverErrors.value = {}
   errorMessage.value = null
   successMessage.value = null
 
+  const dataToSubmit = formData || form
+
   try {
-    if (hotelStore.hotelId && !(form as any).hotel_id) {
-      ;(form as any).hotel_id = hotelStore.hotelId
+    if (hotelStore.hotelId && !(dataToSubmit as any).hotel_id) {
+      ;(dataToSubmit as any).hotel_id = hotelStore.hotelId
     }
-    await store.createRoomType(form)
-    successMessage.value = `Room type "${form.name}" created successfully for ${hotelStore.hotelName}!`
+    await store.createRoomType(dataToSubmit)
+    successMessage.value = `Room type "${dataToSubmit.name}" created successfully for ${hotelStore.hotelName}!`
 
     setTimeout(() => {
       router.push('/admin/room-types')

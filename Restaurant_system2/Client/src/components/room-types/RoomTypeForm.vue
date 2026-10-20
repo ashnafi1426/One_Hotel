@@ -12,8 +12,17 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue', 'submit', 'cancel'])
 
-const form = reactive<RoomType>({ ...props.modelValue })
-const existingNames = ref<string[]>([])
+const form = reactive<RoomType>({
+  id: props.modelValue?.id,
+  name: props.modelValue?.name ?? '',
+  description: props.modelValue?.description ?? '',
+  base_price_per_night: Number(props.modelValue?.base_price_per_night) || 0,
+  capacity: parseInt(String(props.modelValue?.capacity), 10) || 2,
+  amenities: Array.isArray(props.modelValue?.amenities) ? [...props.modelValue.amenities] : [],
+  is_active: props.modelValue?.is_active ?? true,
+})
+
+const existingTypes = ref<Array<{ id: string; name: string }>>([])
 const loadingExisting = ref(false)
 
 const loadExistingTypes = async () => {
@@ -23,9 +32,10 @@ const loadExistingTypes = async () => {
       per_page: 100,
     })
     const list = res.data?.data || []
-    existingNames.value = list
-      .filter((item: any) => !form.id || item.id !== form.id)
-      .map((item: any) => String(item.name || '').trim())
+    existingTypes.value = list.map((item: any) => ({
+      id: String(item.id || ''),
+      name: String(item.name || '').trim(),
+    }))
   } catch (e) {
     console.error('[RoomTypeForm] Error loading existing types:', e)
   } finally {
@@ -37,40 +47,61 @@ onMounted(() => {
   loadExistingTypes()
 })
 
+let isInternalUpdate = false
+
 watch(
   () => props.modelValue,
   (val) => {
+    if (isInternalUpdate) {
+      isInternalUpdate = false
+      return
+    }
     if (val) {
-      Object.assign(form, {
-        ...val,
-        base_price_per_night: Number(val.base_price_per_night) || 0,
-        capacity: parseInt(String(val.capacity), 10) || 0,
-        amenities: Array.isArray(val.amenities) ? [...val.amenities] : [],
-        is_active: Boolean(val.is_active),
-      })
+      if (
+        form.id === val.id &&
+        form.name === (val.name ?? '') &&
+        form.description === (val.description ?? '') &&
+        form.base_price_per_night === (Number(val.base_price_per_night) || 0) &&
+        form.capacity === (parseInt(String(val.capacity), 10) || 0) &&
+        form.is_active === Boolean(val.is_active) &&
+        JSON.stringify(form.amenities) === JSON.stringify(val.amenities || [])
+      ) {
+        return
+      }
+
+      form.id = val.id
+      form.name = val.name ?? ''
+      form.description = val.description ?? ''
+      form.base_price_per_night = Number(val.base_price_per_night) || 0
+      form.capacity = parseInt(String(val.capacity), 10) || 2
+      form.amenities = Array.isArray(val.amenities) ? [...val.amenities] : []
+      form.is_active = val.is_active !== false
     }
   },
-  { immediate: true, deep: true },
+  { deep: true },
 )
 
 watch(
   form,
-  () =>
+  () => {
+    isInternalUpdate = true
     emit('update:modelValue', {
       ...form,
       base_price_per_night: Number(form.base_price_per_night) || 0,
-      capacity: parseInt(String(form.capacity), 10) || 0,
+      capacity: parseInt(String(form.capacity), 10) || 2,
       is_active: Boolean(form.is_active),
-    }),
+    })
+  },
   { deep: true },
 )
 
 const isNameTaken = computed(() => {
-  const clean = String(form.name || '')
-    .trim()
-    .toLowerCase()
+  const clean = String(form.name || '').trim().toLowerCase()
   if (!clean) return false
-  return existingNames.value.some((n) => n.toLowerCase() === clean)
+  const currentId = form.id || props.modelValue?.id
+  return existingTypes.value.some(
+    (item) => item.name.toLowerCase() === clean && (!currentId || item.id !== currentId),
+  )
 })
 
 const newAmenity = ref('')
@@ -96,7 +127,7 @@ const submit = () => {
   emit('submit', {
     ...form,
     base_price_per_night: Number(form.base_price_per_night) || 0,
-    capacity: parseInt(String(form.capacity), 10) || 0,
+    capacity: parseInt(String(form.capacity), 10) || 2,
     is_active: Boolean(form.is_active),
   })
 }
@@ -159,35 +190,55 @@ const submit = () => {
       />
     </div>
 
-    <div>
-      <label
-        class="block mb-1.5 sm:mb-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100"
-      >
-        Price Per Night (ETB) <span class="text-red-500">*</span>
-      </label>
-      <div class="relative">
-        <input
-          type="number"
-          v-model.number="form.base_price_per_night"
-          placeholder="e.g., 2500"
-          class="w-full border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm transition duration-200 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
-          :class="[
-            serverErrors?.base_price_per_night
-              ? 'border-red-400 focus:ring-red-500'
-              : 'border-slate-300 dark:border-slate-800 focus:ring-blue-500',
-          ]"
-          min="0"
-          step="any"
-          required
-        />
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div>
+        <label
+          class="block mb-1.5 sm:mb-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100"
+        >
+          Price Per Night (ETB) <span class="text-red-500">*</span>
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            v-model.number="form.base_price_per_night"
+            placeholder="e.g., 2500"
+            class="w-full border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm transition duration-200 bg-white dark:bg-slate-950 text-slate-900 dark:text-white"
+            :class="[
+              serverErrors?.base_price_per_night
+                ? 'border-red-400 focus:ring-red-500'
+                : 'border-slate-300 dark:border-slate-800 focus:ring-blue-500',
+            ]"
+            min="0"
+            step="any"
+            required
+          />
+        </div>
+        <p
+          v-if="serverErrors?.base_price_per_night"
+          class="text-red-500 text-xs mt-1 flex items-center gap-1"
+        >
+          <AlertCircle class="w-3.5 h-3.5 flex-shrink-0" />
+          <span>{{ serverErrors.base_price_per_night[0] }}</span>
+        </p>
       </div>
-      <p
-        v-if="serverErrors?.base_price_per_night"
-        class="text-red-500 text-xs mt-1 flex items-center gap-1"
-      >
-        <AlertCircle class="w-3.5 h-3.5 flex-shrink-0" />
-        <span>{{ serverErrors.base_price_per_night[0] }}</span>
-      </p>
+
+      <div>
+        <label
+          class="block mb-1.5 sm:mb-2 text-xs sm:text-sm font-semibold text-slate-900 dark:text-slate-100"
+        >
+          Max Capacity (Guests)
+        </label>
+        <div class="relative">
+          <input
+            type="number"
+            v-model.number="form.capacity"
+            placeholder="e.g., 2"
+            class="w-full border rounded-xl px-3.5 py-2.5 text-xs sm:text-sm transition duration-200 bg-white dark:bg-slate-950 text-slate-900 dark:text-white border-slate-300 dark:border-slate-800 focus:ring-blue-500"
+            min="1"
+            max="30"
+          />
+        </div>
+      </div>
     </div>
 
     <div>

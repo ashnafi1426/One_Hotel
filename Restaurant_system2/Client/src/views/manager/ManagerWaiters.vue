@@ -516,7 +516,10 @@ onUnmounted(() => {
               title="Refresh"
               class="inline-flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-xl border border-slate-200 dark:border-[#1e3455] bg-white dark:bg-[#13233c]/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c3356] hover:text-slate-900 dark:hover:text-white transition disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw class="w-4 h-4" :class="{ 'animate-spin': waiterStore.loading || isInitialLoading }" />
+              <RefreshCw
+                class="w-4 h-4"
+                :class="{ 'animate-spin': waiterStore.loading || isInitialLoading }"
+              />
             </button>
 
             <button
@@ -629,7 +632,10 @@ onUnmounted(() => {
           <span class="font-bold text-blue-600 dark:text-blue-400"> {{ total }} staff </span>
         </div>
 
-        <div class="overflow-x-auto w-full min-h-[220px] relative" style="-webkit-overflow-scrolling: touch">
+        <div
+          class="overflow-x-auto w-full min-h-[220px] relative"
+          style="-webkit-overflow-scrolling: touch"
+        >
           <!-- Background Refresh Accent Bar when refreshing already loaded data -->
           <div
             v-if="(waiterStore.loading || isInitialLoading) && paginatedWaiters.length > 0"
@@ -661,7 +667,8 @@ onUnmounted(() => {
                       <Loader2 class="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
                     </div>
                     <div>
-                      <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 block"
+                      <span
+                        class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200 block"
                         >Loading waiters & staff...</span
                       >
                       <span class="text-[11px] text-slate-400 dark:text-slate-500 mt-0.5 block"
