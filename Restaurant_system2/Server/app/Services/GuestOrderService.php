@@ -145,12 +145,6 @@ class GuestOrderService
             }
 
             $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
-
-            try {
-                app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
-            } catch (\Throwable $e) {
-                Log::warning("Automatic waiter assignment failed for room order #{$order->id}: {$e->getMessage()}");
-            }
         };
 
         if (function_exists('app') && !app()->runningInConsole()) {
@@ -245,12 +239,6 @@ class GuestOrderService
             }
 
             $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
-
-            try {
-                app(AutomaticWaiterAssignmentService::class)->assignWaiterToReadyOrder($order);
-            } catch (\Throwable $e) {
-                Log::warning("Automatic waiter assignment failed for table order #{$order->id}: {$e->getMessage()}");
-            }
         };
 
         if (function_exists('app') && !app()->runningInConsole()) {

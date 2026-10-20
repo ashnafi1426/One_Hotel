@@ -65,6 +65,7 @@ return [
                 'timeout' => 2.0,
                 'connect_timeout' => 1.5,
                 'http_errors' => false,
+                'verify' => false,
             ],
         ],
 

@@ -271,10 +271,22 @@
 
       <div
         v-if="orderData.payment_type === 'room_charge'"
-        class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 text-sm text-blue-700 dark:text-blue-300"
+        class="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 rounded-xl px-4 py-3 text-sm text-blue-700 dark:text-blue-300 flex items-center gap-3"
       >
-        <span class="font-medium">Room Charge</span> — This will be added to your room bill at
-        checkout.
+        <span class="text-xl">🏨</span>
+        <div>
+          <span class="font-bold">Room Charge</span> — This will be added to your room bill at checkout.
+        </div>
+      </div>
+
+      <div
+        v-else-if="orderData.table_number || orderData.table_id || orderData.payment_type === 'cash'"
+        class="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 rounded-xl px-4 py-3 text-sm text-amber-800 dark:text-amber-300 flex items-center gap-3"
+      >
+        <span class="text-xl">🍽️</span>
+        <div>
+          <span class="font-bold">Pay After Eating</span> — You can pay your waiter or cashier after enjoying your meal.
+        </div>
       </div>
 
       <div class="text-center">

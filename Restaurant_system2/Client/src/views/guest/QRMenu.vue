@@ -704,12 +704,15 @@ const placeOrderWithRoomCharge = async () => {
       quantity: item.quantity,
     }))
 
-    // Always use room_charge payment type (pay after meal)
+    const isTable = orderContext.value?.type === 'table'
+    const paymentType = isTable ? 'cash' : 'room_charge'
+
+    // Use cash for table dine-in orders (pay after meal) or room_charge for hotel rooms
     const orderResponse = await unifiedOrderService.createOrder({
       qr_token: qrToken.value,
       items: orderItems,
       special_requests: '',
-      payment_type: 'room_charge', // Pay after meal
+      payment_type: paymentType,
     })
 
     if (orderResponse && orderResponse.success && orderResponse.data) {
@@ -723,6 +726,8 @@ const placeOrderWithRoomCharge = async () => {
         ...orderResponse.data,
         id: createdOrderId,
         order_id: createdOrderId,
+        table_number: isTable ? (orderResponse.data.table_number || orderContext.value?.displayName || orderContext.value?.table_number) : null,
+        room_number: !isTable ? (orderResponse.data.room_number || roomNumber.value) : null,
         items: cartItems.value.map((item) => ({
           id: item.id,
           name: item.name,
@@ -738,7 +743,7 @@ const placeOrderWithRoomCharge = async () => {
         total: subtotal.value,
         status: 'pending',
         payment_status: 'pending',
-        payment_type: 'room_charge',
+        payment_type: paymentType,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       }
