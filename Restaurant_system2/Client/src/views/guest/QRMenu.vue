@@ -768,7 +768,7 @@ const placeOrderWithRoomCharge = async () => {
         ...orderResponse.data,
         id: createdOrderId,
         order_id: createdOrderId,
-        table_number: isTable ? (orderResponse.data.table_number || orderContext.value?.displayName || orderContext.value?.table_number) : null,
+        table_number: isTable ? (orderResponse.data.table_number || orderContext.value?.displayName || null) : null,
         room_number: !isTable ? (orderResponse.data.room_number || roomNumber.value) : null,
         items: cartItems.value.map((item) => ({
           id: item.id,

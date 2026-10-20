@@ -38,6 +38,7 @@ export interface OrderData {
   table_number?: string | null
   table_id?: string | null
   customer_name?: string
+  guest_name?: string
   items: OrderItem[]
   order_items?: OrderItem[]
   subtotal: number

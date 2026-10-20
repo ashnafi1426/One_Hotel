@@ -3,17 +3,17 @@ import Pusher from 'pusher-js'
 
 declare global {
   interface Window {
-    Echo?: Echo
-    Pusher?: typeof Pusher
+    Echo: Echo<any>
+    Pusher: typeof Pusher
   }
 }
 
-let echoInstance: Echo | null = null
+let echoInstance: Echo<any> | null = null
 
 /**
  * Initialize Laravel Echo with Pusher WebSocket connection
  */
-export function initializeEcho(): Echo {
+export function initializeEcho(): Echo<any> {
   if (echoInstance) {
     return echoInstance
   }
@@ -51,7 +51,7 @@ export function initializeEcho(): Echo {
 /**
  * Get the Echo instance (initialize if not already done)
  */
-export function getEcho(): Echo {
+export function getEcho(): Echo<any> {
   return echoInstance || initializeEcho()
 }
 

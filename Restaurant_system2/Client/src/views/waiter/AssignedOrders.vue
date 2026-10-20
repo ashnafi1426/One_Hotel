@@ -369,7 +369,7 @@ watch(
         <div class="flex items-center justify-end gap-2 shrink-0">
           <button
             type="button"
-            @click="loadAssignments"
+            @click="() => loadAssignments()"
             :disabled="loading"
             :title="languageStore.t('refresh', 'Refresh')"
             class="inline-flex items-center justify-center h-[38px] w-[38px] rounded-xl border border-slate-200 dark:border-[#1e3455] bg-white dark:bg-[#13233c]/80 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1c3356] hover:text-slate-900 dark:hover:text-white transition disabled:opacity-50 cursor-pointer"

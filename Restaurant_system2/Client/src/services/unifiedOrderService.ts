@@ -7,6 +7,8 @@ export interface OrderItem {
 
 export interface CreateOrderRequest {
   qr_token: string
+  table_id?: string
+  room_id?: string
   items: OrderItem[]
   special_requests?: string
   payment_type?: 'room_charge' | 'cash' | 'card'
