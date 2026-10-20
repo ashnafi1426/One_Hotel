@@ -148,7 +148,9 @@ class GuestOrderService
             $this->notifyChefs($order, "Room order #{$order->order_number} (Room {$room->room_number}) has been placed.");
         };
 
-        if (function_exists('app') && !app()->runningInConsole()) {
+        if (function_exists('Illuminate\Support\defer')) {
+            \Illuminate\Support\defer($dispatchPostTasks);
+        } elseif (function_exists('app') && !app()->runningInConsole()) {
             app()->terminating($dispatchPostTasks);
         } else {
             $dispatchPostTasks();
@@ -209,7 +211,9 @@ class GuestOrderService
 
                     $this->createOrderItems($createdOrder->id, $orderItems);
 
-                    $table->update(['status' => RestaurantTable::STATUS_OCCUPIED]);
+                    if ($table->status !== RestaurantTable::STATUS_OCCUPIED) {
+                        $table->update(['status' => RestaurantTable::STATUS_OCCUPIED]);
+                    }
 
                     return $createdOrder;
                 });
@@ -239,7 +243,9 @@ class GuestOrderService
             $this->notifyChefs($order, "Table order #{$order->order_number} (Table {$table->table_number}) has been placed.");
         };
 
-        if (function_exists('app') && !app()->runningInConsole()) {
+        if (function_exists('Illuminate\Support\defer')) {
+            \Illuminate\Support\defer($dispatchPostTasks);
+        } elseif (function_exists('app') && !app()->runningInConsole()) {
             app()->terminating($dispatchPostTasks);
         } else {
             $dispatchPostTasks();
@@ -383,8 +389,11 @@ class GuestOrderService
     protected function notifyChefs(Order $order, string $message): void
     {
         try {
-            $chefIds = User::where('role', 'chef')->pluck('id');
-            if ($chefIds->isEmpty()) {
+            $chefIds = Cache::remember('active_chef_ids', 600, function () {
+                return User::where('role', 'chef')->pluck('id')->toArray();
+            });
+
+            if (empty($chefIds)) {
                 return;
             }
 

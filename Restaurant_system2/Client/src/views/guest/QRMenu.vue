@@ -208,7 +208,12 @@
                       d="M12 2v20m0-20a9.978 9.978 0 00-9 18m18 0a9.978 9.978 0 00-9-18"
                     ></path>
                   </svg>
-                  🍽️ {{ languageStore.t('order_now_pay_after', 'Order Now (Pay After Meal)') }}
+                  <span v-if="isPlacingOrder" class="inline-flex items-center gap-1.5 font-bold">
+                    Placing Your Order...
+                  </span>
+                  <span v-else class="inline-flex items-center gap-1.5">
+                    🍽️ {{ languageStore.t('order_now_pay_after', 'Order Now (Pay After Meal)') }}
+                  </span>
                 </button>
 
                 <button
