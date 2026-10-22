@@ -192,7 +192,8 @@ const formatDateTime = (dateStr: string) => {
 }
 
 const statusBadgeClasses: Record<string, string> = {
-  ready: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black ring-1 ring-emerald-500/30',
+  ready:
+    'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 font-black ring-1 ring-emerald-500/30',
   assigned: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
   accepted: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
   picked_up: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',

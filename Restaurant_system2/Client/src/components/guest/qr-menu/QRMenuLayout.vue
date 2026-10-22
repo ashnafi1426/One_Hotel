@@ -567,10 +567,8 @@ function deriveCategoriesFromMenuItems() {
   ]
 }
 
-const getMenuCacheKey = () =>
-  `qr_menu_items_cache_${props.qrToken || 'all'}`
-const getCatCacheKey = () =>
-  `qr_categories_cache_${props.qrToken || 'all'}`
+const getMenuCacheKey = () => `qr_menu_items_cache_${props.qrToken || 'all'}`
+const getCatCacheKey = () => `qr_categories_cache_${props.qrToken || 'all'}`
 
 const loadFromClientCache = (): boolean => {
   try {
@@ -1138,10 +1136,7 @@ const loadMenuData = async (forceRefresh = false) => {
   if (isMenuDataFetching) return
   isMenuDataFetching = true
   try {
-    await Promise.allSettled([
-      loadCategories(forceRefresh),
-      loadMenuItems(forceRefresh),
-    ])
+    await Promise.allSettled([loadCategories(forceRefresh), loadMenuItems(forceRefresh)])
   } finally {
     isMenuDataFetching = false
   }

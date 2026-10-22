@@ -79,9 +79,14 @@ const roomForModal = computed(() => ({
       leave-active-class="duration-200 ease-in"
       leave-to-class="opacity-0"
     >
-      <div v-if="isOpen" class="fixed inset-0 z-50 overflow-y-auto bg-[#070C14]/80 backdrop-blur-md">
+      <div
+        v-if="isOpen"
+        class="fixed inset-0 z-50 overflow-y-auto bg-[#070C14]/80 backdrop-blur-md"
+      >
         <div class="flex min-h-screen items-center justify-center p-4 sm:p-6">
-          <div class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-[#101827] border border-white/10 shadow-2xl text-white">
+          <div
+            class="relative w-full max-w-4xl overflow-hidden rounded-2xl bg-[#101827] border border-white/10 shadow-2xl text-white"
+          >
             <!-- Close button -->
             <button
               @click="closeDialog"
@@ -89,14 +94,21 @@ const roomForModal = computed(() => ({
               class="absolute right-5 top-5 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-[#182235]/80 text-white/80 backdrop-blur-sm transition hover:bg-[#D6A94F] hover:text-[#101827]"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
               </svg>
             </button>
 
             <!-- Hero Image Banner -->
             <div class="relative h-72 sm:h-96 w-full overflow-hidden">
               <img :src="room.image" :alt="room.name" class="h-full w-full object-cover" />
-              <div class="absolute inset-0 bg-gradient-to-t from-[#101827] via-[#101827]/40 to-transparent" />
+              <div
+                class="absolute inset-0 bg-gradient-to-t from-[#101827] via-[#101827]/40 to-transparent"
+              />
 
               <div
                 class="absolute left-6 top-6 rounded-full px-4 py-1.5 text-xs font-semibold uppercase tracking-wider backdrop-blur-md"
@@ -115,7 +127,10 @@ const roomForModal = computed(() => ({
                 <div class="mt-3 flex items-center gap-4 text-sm text-slate-300">
                   <span>Room #{{ room.room_number || room.id }}</span>
                   <span class="text-white/40">•</span>
-                  <span class="text-[#D6A94F] font-semibold text-lg">{{ formattedPrice }} <span class="text-xs font-normal text-slate-400">/ night</span></span>
+                  <span class="text-[#D6A94F] font-semibold text-lg"
+                    >{{ formattedPrice }}
+                    <span class="text-xs font-normal text-slate-400">/ night</span></span
+                  >
                 </div>
               </div>
             </div>
@@ -169,10 +184,14 @@ const roomForModal = computed(() => ({
               </div>
 
               <!-- Footer CTA -->
-              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10">
+              <div
+                class="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-white/10"
+              >
                 <div>
                   <div class="text-xs text-slate-400 uppercase tracking-wider">Nightly Stay</div>
-                  <div class="text-2xl font-serif text-[#D6A94F] font-semibold">{{ formattedPrice }}</div>
+                  <div class="text-2xl font-serif text-[#D6A94F] font-semibold">
+                    {{ formattedPrice }}
+                  </div>
                 </div>
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                   <button

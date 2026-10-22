@@ -87,7 +87,11 @@ const currentHotelLogo = computed(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+    if (
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('storage/') ||
+      trimmed.startsWith('hotels/')
+    ) {
       return storageUrl(trimmed)
     }
     return storageUrl(trimmed)
@@ -745,11 +749,7 @@ onUnmounted(() => {
   >
     <div
       class="flex items-center bg-white dark:bg-slate-900 transition-all duration-200 border-b border-slate-200 dark:border-slate-800 flex-shrink-0"
-      :class="
-        isSidebarExpanded
-          ? 'h-16 px-3.5 justify-between'
-          : 'h-16 px-2 justify-center'
-      "
+      :class="isSidebarExpanded ? 'h-16 px-3.5 justify-between' : 'h-16 px-2 justify-center'"
     >
       <template v-if="isSidebarExpanded">
         <div class="flex items-center min-w-0 flex-1 mr-2 gap-2.5">

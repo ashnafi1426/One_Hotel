@@ -50,14 +50,19 @@ function goToReservation() {
           class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/20 text-[#D6A94F] border border-[#D6A94F]/30"
         >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
-          <span class="text-[#D6A94F] font-bold">{{ guestHotelStore.hotelName }} • {{ languageStore.t('gallery', 'Visual Showcase') }}</span>
+          <span class="text-[#D6A94F] font-bold"
+            >{{ guestHotelStore.hotelName }} •
+            {{ languageStore.t('gallery', 'Visual Showcase') }}</span
+          >
         </div>
 
         <h1
           class="font-serif text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight text-white tracking-tight"
         >
           {{ languageStore.t('explore_every', 'Explore Every') }}
-          <span class="italic font-normal text-[#D6A94F]"> {{ languageStore.t('corner', 'Corner') }} </span>
+          <span class="italic font-normal text-[#D6A94F]">
+            {{ languageStore.t('corner', 'Corner') }}
+          </span>
           {{ languageStore.t('of_our_hotel', 'of Our Sanctuary') }}
         </h1>
 
@@ -80,7 +85,9 @@ function goToReservation() {
             class="rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] px-8 py-3.5 font-black text-[#101827] shadow-lg shadow-[#D6A94F]/20 transition text-xs uppercase tracking-widest cursor-pointer flex items-center justify-center gap-2"
           >
             <Calendar class="w-4 h-4 text-[#101827]" />
-            <span class="text-[#101827] font-extrabold">{{ languageStore.t('book_your_stay', 'Book Your Stay') }}</span>
+            <span class="text-[#101827] font-extrabold">{{
+              languageStore.t('book_your_stay', 'Book Your Stay')
+            }}</span>
           </button>
 
           <button
@@ -88,34 +95,52 @@ function goToReservation() {
             class="rounded-full border border-[#26354D] bg-[#182235]/80 hover:bg-[#182235] px-8 py-3.5 font-bold text-white transition text-xs uppercase tracking-widest cursor-pointer backdrop-blur-md flex items-center justify-center gap-2"
           >
             <BedDouble class="w-4 h-4 text-[#D6A94F]" />
-            <span class="text-white font-bold">{{ languageStore.t('view_rooms', 'View Suites') }}</span>
+            <span class="text-white font-bold">{{
+              languageStore.t('view_rooms', 'View Suites')
+            }}</span>
           </button>
         </div>
 
         <!-- Real Property Operational Information -->
         <div class="pt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-          <div class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
-            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+          <div
+            class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1"
+          >
+            <p
+              class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5"
+            >
               <BedDouble class="w-3.5 h-3.5 text-[#D6A94F]" />
               Accommodations
             </p>
             <p class="text-sm font-bold text-white">{{ roomCount }} Available Suites</p>
           </div>
 
-          <div class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
-            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+          <div
+            class="p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1"
+          >
+            <p
+              class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5"
+            >
               <Clock class="w-3.5 h-3.5 text-[#D6A94F]" />
               Front Desk
             </p>
-            <p class="text-sm font-bold text-white truncate">{{ guestHotelStore.frontDeskHours }}</p>
+            <p class="text-sm font-bold text-white truncate">
+              {{ guestHotelStore.frontDeskHours }}
+            </p>
           </div>
 
-          <div class="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1">
-            <p class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5">
+          <div
+            class="col-span-2 sm:col-span-1 p-3.5 rounded-2xl bg-[#182235]/85 border border-[#26354D]/80 backdrop-blur-md space-y-1"
+          >
+            <p
+              class="text-[9px] font-extrabold uppercase text-[#D6A94F] tracking-wider flex items-center gap-1.5"
+            >
               <MapPin class="w-3.5 h-3.5 text-[#D6A94F]" />
               Destination
             </p>
-            <p class="text-sm font-bold text-white truncate">{{ guestHotelStore.hotelCity }}, {{ guestHotelStore.hotelCountry }}</p>
+            <p class="text-sm font-bold text-white truncate">
+              {{ guestHotelStore.hotelCity }}, {{ guestHotelStore.hotelCountry }}
+            </p>
           </div>
         </div>
       </div>

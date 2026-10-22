@@ -26,11 +26,16 @@ const emit = defineEmits<{
   'update:type': [value: string]
   'update:capacity': [value: string]
   'update:sort': [value: string]
-  'clear': []
+  clear: []
 }>()
 
 const hasActiveFilters = computed(() => {
-  return props.modelValue !== '' || props.type !== 'All' || props.capacity !== 'All' || props.sort !== 'recommended'
+  return (
+    props.modelValue !== '' ||
+    props.type !== 'All' ||
+    props.capacity !== 'All' ||
+    props.sort !== 'recommended'
+  )
 })
 </script>
 
@@ -41,7 +46,9 @@ const hasActiveFilters = computed(() => {
       class="bg-[#182235]/95 backdrop-blur-xl border border-[#26354D] rounded-3xl p-4 sm:p-5 shadow-2xl text-white relative overflow-hidden"
     >
       <!-- Top gold hairline -->
-      <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+      <div
+        class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+      />
 
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3.5 items-center">
         <!-- Search Keyword Input -->
@@ -54,7 +61,9 @@ const hasActiveFilters = computed(() => {
               :value="modelValue"
               @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
               type="text"
-              :placeholder="languageStore.t('search_rooms_guest_placeholder', 'Search by suite name, number…')"
+              :placeholder="
+                languageStore.t('search_rooms_guest_placeholder', 'Search by suite name, number…')
+              "
               class="w-full h-11 pl-10 pr-9 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium placeholder-slate-300 focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition"
               autocomplete="off"
             />
@@ -82,11 +91,7 @@ const hasActiveFilters = computed(() => {
               class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark]"
             >
               <option value="All">{{ languageStore.t('all_types', 'All Room Types') }}</option>
-              <option
-                v-for="rt in roomTypeStore.roomTypes"
-                :key="rt.id"
-                :value="rt.name"
-              >
+              <option v-for="rt in roomTypeStore.roomTypes" :key="rt.id" :value="rt.name">
                 {{ rt.name }}
               </option>
             </select>
@@ -125,8 +130,12 @@ const hasActiveFilters = computed(() => {
               class="w-full h-11 pl-10 pr-8 rounded-2xl bg-[#101827] border border-[#26354D] text-white text-xs sm:text-sm font-medium focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark]"
             >
               <option value="recommended">{{ languageStore.t('recommended', 'Featured') }}</option>
-              <option value="price-asc">{{ languageStore.t('price_low_high', 'Price: Low → High') }}</option>
-              <option value="price-desc">{{ languageStore.t('price_high_low', 'Price: High → Low') }}</option>
+              <option value="price-asc">
+                {{ languageStore.t('price_low_high', 'Price: Low → High') }}
+              </option>
+              <option value="price-desc">
+                {{ languageStore.t('price_high_low', 'Price: High → Low') }}
+              </option>
             </select>
           </div>
         </div>
@@ -141,7 +150,9 @@ const hasActiveFilters = computed(() => {
             title="Reset all filters"
           >
             <X class="w-3.5 h-3.5 text-[#F5BD47]" />
-            <span class="lg:hidden text-slate-300">{{ languageStore.t('clear_all', 'Reset') }}</span>
+            <span class="lg:hidden text-slate-300">{{
+              languageStore.t('clear_all', 'Reset')
+            }}</span>
           </button>
           <div v-else class="hidden lg:flex items-center justify-center w-full h-11 text-slate-600">
             <SlidersHorizontal class="w-4 h-4" />

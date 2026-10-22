@@ -68,7 +68,7 @@ export const useWaiterStore = defineStore('waiter', () => {
    */
   function updateAssignmentStatus(orderId: string, newStatus: string) {
     const index = assignments.value.findIndex(
-      (a) => String(a.order_id) === String(orderId) || String(a.id) === String(orderId)
+      (a) => String(a.order_id) === String(orderId) || String(a.id) === String(orderId),
     )
     if (index !== -1) {
       assignments.value[index].status = newStatus
@@ -121,7 +121,7 @@ export const useWaiterStore = defineStore('waiter', () => {
         },
         (error: any) => {
           console.error('[waiterStore] Waiter WebSocket error:', error)
-        }
+        },
       )
       if (typeof unsub === 'function') {
         unsubscribers.push(unsub)

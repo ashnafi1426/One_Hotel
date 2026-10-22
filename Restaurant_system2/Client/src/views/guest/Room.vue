@@ -37,7 +37,8 @@ const filteredRooms = computed(() => {
 
     const roomType =
       typeof room.room_type === 'string' ? room.room_type : room.room_type?.name || 'Standard'
-    const matchesType = selectedType.value === 'All' || roomType.toLowerCase() === selectedType.value.toLowerCase()
+    const matchesType =
+      selectedType.value === 'All' || roomType.toLowerCase() === selectedType.value.toLowerCase()
 
     const capacity = room.capacity || room.room_type?.capacity || 2
     const matchesCapacity =
@@ -154,7 +155,7 @@ watch(
           :sort="sortBy"
           @update:type="selectedType = $event"
           @update:capacity="selectedCapacity = $event"
-          @update:sort="sortBy = ($event as any)"
+          @update:sort="sortBy = $event as any"
           @clear="clearFilters"
         />
       </section>
@@ -169,7 +170,9 @@ watch(
                 class="absolute inset-0 w-12 h-12 rounded-full border-2 border-transparent border-t-[#D6A94F] border-r-[#D6A94F]/60 animate-spin"
               ></div>
             </div>
-            <p class="text-slate-600 dark:text-slate-300 font-semibold text-xs uppercase tracking-widest">
+            <p
+              class="text-slate-600 dark:text-slate-300 font-semibold text-xs uppercase tracking-widest"
+            >
               {{ languageStore.t('loading_rooms', 'Finding available suites…') }}
             </p>
           </div>
@@ -178,7 +181,9 @@ watch(
 
       <!-- Error State with Luxury Card & Retry -->
       <section v-else-if="error" class="mx-auto mt-12 max-w-2xl px-6">
-        <div class="rounded-3xl bg-[#182235] border border-[#26354D] p-8 text-center text-white space-y-4 shadow-xl">
+        <div
+          class="rounded-3xl bg-[#182235] border border-[#26354D] p-8 text-center text-white space-y-4 shadow-xl"
+        >
           <h3 class="font-serif text-xl font-bold text-white">
             {{ languageStore.t('error_loading_rooms', 'Unable to retrieve rooms') }}
           </h3>
@@ -193,11 +198,7 @@ watch(
       </section>
 
       <!-- Room Grid -->
-      <section
-        v-else
-        id="rooms-section"
-        class="mx-auto mt-10 max-w-7xl px-4 sm:px-6 lg:px-8"
-      >
+      <section v-else id="rooms-section" class="mx-auto mt-10 max-w-7xl px-4 sm:px-6 lg:px-8">
         <RoomGrid v-if="paginatedRooms.length" :rooms="paginatedRooms" />
         <NoRoomsFound v-else @clear-filters="clearFilters" />
       </section>

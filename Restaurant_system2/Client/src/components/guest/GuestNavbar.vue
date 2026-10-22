@@ -35,7 +35,11 @@ const currentHotelLogo = computed(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+    if (
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('storage/') ||
+      trimmed.startsWith('hotels/')
+    ) {
       return storageUrl(trimmed)
     }
     return storageUrl(trimmed)
@@ -117,18 +121,12 @@ onUnmounted(() => {
 <template>
   <header
     class="sticky top-0 z-50 w-full transition-shadow duration-300 select-none bg-white/95 dark:bg-[#101827]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10"
-    :class="[
-      scrolled
-        ? 'shadow-md shadow-slate-900/5 dark:shadow-black/40'
-        : 'shadow-none',
-    ]"
+    :class="[scrolled ? 'shadow-md shadow-slate-900/5 dark:shadow-black/40' : 'shadow-none']"
   >
     <div
       class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#9A7418] dark:via-[#D6A94F] to-transparent opacity-80"
     />
-    <div
-      class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[76px] flex items-center justify-between"
-    >
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[76px] flex items-center justify-between">
       <!-- Logo + Brand Emblem (56px) -->
       <RouterLink
         to="/"
@@ -161,19 +159,15 @@ onUnmounted(() => {
             class="text-[8.5px] sm:text-[10px] font-bold text-[#9A7418] dark:text-[#D6A746] tracking-[0.06em] sm:tracking-[0.08em] uppercase mt-0.5 leading-none whitespace-nowrap"
           >
             {{
-              (guestHotelStore.hotelCity || 'ADDIS ABABA')
-                .toUpperCase()
-                .replace('ADDISS', 'ADDIS')
-            }} • LUXURY HOTEL
+              (guestHotelStore.hotelCity || 'ADDIS ABABA').toUpperCase().replace('ADDISS', 'ADDIS')
+            }}
+            • LUXURY HOTEL
           </span>
         </div>
       </RouterLink>
 
       <!-- Desktop Navigation Menu (>= 1024px) -->
-      <nav
-        class="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0"
-        aria-label="Main Navigation"
-      >
+      <nav class="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0" aria-label="Main Navigation">
         <RouterLink
           v-for="menu in menus"
           :key="menu.route"
@@ -289,15 +283,27 @@ onUnmounted(() => {
                       :src="currentHotelLogo"
                       :alt="guestHotelStore.hotelName"
                       class="w-full h-full object-contain"
-                      @error="(e: any) => { e.target.src = '/images/Hotel logo.png' }"
+                      @error="
+                        (e: any) => {
+                          e.target.src = '/images/Hotel logo.png'
+                        }
+                      "
                     />
                   </div>
                   <div class="flex flex-col min-w-0">
-                    <span class="font-serif text-[15px] sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate">
+                    <span
+                      class="font-serif text-[15px] sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate"
+                    >
                       {{ guestHotelStore.hotelName }}
                     </span>
-                    <span class="text-[9px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase">
-                      {{ (guestHotelStore.hotelCity || 'ADDIS ABABA').toUpperCase().replace('ADDISS', 'ADDIS') }}
+                    <span
+                      class="text-[9px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase"
+                    >
+                      {{
+                        (guestHotelStore.hotelCity || 'ADDIS ABABA')
+                          .toUpperCase()
+                          .replace('ADDISS', 'ADDIS')
+                      }}
                     </span>
                   </div>
                 </div>
@@ -313,13 +319,17 @@ onUnmounted(() => {
                   >
                     <span
                       class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
-                      :class="theme.isDark ? 'bg-[#101827] text-[#D6A94F] shadow-xs' : 'text-slate-400'"
+                      :class="
+                        theme.isDark ? 'bg-[#101827] text-[#D6A94F] shadow-xs' : 'text-slate-400'
+                      "
                     >
                       <Moon class="w-3.5 h-3.5" />
                     </span>
                     <span
                       class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
-                      :class="!theme.isDark ? 'bg-[#0F56B3] text-white shadow-xs' : 'text-slate-400'"
+                      :class="
+                        !theme.isDark ? 'bg-[#0F56B3] text-white shadow-xs' : 'text-slate-400'
+                      "
                     >
                       <Sun class="w-3.5 h-3.5" />
                     </span>
@@ -360,10 +370,14 @@ onUnmounted(() => {
 
               <!-- Language Selector Section -->
               <div class="pt-2 border-t border-slate-100 dark:border-white/10">
-                <span class="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2">
+                <span
+                  class="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2"
+                >
                   {{ languageStore.t('language', 'Language') }}
                 </span>
-                <div class="inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10">
+                <div
+                  class="inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10"
+                >
                   <button
                     v-for="opt in languageStore.options"
                     :key="opt.code"
@@ -389,7 +403,11 @@ onUnmounted(() => {
                   @click="closeMenu"
                   class="w-full py-2.5 sm:py-3 rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold tracking-wide text-center transition-all shadow-xs block cursor-pointer"
                 >
-                  {{ authStore.isAuthenticated ? languageStore.t('dashboard', 'Dashboard') : languageStore.t('sign_in', 'Sign in') }}
+                  {{
+                    authStore.isAuthenticated
+                      ? languageStore.t('dashboard', 'Dashboard')
+                      : languageStore.t('sign_in', 'Sign in')
+                  }}
                 </RouterLink>
 
                 <!-- Primary Button: Book Your Stay -->

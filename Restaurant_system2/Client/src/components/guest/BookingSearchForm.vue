@@ -21,7 +21,10 @@ const props = withDefaults(
 )
 
 const emit = defineEmits<{
-  (e: 'search', params: { checkIn: string; checkOut: string; guests: number; roomType: string }): void
+  (
+    e: 'search',
+    params: { checkIn: string; checkOut: string; guests: number; roomType: string },
+  ): void
 }>()
 
 const router = useRouter()
@@ -82,12 +85,18 @@ function handleCheckOutChange() {
 function submitSearch() {
   errorMessage.value = ''
   if (!checkIn.value || !checkOut.value) {
-    errorMessage.value = languageStore.t('select_dates_error', 'Please select both check-in and check-out dates.')
+    errorMessage.value = languageStore.t(
+      'select_dates_error',
+      'Please select both check-in and check-out dates.',
+    )
     return
   }
 
   if (checkIn.value < todayStr) {
-    errorMessage.value = languageStore.t('checkin_past_error', 'Check-in date cannot be in the past.')
+    errorMessage.value = languageStore.t(
+      'checkin_past_error',
+      'Check-in date cannot be in the past.',
+    )
     return
   }
 
@@ -136,17 +145,15 @@ onMounted(async () => {
 <template>
   <div
     class="w-full relative z-30 transition-all duration-300"
-    :class="[
-      variant === 'hero'
-        ? 'max-w-6xl mx-auto px-4 sm:px-6'
-        : 'max-w-7xl mx-auto',
-    ]"
+    :class="[variant === 'hero' ? 'max-w-6xl mx-auto px-4 sm:px-6' : 'max-w-7xl mx-auto']"
   >
     <div
       class="rounded-3xl bg-[#182235] border border-white/10 p-5 sm:p-6 lg:p-7 shadow-2xl text-white relative overflow-hidden"
     >
       <!-- Subtle luxury gold top hairline accent -->
-      <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-90" />
+      <div
+        class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-90"
+      />
 
       <form @submit.prevent="submitSearch" class="space-y-4">
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5 sm:gap-4 items-end">
@@ -226,11 +233,7 @@ onMounted(async () => {
               class="w-full h-12 px-3.5 rounded-2xl bg-[#101827] border border-white/15 text-white font-medium text-sm focus:outline-none focus:border-[#F5BD47] focus:ring-1 focus:ring-[#F5BD47] transition cursor-pointer [color-scheme:dark] truncate"
             >
               <option value="All">{{ languageStore.t('all_types', 'All Room Types') }}</option>
-              <option
-                v-for="rt in roomTypeStore.roomTypes"
-                :key="rt.id"
-                :value="rt.name"
-              >
+              <option v-for="rt in roomTypeStore.roomTypes" :key="rt.id" :value="rt.name">
                 {{ rt.name }}
               </option>
             </select>

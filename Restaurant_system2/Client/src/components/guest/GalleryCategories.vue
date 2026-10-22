@@ -58,7 +58,10 @@ const categories = computed(() => [
         </h2>
         <p class="mt-2 text-sm text-slate-600 dark:text-slate-400 font-light">
           {{
-            languageStore.t('browse_by_category_desc', 'Discover every corner of our luxury property.')
+            languageStore.t(
+              'browse_by_category_desc',
+              'Discover every corner of our luxury property.',
+            )
           }}
         </p>
       </div>

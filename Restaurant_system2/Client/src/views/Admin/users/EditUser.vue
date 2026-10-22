@@ -82,15 +82,22 @@ onMounted(loadUser)
       </div>
 
       <div class="bg-white rounded-xl shadow p-8">
-        <div v-if="loadingUser" class="text-center py-16 flex flex-col items-center justify-center gap-3">
+        <div
+          v-if="loadingUser"
+          class="text-center py-16 flex flex-col items-center justify-center gap-3"
+        >
           <div
             class="p-3.5 rounded-2xl bg-blue-50 dark:bg-blue-950/60 border border-blue-100 dark:border-blue-900/50 shadow-xs"
           >
             <Loader2 class="w-8 h-8 text-blue-600 dark:text-blue-400 animate-spin" />
           </div>
           <div>
-            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">Loading user details...</p>
-            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">Please wait while staff profile information is loaded</p>
+            <p class="text-sm font-bold text-slate-800 dark:text-slate-200">
+              Loading user details...
+            </p>
+            <p class="text-xs text-slate-400 dark:text-slate-500 mt-0.5">
+              Please wait while staff profile information is loaded
+            </p>
           </div>
         </div>
 

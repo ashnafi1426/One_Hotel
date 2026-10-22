@@ -31,7 +31,11 @@ const hotelLogoUrl = computed(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+    if (
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('storage/') ||
+      trimmed.startsWith('hotels/')
+    ) {
       return storageUrl(trimmed)
     }
     if (trimmed.startsWith('images/')) {
@@ -53,7 +57,9 @@ const hotelLogoUrl = computed(() => {
     class="bg-[#101827] border-t border-[#26354D] text-slate-300 font-sans transition-colors duration-300 relative overflow-hidden"
   >
     <!-- Top hairline gold accent -->
-    <div class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+    <div
+      class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+    />
 
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-16 space-y-12">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
@@ -73,19 +79,21 @@ const hotelLogoUrl = computed(() => {
               <span v-else>{{ (guestHotelStore.hotelName || 'H').charAt(0).toUpperCase() }}</span>
             </div>
             <div>
-              <span class="font-serif text-lg font-bold text-white tracking-wider uppercase block leading-tight">
+              <span
+                class="font-serif text-lg font-bold text-white tracking-wider uppercase block leading-tight"
+              >
                 {{ guestHotelStore.hotelName }}
               </span>
-              <span
-                class="text-[9px] font-bold text-[#D6A94F] uppercase tracking-[0.2em] block"
-              >
-                {{ (guestHotelStore.currentHotel?.city || 'Addis Ababa').toUpperCase() }} • LUXURY HOTEL
+              <span class="text-[9px] font-bold text-[#D6A94F] uppercase tracking-[0.2em] block">
+                {{ (guestHotelStore.currentHotel?.city || 'Addis Ababa').toUpperCase() }} • LUXURY
+                HOTEL
               </span>
             </div>
           </div>
 
           <p class="text-xs text-slate-400 leading-relaxed font-light">
-            A sanctuary of timeless elegance, authentic Ethiopian hospitality, signature fine dining, and master suites.
+            A sanctuary of timeless elegance, authentic Ethiopian hospitality, signature fine
+            dining, and master suites.
           </p>
 
           <div class="space-y-2 text-xs font-light text-slate-300">
@@ -219,7 +227,8 @@ const hotelLogoUrl = computed(() => {
             Property Management
           </h3>
           <p class="text-xs text-slate-400 leading-relaxed font-light">
-            Authorized hospitality staff, front-desk hosts, and management can access the property portal below.
+            Authorized hospitality staff, front-desk hosts, and management can access the property
+            portal below.
           </p>
 
           <RouterLink
@@ -239,14 +248,21 @@ const hotelLogoUrl = computed(() => {
         class="pt-8 border-t border-[#26354D] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-light text-slate-400"
       >
         <p>
-          &copy; {{ new Date().getFullYear() }} {{ guestHotelStore.hotelName }}. All rights reserved.
+          &copy; {{ new Date().getFullYear() }} {{ guestHotelStore.hotelName }}. All rights
+          reserved.
         </p>
         <div class="flex items-center gap-4 text-slate-400">
-          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Privacy Policy</RouterLink>
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition"
+            >Privacy Policy</RouterLink
+          >
           <span>•</span>
-          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Terms of Service</RouterLink>
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition"
+            >Terms of Service</RouterLink
+          >
           <span>•</span>
-          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition">Concierge Support</RouterLink>
+          <RouterLink to="/contact" class="hover:text-[#D6A94F] transition"
+            >Concierge Support</RouterLink
+          >
         </div>
       </div>
     </div>

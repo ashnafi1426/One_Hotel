@@ -49,7 +49,11 @@ function loadInitialHotel(): PublicHotel {
       if (parsed && (parsed.id || parsed.name)) {
         let hotelName = parsed.name || DEFAULT_GUEST_HOTEL.name
         const lower = hotelName.toLowerCase()
-        if (lower.includes('sherat') || lower.includes('grand horizon') || lower.includes('metropolitan')) {
+        if (
+          lower.includes('sherat') ||
+          lower.includes('grand horizon') ||
+          lower.includes('metropolitan')
+        ) {
           hotelName = DEFAULT_GUEST_HOTEL.name
         }
         return {
@@ -89,10 +93,14 @@ export const useGuestHotelStore = defineStore('guestHotel', {
     },
     hotelPhone: (state): string => state.currentHotel?.phone || HOTEL_CONFIG.phone,
     reservationPhone: (state): string =>
-      state.currentHotel?.reservation_phone || state.currentHotel?.phone || HOTEL_CONFIG.reservationPhone,
+      state.currentHotel?.reservation_phone ||
+      state.currentHotel?.phone ||
+      HOTEL_CONFIG.reservationPhone,
     hotelEmail: (state): string => state.currentHotel?.email || HOTEL_CONFIG.email,
     reservationEmail: (state): string =>
-      state.currentHotel?.reservation_email || state.currentHotel?.email || HOTEL_CONFIG.reservationEmail,
+      state.currentHotel?.reservation_email ||
+      state.currentHotel?.email ||
+      HOTEL_CONFIG.reservationEmail,
     frontDeskHours: (state): string =>
       state.currentHotel?.front_desk_hours || HOTEL_CONFIG.frontDeskHours,
     diningHours: (state): string => state.currentHotel?.dining_hours || HOTEL_CONFIG.diningHours,
@@ -106,7 +114,11 @@ export const useGuestHotelStore = defineStore('guestHotel', {
       this.error = null
       try {
         const response = await publicAxios.get('/guest/hotels')
-        if (response.data?.success && Array.isArray(response.data?.data) && response.data.data.length > 0) {
+        if (
+          response.data?.success &&
+          Array.isArray(response.data?.data) &&
+          response.data.data.length > 0
+        ) {
           const hotel = response.data.data[0]
           this.currentHotel = { ...DEFAULT_GUEST_HOTEL, ...hotel }
           this.availableHotels = [this.currentHotel]

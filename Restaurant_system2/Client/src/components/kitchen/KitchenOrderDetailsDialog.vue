@@ -123,7 +123,12 @@
                   </div>
                   <span
                     class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 flex-shrink-0 whitespace-nowrap"
-                    >${{ (typeof item.line_total === 'string' ? parseFloat(item.line_total) : (item.line_total || 0)).toFixed(2) }}</span
+                    >${{
+                      (typeof item.line_total === 'string'
+                        ? parseFloat(item.line_total)
+                        : item.line_total || 0
+                      ).toFixed(2)
+                    }}</span
                   >
                 </div>
               </div>

@@ -136,11 +136,7 @@ const loadExistingRoomNumbers = async () => {
 }
 
 const loadFormData = () => {
-  Promise.allSettled([
-    loadRoomTypes(),
-    loadFloors(),
-    loadExistingRoomNumbers(),
-  ]).then(() => {
+  Promise.allSettled([loadRoomTypes(), loadFloors(), loadExistingRoomNumbers()]).then(() => {
     if (props.initialData) {
       populateInitial(props.initialData)
     }
@@ -267,7 +263,8 @@ const save = () => {
       <div class="flex items-center gap-2">
         <AlertCircle class="w-5 h-5 text-amber-600 flex-shrink-0" />
         <span>
-          No floors found. Every room must belong to an existing floor for room service & waiter assignments.
+          No floors found. Every room must belong to an existing floor for room service & waiter
+          assignments.
         </span>
       </div>
       <div class="flex items-center gap-2">
@@ -295,9 +292,7 @@ const save = () => {
     >
       <div class="flex items-center gap-2">
         <AlertCircle class="w-5 h-5 text-amber-600 flex-shrink-0" />
-        <span>
-          No room types found. You must create a room type before adding rooms.
-        </span>
+        <span> No room types found. You must create a room type before adding rooms. </span>
       </div>
       <button
         type="button"
@@ -716,7 +711,9 @@ const save = () => {
       <div class="flex items-center gap-2 mb-2">
         <Building2 class="w-4 h-4 text-blue-700 dark:text-blue-400" />
         <p class="text-xs sm:text-sm font-semibold text-blue-950 dark:text-blue-300">
-          {{ languageStore.t('existing_rooms_label', 'Existing Rooms') }} ({{ existingRoomNumbers.length }}):
+          {{ languageStore.t('existing_rooms_label', 'Existing Rooms') }} ({{
+            existingRoomNumbers.length
+          }}):
         </p>
       </div>
       <div class="flex flex-wrap gap-1.5 max-h-36 overflow-y-auto">

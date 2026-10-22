@@ -62,7 +62,7 @@ export function getEcho(): Echo<any> {
 export function subscribeToOrderUpdates(
   orderId: string,
   onUpdate: (data: any) => void,
-  onError?: (error: any) => void
+  onError?: (error: any) => void,
 ): void {
   try {
     const echo = getEcho()
@@ -90,7 +90,10 @@ export function subscribeToOrderUpdates(
  * Subscribe to all manager order updates
  * Fired when any order status changes or new orders arrive
  */
-export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
+export function subscribeToManagerOrderUpdates(
+  onUpdate: (data: any) => void,
+  onError?: (error: any) => void,
+): () => void {
   try {
     const echo = getEcho()
     const channel = echo.channel('manager.orders.update')
@@ -141,7 +144,10 @@ export function subscribeToManagerOrderUpdates(onUpdate: (data: any) => void, on
  * Subscribe to all kitchen order updates
  * Fired when any order status changes in the kitchen
  */
-export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
+export function subscribeToKitchenOrderUpdates(
+  onUpdate: (data: any) => void,
+  onError?: (error: any) => void,
+): () => void {
   try {
     const echo = getEcho()
     const channelNames = ['kitchen.orders.update', 'manager.orders.update']
@@ -219,7 +225,10 @@ export function subscribeToKitchenOrderUpdates(onUpdate: (data: any) => void, on
  * Connects to waiter, kitchen, and manager channels so ANY kitchen status update (ready, preparing, served)
  * triggers real-time UI updates without any polling.
  */
-export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onError?: (error: any) => void): (() => void) {
+export function subscribeToWaiterOrderUpdates(
+  onUpdate: (data: any) => void,
+  onError?: (error: any) => void,
+): () => void {
   try {
     const echo = getEcho()
     const channelNames = ['waiter.orders.update', 'kitchen.orders.update', 'manager.orders.update']
@@ -279,7 +288,10 @@ export function subscribeToWaiterOrderUpdates(onUpdate: (data: any) => void, onE
       })
     })
 
-    console.log('[Echo] ✅ Waiter subscribed to real-time WebSocket channels:', channelNames.join(', '))
+    console.log(
+      '[Echo] ✅ Waiter subscribed to real-time WebSocket channels:',
+      channelNames.join(', '),
+    )
 
     return () => {
       channelNames.forEach((chName) => {

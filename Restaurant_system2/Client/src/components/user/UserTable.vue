@@ -525,7 +525,9 @@ onBeforeUnmount(() => {
                   class="px-6 py-14 text-center text-slate-500 dark:text-slate-400 text-xs font-bold"
                 >
                   <div class="flex flex-col items-center justify-center gap-2.5">
-                    <div class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500">
+                    <div
+                      class="p-3 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500"
+                    >
                       <Users class="w-6 h-6" />
                     </div>
                     <span>{{

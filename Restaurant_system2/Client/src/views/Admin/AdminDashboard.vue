@@ -27,7 +27,6 @@ import { useAuthStore } from '@/stores/auth'
 import { useHotelStore } from '@/stores/hotelStore'
 import axios from '@/services/axios'
 
-
 const router = useRouter()
 const auth = useAuthStore()
 const hotelStore = useHotelStore()
@@ -36,7 +35,6 @@ const dashboard = ref<DashboardData | null>(null)
 const loading = ref<boolean>(true)
 const refreshing = ref<boolean>(false)
 const platformStats = ref<Record<string, never>>({})
-
 
 const getCacheKey = () => `admin_dashboard_cache_${hotelStore.hotelId || 'platform'}`
 
@@ -71,8 +69,6 @@ const restoreCachedData = () => {
   }
 }
 
-
-
 const loadDashboard = async (isManualRefresh = false) => {
   try {
     if (!dashboard.value) {
@@ -86,8 +82,6 @@ const loadDashboard = async (isManualRefresh = false) => {
     try {
       localStorage.setItem(getCacheKey(), JSON.stringify(freshData))
     } catch (e) {}
-
-
   } catch (error) {
     console.error('[AdminDashboard] Failed to load dashboard:', error)
   } finally {
@@ -363,8 +357,6 @@ watch(() => hotelStore.hotelId, initializeDashboard)
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
   </DashboardLayout>

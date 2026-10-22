@@ -581,4 +581,3 @@ function getStatusBgRow(status: string): string {
     </div>
   </div>
 </template>
-

@@ -55,7 +55,9 @@
         <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
             <div class="flex items-center gap-2.5 flex-wrap">
-              <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+              <h1
+                class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight"
+              >
                 {{ greetingMessage }}, {{ waiterName }}!
               </h1>
               <span
@@ -73,7 +75,12 @@
               </span>
             </div>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              {{ languageStore.t('waiter_subtitle', 'Manage your orders and keep the service running smoothly.') }}
+              {{
+                languageStore.t(
+                  'waiter_subtitle',
+                  'Manage your orders and keep the service running smoothly.',
+                )
+              }}
             </p>
           </div>
 
@@ -101,7 +108,9 @@
                       {{ pendingOrders.length }}
                     </span>
                   </div>
-                  <p class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                  <p
+                    class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5"
+                  >
                     Collect ready orders from kitchen
                   </p>
                 </div>
@@ -131,7 +140,9 @@
                       {{ deliveryOrders.length }}
                     </span>
                   </div>
-                  <p class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5">
+                  <p
+                    class="hidden sm:block text-[11px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5"
+                  >
                     Mark orders as delivered to guest
                   </p>
                 </div>
@@ -154,7 +165,9 @@
         </div>
 
         <!-- Mobile & Tablet Responsive View Tab Switcher (< lg screens) -->
-        <div class="lg:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
+        <div
+          class="lg:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner"
+        >
           <button
             type="button"
             @click="activeMobileTab = 'pending'"
@@ -169,7 +182,11 @@
             <span>Pending</span>
             <span
               class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
-              :class="activeMobileTab === 'pending' ? 'bg-blue-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+              :class="
+                activeMobileTab === 'pending'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              "
             >
               {{ pendingOrders.length }}
             </span>
@@ -189,7 +206,11 @@
             <span>Delivery</span>
             <span
               class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
-              :class="activeMobileTab === 'delivery' ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+              :class="
+                activeMobileTab === 'delivery'
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              "
             >
               {{ deliveryOrders.length }}
             </span>
@@ -207,10 +228,7 @@
           >
             <FileText class="w-3.5 h-3.5 text-purple-500" />
             <span>Order Details</span>
-            <span
-              v-if="selectedOrder"
-              class="w-2 h-2 rounded-full bg-purple-500"
-            ></span>
+            <span v-if="selectedOrder" class="w-2 h-2 rounded-full bg-purple-500"></span>
           </button>
         </div>
 
@@ -220,7 +238,9 @@
           class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3"
         >
           <div>
-            <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">Failed to load waiter dashboard</p>
+            <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">
+              Failed to load waiter dashboard
+            </p>
             <p class="text-rose-600 dark:text-rose-300 text-xs mt-0.5">{{ error }}</p>
           </div>
           <button
@@ -297,9 +317,12 @@
               >
                 <UtensilsCrossed class="w-6 h-6" />
               </div>
-              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Orders Pending Pickup</h3>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                No Orders Pending Pickup
+              </h3>
               <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
-                When the kitchen marks an order as ready, it will instantly appear here via real-time WebSocket.
+                When the kitchen marks an order as ready, it will instantly appear here via
+                real-time WebSocket.
               </p>
             </div>
 
@@ -378,7 +401,9 @@
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                      <span
+                        class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1"
+                      >
                         {{ item.name }}
                       </span>
                       <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
@@ -477,9 +502,12 @@
               >
                 <Truck class="w-6 h-6" />
               </div>
-              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Active Deliveries</h3>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                No Active Deliveries
+              </h3>
               <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
-                When you click "Mark as Picked Up", orders move directly here, ready to take to the guest table or room.
+                When you click "Mark as Picked Up", orders move directly here, ready to take to the
+                guest table or room.
               </p>
             </div>
 
@@ -549,7 +577,9 @@
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                      <span
+                        class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1"
+                      >
                         {{ item.name }}
                       </span>
                       <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
@@ -587,21 +617,22 @@
           <!-- ============================================== -->
           <!-- COLUMN 3: Order Details Panel (lg:col-span-4)  -->
           <!-- ============================================== -->
-          <div
-            class="lg:col-span-4"
-            :class="{ 'hidden lg:block': activeMobileTab !== 'details' }"
-          >
+          <div class="lg:col-span-4" :class="{ 'hidden lg:block': activeMobileTab !== 'details' }">
             <div
               v-if="selectedOrder"
               class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-5 lg:sticky lg:top-6"
             >
               <!-- Panel Header -->
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div
+                class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3"
+              >
                 <div class="flex items-center gap-2">
                   <button
                     v-if="activeMobileTab === 'details'"
                     type="button"
-                    @click="activeMobileTab = isOrderPending(selectedOrder) ? 'pending' : 'delivery'"
+                    @click="
+                      activeMobileTab = isOrderPending(selectedOrder) ? 'pending' : 'delivery'
+                    "
                     class="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1"
                     title="Back to list"
                   >
@@ -643,7 +674,9 @@
                   </span>
                 </div>
 
-                <div class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div
+                  class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400"
+                >
                   <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                     <Building2 class="w-3.5 h-3.5 text-slate-400" />
                     <span>{{ getDestinationLabel(selectedOrder) }}</span>
@@ -657,10 +690,14 @@
 
               <!-- Itemized List -->
               <div class="space-y-3">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div
+                  class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                >
                   {{ languageStore.t('items', 'Items') }}
                 </div>
-                <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1 space-y-2">
+                <div
+                  class="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1 space-y-2"
+                >
                   <div
                     v-for="(item, idx) in normalizeOrderItems(selectedOrder)"
                     :key="idx"
@@ -711,7 +748,9 @@
 
               <!-- Special Notes -->
               <div class="space-y-1.5">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div
+                  class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                >
                   Special Notes
                 </div>
                 <div
@@ -719,7 +758,9 @@
                 >
                   <FileText class="w-4 h-4 text-blue-500 mt-0.5 shrink-0" />
                   <span class="leading-relaxed">
-                    {{ selectedOrder.special_requests || selectedOrder.notes || 'Less salt, please.' }}
+                    {{
+                      selectedOrder.special_requests || selectedOrder.notes || 'Less salt, please.'
+                    }}
                   </span>
                 </div>
               </div>
@@ -768,9 +809,12 @@
               >
                 <FileText class="w-6 h-6" />
               </div>
-              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Order Selected</h3>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                No Order Selected
+              </h3>
               <p class="text-[11px] text-slate-400 leading-relaxed max-w-[200px] mx-auto">
-                Click on any order card in Pending Pickup or Ready for Delivery to view its full bill details and guest instructions.
+                Click on any order card in Pending Pickup or Ready for Delivery to view its full
+                bill details and guest instructions.
               </p>
             </div>
           </div>
@@ -843,7 +887,11 @@ interface Toast {
 }
 const toasts = ref<Toast[]>([])
 
-const showToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
+const showToast = (
+  title: string,
+  message: string,
+  type: 'success' | 'info' | 'error' = 'success',
+) => {
   const id = Date.now() + Math.floor(Math.random() * 1000)
   toasts.value.push({ id, title, message, type })
   setTimeout(() => {
@@ -900,12 +948,17 @@ const getDestinationLabel = (order: any): string => {
   if (!order) return 'Table 1'
   const rawTable = order.table_number || order.table?.table_number || order.table?.name || ''
   if (rawTable) {
-    const cleaned = String(rawTable).trim().replace(/^table\s*/i, '').replace(/^t\s*/i, '')
+    const cleaned = String(rawTable)
+      .trim()
+      .replace(/^table\s*/i, '')
+      .replace(/^t\s*/i, '')
     return `Table ${cleaned || rawTable}`
   }
   const rawRoom = order.room_number || order.room?.room_number || ''
   if (rawRoom && rawRoom !== 'Room Service') {
-    const cleanedRoom = String(rawRoom).trim().replace(/^room\s*/i, '')
+    const cleanedRoom = String(rawRoom)
+      .trim()
+      .replace(/^room\s*/i, '')
     return `Room ${cleanedRoom || rawRoom}`
   }
   if (order.destination) {
@@ -1088,11 +1141,7 @@ const handleDeliverOrder = async (order: any, event?: Event) => {
     selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
   }
 
-  showToast(
-    'Order Delivered',
-    `Order #${orderNum} successfully delivered to the guest!`,
-    'success',
-  )
+  showToast('Order Delivered', `Order #${orderNum} successfully delivered to the guest!`, 'success')
 
   try {
     await waiterService.deliverOrder(targetId)
@@ -1163,7 +1212,8 @@ const handleRealtimeOrderUpdate = (data: any) => {
           ? 'Table Order'
           : 'Room Service'
     const guestName = ord.guest?.full_name || ord.guest?.name || data.guest_name || 'Guest'
-    const orderNumber = ord.order_number || data.order_number || ('ORD-' + orderId.slice(0, 6).toUpperCase())
+    const orderNumber =
+      ord.order_number || data.order_number || 'ORD-' + orderId.slice(0, 6).toUpperCase()
 
     const newOrderObj = {
       id: ord.id || orderId,
@@ -1191,7 +1241,11 @@ const handleRealtimeOrderUpdate = (data: any) => {
       pendingOrders.value.splice(idx, 1, newOrderObj)
     } else {
       pendingOrders.value.unshift(newOrderObj)
-      showToast('New Ready Order', `Order #${orderNumber} is ready for pickup from the kitchen!`, 'info')
+      showToast(
+        'New Ready Order',
+        `Order #${orderNumber} is ready for pickup from the kitchen!`,
+        'info',
+      )
     }
 
     if (!selectedOrder.value) {
@@ -1205,7 +1259,11 @@ const handleRealtimeOrderUpdate = (data: any) => {
       const moved = pendingOrders.value.splice(pendingIdx, 1)[0]
       moved.status = status
       moved.delivery_task_status = status
-      if (!deliveryOrders.value.some((o) => String(o.id) === orderId || String(o.order_id) === orderId)) {
+      if (
+        !deliveryOrders.value.some(
+          (o) => String(o.id) === orderId || String(o.order_id) === orderId,
+        )
+      ) {
         deliveryOrders.value.unshift(moved)
       }
     }
@@ -1218,7 +1276,8 @@ const handleRealtimeOrderUpdate = (data: any) => {
     )
     if (
       selectedOrder.value &&
-      (String(selectedOrder.value.id) === orderId || String(selectedOrder.value.order_id) === orderId)
+      (String(selectedOrder.value.id) === orderId ||
+        String(selectedOrder.value.order_id) === orderId)
     ) {
       selectedOrder.value = deliveryOrders.value[0] || pendingOrders.value[0] || null
     }

@@ -7,24 +7,24 @@ import type { KitchenOrder, KitchenStatistics } from '@/types/kitchen'
 export const useKitchenStore = defineStore('kitchen', () => {
   const orders = ref<KitchenOrder[]>([])
   const statisticsFromApi = ref<KitchenStatistics | null>(null)
-  
+
   // Compute statistics in real-time from orders array for instant updates
   const statistics = computed<KitchenStatistics | null>(() => {
     if (orders.value.length === 0 && !statisticsFromApi.value) {
       return null
     }
-    
+
     // Count orders by status from the live orders array
-    const pending = orders.value.filter(o => o.status === 'pending').length
-    const preparing = orders.value.filter(o => o.status === 'preparing').length
-    const ready = orders.value.filter(o => o.status === 'ready').length
-    const served = orders.value.filter(o => o.status === 'served').length
-    const cancelled = orders.value.filter(o => o.status === 'cancelled').length
+    const pending = orders.value.filter((o) => o.status === 'pending').length
+    const preparing = orders.value.filter((o) => o.status === 'preparing').length
+    const ready = orders.value.filter((o) => o.status === 'ready').length
+    const served = orders.value.filter((o) => o.status === 'served').length
+    const cancelled = orders.value.filter((o) => o.status === 'cancelled').length
     const total = orders.value.length
-    
+
     // Use API stats as base for today's counts, or compute if not available
     const apiStats = statisticsFromApi.value
-    
+
     return {
       pending_orders: pending,
       preparing_orders: preparing,
@@ -164,19 +164,19 @@ export const useKitchenStore = defineStore('kitchen', () => {
 
   function receiveOrderUpdate(data: any) {
     console.log('[kitchenStore] ? Received order update via WebSocket:', data)
-    
+
     const orderId = data.id || data.order_id
     if (!orderId) {
       console.warn('[kitchenStore] ? No order ID in WebSocket data, doing full refresh')
       fetchDashboard()
       return
     }
-    
+
     console.log('[kitchenStore] ?? Processing update for order:', orderId)
-    
+
     if (data.order && typeof data.order === 'object') {
       const fullOrder = data.order as KitchenOrder
-      
+
       console.log('[kitchenStore] ?? Order data:', {
         id: fullOrder.id,
         order_number: fullOrder.order_number,
@@ -186,16 +186,16 @@ export const useKitchenStore = defineStore('kitchen', () => {
         guest: fullOrder.guest?.full_name,
         items: fullOrder.items?.length || 0,
       })
-      
+
       if (!fullOrder.room && !fullOrder.table) {
         console.warn('[kitchenStore] ?? Order missing location:', orderId)
       }
       if (!fullOrder.items || fullOrder.items.length === 0) {
         console.warn('[kitchenStore] ?? Order missing items:', orderId)
       }
-      
+
       const existingIndex = orders.value.findIndex((o) => String(o.id) === String(orderId))
-      
+
       if (existingIndex !== -1) {
         orders.value.splice(existingIndex, 1, fullOrder)
         console.log('[kitchenStore] ? Order updated:', orderId, '?', fullOrder.status)
@@ -208,7 +208,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
       fetchDashboard()
       return
     }
-    
+
     console.log('[kitchenStore] ?? Statistics will auto-compute')
   }
 
@@ -225,7 +225,7 @@ export const useKitchenStore = defineStore('kitchen', () => {
       },
       (error: any) => {
         console.error('[kitchenStore] WebSocket error:', error)
-      }
+      },
     )
   }
 

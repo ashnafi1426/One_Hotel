@@ -36,8 +36,8 @@ const saveToCache = (users: User[]) => {
   } catch (e) {}
 }
 
-const isInitialLoading = ref(true);
-const isDeletingUser = ref(false);
+const isInitialLoading = ref(true)
+const isDeletingUser = ref(false)
 
 const loadUsers = async (forceRefresh = false) => {
   if (!forceRefresh) loadFromCache()

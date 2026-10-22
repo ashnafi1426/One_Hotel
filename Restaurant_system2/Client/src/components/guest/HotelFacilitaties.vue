@@ -72,8 +72,7 @@ const facilities = computed<Facility[]>(() => [
   {
     id: 6,
     icon: Car,
-    title:
-      languageStore.currentLanguage === 'am' ? 'አስተማማኝ የመኪና ማቆሚያ' : 'Secure Valet Parking',
+    title: languageStore.currentLanguage === 'am' ? 'አስተማማኝ የመኪና ማቆሚያ' : 'Secure Valet Parking',
     description:
       languageStore.currentLanguage === 'am'
         ? 'የ24 ሰዓት ጥበቃ ያለው አስተማማኝና ሰፊ የመኪና ማቆሚያ።'
@@ -109,9 +108,14 @@ const facilities = computed<Facility[]>(() => [
     <div class="mx-auto max-w-7xl px-4 sm:px-6 md:px-8 lg:px-10 space-y-12">
       <!-- Section Header -->
       <div class="mx-auto max-w-3xl text-center space-y-3">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30"
+        >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
-          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('curated_comfort', 'Curated Amenities') }}</span>
+          <span
+            >{{ guestHotelStore.hotelName }} •
+            {{ languageStore.t('curated_comfort', 'Curated Amenities') }}</span
+          >
         </div>
 
         <h2
@@ -120,7 +124,9 @@ const facilities = computed<Facility[]>(() => [
           {{ languageStore.t('world_class_facilities', 'World-Class Hospitality Facilities') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
+        <p
+          class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed"
+        >
           {{
             languageStore.t(
               'facilities_desc',

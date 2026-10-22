@@ -121,7 +121,9 @@ watch(
       <!-- Section Header -->
       <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div class="space-y-3 max-w-2xl">
-          <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+          <div
+            class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30"
+          >
             <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
             <span>{{ languageStore.t('featured_accommodation', 'Exclusive Accommodations') }}</span>
           </div>
@@ -130,7 +132,9 @@ watch(
           >
             {{ languageStore.t('explore_fine_rooms', 'Signature Rooms & Suites') }}
           </h2>
-          <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+          <p
+            class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed"
+          >
             {{
               languageStore.t(
                 'designed_for_luxury',
@@ -144,7 +148,9 @@ watch(
           @click="goToRooms"
           class="px-6 py-3 rounded-full bg-[#182235] hover:bg-[#101827] text-white dark:bg-[#182235] dark:hover:bg-[#26354D] font-bold text-xs uppercase tracking-wider transition flex items-center gap-2 cursor-pointer self-start md:self-auto border border-[#26354D] shadow-md hover:border-[#D6A94F]/60"
         >
-          <span class="text-white font-bold">{{ languageStore.t('view_all_rooms', 'View All Suites') }}</span>
+          <span class="text-white font-bold">{{
+            languageStore.t('view_all_rooms', 'View All Suites')
+          }}</span>
           <ArrowRight class="w-4 h-4 text-[#D6A94F]" />
         </button>
       </div>
@@ -165,13 +171,17 @@ watch(
               loading="lazy"
               @error="(e: any) => (e.target.src = '/images/rooms/deluxe.jpg')"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"
+            />
 
             <div
               class="absolute bottom-3 left-3 px-3 py-1.5 bg-[#101827]/90 backdrop-blur-md text-[#D6A94F] font-bold text-xs rounded-xl border border-[#D6A94F]/40 shadow-lg"
             >
               <span class="text-[#D6A94F] font-bold">{{ getRoomPrice(room) }}</span>
-              <span class="text-[10px] text-slate-200 font-normal"> / {{ languageStore.t('per_night', 'night') }}</span>
+              <span class="text-[10px] text-slate-200 font-normal">
+                / {{ languageStore.t('per_night', 'night') }}</span
+              >
             </div>
           </div>
 
@@ -191,21 +201,31 @@ watch(
                   <Users class="w-4 h-4 text-[#D6A94F]" />
                   <span>
                     {{ languageStore.t('up_to', 'Up to') }}
-                    {{ (room.room_type as any)?.capacity || (room.room_type as any)?.max_occupancy || 2 }}
+                    {{
+                      (room.room_type as any)?.capacity ||
+                      (room.room_type as any)?.max_occupancy ||
+                      2
+                    }}
                     {{ languageStore.t('guests_count', 'Guests') }}
                   </span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <BedDouble class="w-4 h-4 text-[#D6A94F]" />
-                  <span>{{ languageStore.t('room', 'Room') }} #{{ room.room_number || '101' }}</span>
+                  <span
+                    >{{ languageStore.t('room', 'Room') }} #{{ room.room_number || '101' }}</span
+                  >
                 </div>
               </div>
             </div>
 
             <!-- Amenities Badges -->
-            <div class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex flex-wrap gap-1.5">
+            <div
+              class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex flex-wrap gap-1.5"
+            >
               <span
-                v-for="(amenity, idx) in (room.amenities || ['King Bed', 'City View', 'Free Wi-Fi']).slice(0, 3)"
+                v-for="(amenity, idx) in (
+                  room.amenities || ['King Bed', 'City View', 'Free Wi-Fi']
+                ).slice(0, 3)"
                 :key="typeof amenity === 'object' ? amenity.name || idx : amenity || idx"
                 class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[#FAF3E7] dark:bg-[#101827] text-[#8A641A] dark:text-slate-300 border border-[#D6A94F]/20 dark:border-[#26354D]"
               >
@@ -227,7 +247,9 @@ watch(
                 @click="openBooking(room)"
                 class="py-2.5 px-3 rounded-xl bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black text-xs uppercase tracking-wider shadow-md shadow-[#D6A94F]/20 hover:shadow-lg transition-all cursor-pointer flex items-center justify-center gap-1.5"
               >
-                <span class="text-[#101827] font-extrabold">{{ languageStore.t('book_now', 'Book Now') }}</span>
+                <span class="text-[#101827] font-extrabold">{{
+                  languageStore.t('book_now', 'Book Now')
+                }}</span>
                 <ArrowRight class="w-3.5 h-3.5" />
               </button>
             </div>

@@ -11,7 +11,11 @@ export function storageUrl(path: string | null | undefined): string {
   if (!path || path === 'null' || path === 'undefined') return ''
   const sanitized = String(path).replace(/\\/g, '/').trim()
   if (!sanitized) return ''
-  if (sanitized.startsWith('http://') || sanitized.startsWith('https://') || sanitized.startsWith('data:')) {
+  if (
+    sanitized.startsWith('http://') ||
+    sanitized.startsWith('https://') ||
+    sanitized.startsWith('data:')
+  ) {
     return sanitized
   }
   const cleanPath = sanitized.replace(/^\/+/, '')

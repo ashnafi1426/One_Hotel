@@ -29,7 +29,11 @@ const loadInitialHotelItem = (): HotelItem => {
         if (parsed && (parsed.id || parsed.name)) {
           let hotelName = parsed.name || DEFAULT_HOTEL.name
           const lower = hotelName.toLowerCase()
-          if (lower.includes('sherat') || lower.includes('grand horizon') || lower.includes('metropolitan')) {
+          if (
+            lower.includes('sherat') ||
+            lower.includes('grand horizon') ||
+            lower.includes('metropolitan')
+          ) {
             hotelName = DEFAULT_HOTEL.name
           }
           return {
@@ -84,7 +88,11 @@ export const useHotelStore = defineStore('hotel', {
     async fetchMyHotels() {
       try {
         const response = await axiosInstance.get('/guest/hotels')
-        if (response.data?.success && Array.isArray(response.data?.data) && response.data.data.length > 0) {
+        if (
+          response.data?.success &&
+          Array.isArray(response.data?.data) &&
+          response.data.data.length > 0
+        ) {
           const hotelData = response.data.data[0]
           this.currentHotel = {
             id: String(hotelData.id),

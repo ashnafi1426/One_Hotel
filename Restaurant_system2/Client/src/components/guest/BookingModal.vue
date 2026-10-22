@@ -551,7 +551,6 @@ onUnmounted(() => {
   document.body.style.overflow = 'auto'
   document.body.style.touchAction = 'auto'
 })
-
 </script>
 
 <template>
@@ -571,14 +570,20 @@ onUnmounted(() => {
           class="relative bg-[#101827] border-b border-[#26354D] px-4 sm:px-6 md:px-8 py-3.5 sm:py-4 flex justify-between items-center flex-shrink-0"
         >
           <!-- Top gold hairline -->
-          <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+          <div
+            class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+          />
 
           <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
-            <div class="p-1.5 sm:p-2 bg-[#182235] border border-[#D6A94F]/30 rounded-xl backdrop-blur-sm shrink-0">
+            <div
+              class="p-1.5 sm:p-2 bg-[#182235] border border-[#D6A94F]/30 rounded-xl backdrop-blur-sm shrink-0"
+            >
               <Sparkles class="w-4 h-4 sm:w-5 sm:h-5 text-[#D6A94F]" />
             </div>
             <div class="min-w-0">
-              <h2 class="font-serif text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate">
+              <h2
+                class="font-serif text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight truncate"
+              >
                 {{ languageStore.t('complete_your_booking', 'Complete Your Booking') }}
               </h2>
               <p class="text-[11px] sm:text-xs text-[#D6A94F] truncate">
@@ -601,7 +606,9 @@ onUnmounted(() => {
           class="flex-1 overflow-y-auto md:overflow-hidden md:grid md:grid-cols-12 md:gap-6 p-4 sm:p-5 md:p-6 lg:p-7 min-h-0"
         >
           <!-- Left Column: Room Details & Breakdown (Desktop & Tablet left; Mobile stacked below) -->
-          <div class="md:col-span-5 flex flex-col space-y-4 md:overflow-y-auto order-2 md:order-1 pr-0 md:pr-1">
+          <div
+            class="md:col-span-5 flex flex-col space-y-4 md:overflow-y-auto order-2 md:order-1 pr-0 md:pr-1"
+          >
             <!-- Room Image Banner -->
             <div
               class="relative w-full bg-slate-100 dark:bg-slate-800 rounded-xl sm:rounded-2xl overflow-hidden flex-shrink-0 shadow-md aspect-[4/3] max-h-[220px] sm:max-h-[260px]"
@@ -731,7 +738,9 @@ onUnmounted(() => {
               <div class="border-b border-slate-200/80 dark:border-[#26354D] pb-3">
                 <div class="flex items-start justify-between gap-2">
                   <div class="min-w-0">
-                    <h3 class="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate">
+                    <h3
+                      class="text-base sm:text-lg font-bold text-slate-900 dark:text-white truncate"
+                    >
                       {{ getRoomTypeName(room) }}
                     </h3>
                     <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -767,12 +776,16 @@ onUnmounted(() => {
                 </span>
               </div>
 
-              <p class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3">
+              <p
+                class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed line-clamp-3"
+              >
                 {{ getRoomDescription(room) }}
               </p>
 
               <!-- Stay Duration Box -->
-              <div class="bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200/70 dark:border-amber-500/20 rounded-xl p-3 space-y-2 text-slate-800 dark:text-slate-200">
+              <div
+                class="bg-amber-50/70 dark:bg-amber-500/10 border border-amber-200/70 dark:border-amber-500/20 rounded-xl p-3 space-y-2 text-slate-800 dark:text-slate-200"
+              >
                 <div class="flex justify-between items-center">
                   <div class="flex items-center gap-1.5">
                     <Calendar class="w-4 h-4 text-amber-600 dark:text-[#D6A94F]" />
@@ -790,7 +803,9 @@ onUnmounted(() => {
                   </span>
                 </div>
                 <div class="flex justify-between text-xs sm:text-sm">
-                  <span class="text-slate-600 dark:text-slate-400">{{ languageStore.t('check_in', 'Check-in') }}</span>
+                  <span class="text-slate-600 dark:text-slate-400">{{
+                    languageStore.t('check_in', 'Check-in')
+                  }}</span>
                   <span class="font-medium text-slate-800 dark:text-slate-200">{{
                     bookingForm.checkInDate
                       ? new Date(bookingForm.checkInDate).toLocaleDateString('en-US', {
@@ -815,8 +830,12 @@ onUnmounted(() => {
                       : '--'
                   }}</span>
                 </div>
-                <div class="flex justify-between text-xs sm:text-sm pt-1.5 border-t border-amber-200/50 dark:border-amber-500/20">
-                  <span class="text-slate-600 dark:text-slate-400">{{ languageStore.t('guests', 'Guests') }}</span>
+                <div
+                  class="flex justify-between text-xs sm:text-sm pt-1.5 border-t border-amber-200/50 dark:border-amber-500/20"
+                >
+                  <span class="text-slate-600 dark:text-slate-400">{{
+                    languageStore.t('guests', 'Guests')
+                  }}</span>
                   <span class="font-medium text-slate-800 dark:text-slate-200">
                     {{ bookingForm.guests }} {{ languageStore.t('guests', 'Guests') }}
                   </span>
@@ -830,7 +849,9 @@ onUnmounted(() => {
                     {{ languageStore.t('room_label', 'Room') }} ({{ calculateNights() }} × ETB
                     {{ getRoomPrice(room) }})
                   </span>
-                  <span class="font-semibold text-slate-900 dark:text-white">ETB {{ calculateRoomTotal() }}</span>
+                  <span class="font-semibold text-slate-900 dark:text-white"
+                    >ETB {{ calculateRoomTotal() }}</span
+                  >
                 </div>
                 <div
                   v-if="bookingForm.includeBreakfast"
@@ -871,7 +892,9 @@ onUnmounted(() => {
                 <span class="text-xs sm:text-sm font-bold text-slate-800 dark:text-slate-200">{{
                   languageStore.t('total', 'Grand Total')
                 }}</span>
-                <span class="text-lg sm:text-xl md:text-2xl font-bold text-amber-600 dark:text-[#D6A94F]">
+                <span
+                  class="text-lg sm:text-xl md:text-2xl font-bold text-amber-600 dark:text-[#D6A94F]"
+                >
                   ETB {{ calculateGrandTotal() }}
                 </span>
               </div>
@@ -879,7 +902,9 @@ onUnmounted(() => {
           </div>
 
           <!-- Right Column: Guest Information Form -->
-          <div class="md:col-span-7 flex flex-col space-y-3.5 md:overflow-y-auto order-1 md:order-2 pr-0 md:pr-1">
+          <div
+            class="md:col-span-7 flex flex-col space-y-3.5 md:overflow-y-auto order-1 md:order-2 pr-0 md:pr-1"
+          >
             <div class="flex items-center justify-between flex-shrink-0 pb-1">
               <div>
                 <h3 class="text-sm sm:text-base font-bold text-slate-900 dark:text-white">
@@ -913,7 +938,9 @@ onUnmounted(() => {
                   <h4 class="text-sm font-bold text-slate-900 dark:text-white truncate">
                     {{ getRoomTypeName(room) }}
                   </h4>
-                  <p class="text-xs text-slate-500 dark:text-slate-400">Room #{{ room.room_number }}</p>
+                  <p class="text-xs text-slate-500 dark:text-slate-400">
+                    Room #{{ room.room_number }}
+                  </p>
                   <p class="text-sm font-bold text-amber-600 dark:text-[#D6A94F] mt-0.5">
                     ETB {{ calculateGrandTotal() }}
                   </p>
@@ -926,7 +953,9 @@ onUnmounted(() => {
               <!-- Check-In & Check-Out Inputs -->
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label
+                    class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
                     {{ languageStore.t('check_in', 'Check-in') }}
                     <span class="text-rose-500">*</span>
                   </label>
@@ -941,7 +970,9 @@ onUnmounted(() => {
                   </p>
                 </div>
                 <div>
-                  <label class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                  <label
+                    class="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1"
+                  >
                     {{ languageStore.t('check_out', 'Check-out') }}
                     <span class="text-rose-500">*</span>
                   </label>
@@ -1058,7 +1089,9 @@ onUnmounted(() => {
               </div>
 
               <!-- Add-on Services Selection -->
-              <div class="bg-slate-50 dark:bg-[#182235]/60 rounded-xl p-3 sm:p-3.5 space-y-2 border border-slate-200/80 dark:border-[#26354D]">
+              <div
+                class="bg-slate-50 dark:bg-[#182235]/60 rounded-xl p-3 sm:p-3.5 space-y-2 border border-slate-200/80 dark:border-[#26354D]"
+              >
                 <p class="text-xs font-semibold text-slate-700 dark:text-slate-300">
                   {{ languageStore.t('addon_services', 'Add-on Services') }}
                 </p>
@@ -1073,9 +1106,10 @@ onUnmounted(() => {
                     />
                     <div class="flex items-center gap-1.5 min-w-0">
                       <Coffee class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
-                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
-                        languageStore.t('breakfast', 'Breakfast')
-                      }}</span>
+                      <span
+                        class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate"
+                        >{{ languageStore.t('breakfast', 'Breakfast') }}</span
+                      >
                     </div>
                   </label>
                   <label
@@ -1088,9 +1122,10 @@ onUnmounted(() => {
                     />
                     <div class="flex items-center gap-1.5 min-w-0">
                       <Utensils class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
-                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
-                        languageStore.t('dinner', 'Dinner')
-                      }}</span>
+                      <span
+                        class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate"
+                        >{{ languageStore.t('dinner', 'Dinner') }}</span
+                      >
                     </div>
                   </label>
                   <label
@@ -1103,9 +1138,10 @@ onUnmounted(() => {
                     />
                     <div class="flex items-center gap-1.5 min-w-0">
                       <Sparkles class="w-3.5 h-3.5 text-amber-600 dark:text-[#D6A94F] shrink-0" />
-                      <span class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate">{{
-                        languageStore.t('spa', 'Spa')
-                      }}</span>
+                      <span
+                        class="text-xs font-medium text-slate-700 dark:text-slate-200 truncate"
+                        >{{ languageStore.t('spa', 'Spa') }}</span
+                      >
                     </div>
                   </label>
                 </div>
@@ -1203,7 +1239,9 @@ onUnmounted(() => {
         <div
           class="bg-[#101827] border-b border-[#26354D] px-5 py-4 text-white flex items-center justify-between flex-shrink-0 relative overflow-hidden"
         >
-          <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+          <div
+            class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+          />
           <div>
             <h3 class="font-serif text-lg sm:text-xl font-bold tracking-tight text-white">
               {{ languageStore.t('payment_confirmation', 'Payment Confirmation') }}

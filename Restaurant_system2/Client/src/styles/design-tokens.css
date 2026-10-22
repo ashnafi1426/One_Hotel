@@ -7,26 +7,26 @@
 [data-hotel-theme='luxury-gold'],
 [data-hotel-theme='sheraton'] {
   /* Brand / Primary Palette - Warm Luxury Gold (#D6A94F) */
-  --color-primary: #D6A94F;
+  --color-primary: #d6a94f;
   --color-primary-rgb: 214, 169, 79;
-  --color-primary-hover: #C59B3F;
+  --color-primary-hover: #c59b3f;
   --color-primary-hover-rgb: 197, 155, 63;
   --color-primary-foreground: #101827;
   --color-primary-foreground-rgb: 16, 24, 39;
-  --color-primary-subtle: #FAF3E7;
+  --color-primary-subtle: #faf3e7;
   --color-primary-subtle-rgb: 250, 243, 231;
-  --color-primary-subtle-foreground: #8A641A;
+  --color-primary-subtle-foreground: #8a641a;
 
   /* Surfaces & Backgrounds */
-  --color-background: #F7F7F5;
+  --color-background: #f7f7f5;
   --color-background-rgb: 247, 247, 245;
   --color-surface: #ffffff;
   --color-surface-rgb: 255, 255, 255;
-  --color-surface-secondary: #EFEFEA;
+  --color-surface-secondary: #efefea;
   --color-surface-secondary-rgb: 239, 239, 234;
   --color-navy: #101827;
   --color-navy-surface: #182235;
-  --color-navy-border: #26354D;
+  --color-navy-border: #26354d;
 
   /* Typography */
   --color-text: #0f172a;
@@ -92,8 +92,8 @@
   --brand-border-subtle-rgb: var(--color-border-subtle-rgb);
 
   /* Accessible Gold (WCAG AA 4.7:1 on Light Backgrounds) */
-  --color-primary-accessible: #9A7418;
-  --color-gold-bright: #F5BD47;
+  --color-primary-accessible: #9a7418;
+  --color-gold-bright: #f5bd47;
 
   /* Typography Design Tokens (Two Font Families) */
   --font-serif: 'Cormorant Garamond', Georgia, serif;
@@ -222,8 +222,8 @@ html.dark {
   --brand-border-subtle-rgb: var(--color-border-subtle-rgb);
 
   /* Accessible Gold in Dark Mode */
-  --color-primary-accessible: #D6A94F;
-  --color-gold-bright: #F5BD47;
+  --color-primary-accessible: #d6a94f;
+  --color-gold-bright: #f5bd47;
 
   --shadow-brand-glow: 0 4px 22px 0 rgba(var(--brand-primary-rgb), 0.42);
   --shadow-brand-glow-lg: 0 8px 32px 0 rgba(var(--brand-primary-rgb), 0.55);

@@ -64,7 +64,10 @@ const commitments = computed(() => [
           class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30"
         >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
-          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('our_philosophy', 'Our Philosophy') }}</span>
+          <span
+            >{{ guestHotelStore.hotelName }} •
+            {{ languageStore.t('our_philosophy', 'Our Philosophy') }}</span
+          >
         </div>
 
         <h1
@@ -116,7 +119,9 @@ const commitments = computed(() => [
       <div
         class="mt-12 rounded-3xl bg-[#101827] border border-[#26354D] p-8 sm:p-12 text-white shadow-2xl relative overflow-hidden"
       >
-        <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
+        <div
+          class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+        />
 
         <div class="grid gap-8 grid-cols-1 md:grid-cols-2 items-center">
           <div class="space-y-3">

@@ -29,7 +29,6 @@ const languageStore = useLanguageStore()
 const profileOpen = ref(false)
 const isFullscreen = ref(false)
 
-
 const toggleProfile = () => {
   profileOpen.value = !profileOpen.value
 }

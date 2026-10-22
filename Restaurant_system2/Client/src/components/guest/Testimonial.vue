@@ -53,7 +53,9 @@ const testimonials: Testimonial[] = [
     <div class="mx-auto w-full max-w-7xl px-4 sm:px-6 md:px-8 lg:px-10 space-y-12">
       <!-- Section Header -->
       <div class="mx-auto max-w-3xl text-center space-y-3">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30"
+        >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
           <span>{{ languageStore.t('guest_reviews', 'Guest Perspectives') }}</span>
         </div>
@@ -64,7 +66,9 @@ const testimonials: Testimonial[] = [
           {{ languageStore.t('what_guests_say', 'Memories from Our Guests') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+        <p
+          class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed"
+        >
           {{
             languageStore.t(
               'what_guests_say_desc',
@@ -86,7 +90,11 @@ const testimonials: Testimonial[] = [
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <div class="flex items-center gap-1 text-[#D6A94F]">
-                <Star v-for="i in item.rating" :key="i" class="w-4 h-4 fill-[#D6A94F] text-[#D6A94F]" />
+                <Star
+                  v-for="i in item.rating"
+                  :key="i"
+                  class="w-4 h-4 fill-[#D6A94F] text-[#D6A94F]"
+                />
               </div>
               <Quote class="w-7 h-7 text-[#D6A94F]/30" />
             </div>
@@ -98,7 +106,9 @@ const testimonials: Testimonial[] = [
             </p>
           </div>
 
-          <div class="pt-4 border-t border-slate-200/80 dark:border-[#26354D]/60 flex items-center gap-3.5">
+          <div
+            class="pt-4 border-t border-slate-200/80 dark:border-[#26354D]/60 flex items-center gap-3.5"
+          >
             <img
               :src="item.image"
               :alt="item.name"
@@ -107,7 +117,11 @@ const testimonials: Testimonial[] = [
             />
             <div>
               <h3 class="text-xs font-bold text-[#101827] dark:text-white">{{ item.name }}</h3>
-              <p class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase">{{ item.country }}</p>
+              <p
+                class="text-[10px] text-slate-500 dark:text-slate-400 font-medium tracking-wider uppercase"
+              >
+                {{ item.country }}
+              </p>
             </div>
           </div>
         </div>

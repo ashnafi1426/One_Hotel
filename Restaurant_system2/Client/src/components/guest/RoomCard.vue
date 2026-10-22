@@ -67,7 +67,9 @@ function closeBooking() {
         @error="(e: any) => (e.target.src = '/images/rooms/deluxe.jpg')"
       />
 
-      <div class="absolute inset-0 bg-gradient-to-t from-[#101827]/70 via-transparent to-[#101827]/20" />
+      <div
+        class="absolute inset-0 bg-gradient-to-t from-[#101827]/70 via-transparent to-[#101827]/20"
+      />
 
       <div
         class="absolute bottom-3 left-3 bg-[#101827]/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-[#D6A94F]/40 shadow-lg text-[#D6A94F]"
@@ -84,7 +86,9 @@ function closeBooking() {
     <!-- Room Body -->
     <div class="p-5 flex flex-col flex-grow justify-between space-y-4">
       <div class="space-y-1.5">
-        <h3 class="font-serif text-lg font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug">
+        <h3
+          class="font-serif text-lg font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug"
+        >
           {{ room.name }}
         </h3>
 
@@ -102,7 +106,10 @@ function closeBooking() {
       </div>
 
       <!-- Amenities Highlights -->
-      <div v-if="room.amenities && room.amenities.length" class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60">
+      <div
+        v-if="room.amenities && room.amenities.length"
+        class="flex flex-wrap gap-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60"
+      >
         <span
           v-for="item in room.amenities.slice(0, 3)"
           :key="item"
@@ -114,7 +121,9 @@ function closeBooking() {
       </div>
 
       <!-- Actions -->
-      <div class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100 dark:border-[#26354D]/60 mt-auto">
+      <div
+        class="grid grid-cols-2 gap-2.5 pt-3 border-t border-slate-100 dark:border-[#26354D]/60 mt-auto"
+      >
         <button
           @click="viewDetails"
           class="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-xl border border-[#26354D] text-[#101827] dark:text-slate-200 font-bold hover:border-[#D6A94F] hover:text-[#D6A94F] transition text-xs uppercase tracking-wider cursor-pointer"
@@ -134,10 +143,6 @@ function closeBooking() {
     </div>
 
     <!-- Booking Modal -->
-    <BookingModal
-      :isOpen="showBookingModal"
-      :room="(room as any)"
-      @close="closeBooking"
-    />
+    <BookingModal :isOpen="showBookingModal" :room="room as any" @close="closeBooking" />
   </div>
 </template>

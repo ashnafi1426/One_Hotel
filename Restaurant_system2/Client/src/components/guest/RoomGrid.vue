@@ -67,7 +67,11 @@ const getRoomCapacity = (room: Room): number => {
 }
 
 const getRoomAmenities = (room: Room): string[] => {
-  if (typeof room.room_type === 'object' && room.room_type?.amenities && Array.isArray(room.room_type.amenities)) {
+  if (
+    typeof room.room_type === 'object' &&
+    room.room_type?.amenities &&
+    Array.isArray(room.room_type.amenities)
+  ) {
     return room.room_type.amenities
   }
   return ['King Bed', 'City Skyline View', 'High-Speed Wi-Fi', 'Room Service']
@@ -77,7 +81,10 @@ const getRoomDescription = (room: Room): string => {
   if (typeof room.room_type === 'object' && room.room_type?.description) {
     return room.room_type.description
   }
-  return room.description || 'Experience ultimate comfort and tranquility in our signature luxury suites.'
+  return (
+    room.description ||
+    'Experience ultimate comfort and tranquility in our signature luxury suites.'
+  )
 }
 
 const getRoomImage = (room: Room): string => {
@@ -132,7 +139,11 @@ function handleBookingSubmit(_bookingData: any) {}
         <span class="results-dot"></span>
         <span class="results-count text-[#101827] dark:text-white">{{ rooms.length }}</span>
         <span class="results-label text-slate-500 dark:text-slate-400">
-          {{ rooms.length === 1 ? languageStore.t('room', 'suite') : languageStore.t('rooms', 'suites') }}
+          {{
+            rooms.length === 1
+              ? languageStore.t('room', 'suite')
+              : languageStore.t('rooms', 'suites')
+          }}
           {{ languageStore.t('rooms_found', 'available for your stay') }}
         </span>
       </div>
@@ -163,7 +174,9 @@ function handleBookingSubmit(_bookingData: any) {}
           <div
             class="absolute bottom-3 left-3 bg-[#101827]/90 backdrop-blur-md px-3.5 py-1.5 rounded-xl border border-[#D6A94F]/40 shadow-lg text-[#D6A94F]"
           >
-            <div class="text-[9px] uppercase tracking-wider font-extrabold text-[#D6A94F]/90 leading-none mb-0.5">
+            <div
+              class="text-[9px] uppercase tracking-wider font-extrabold text-[#D6A94F]/90 leading-none mb-0.5"
+            >
               {{ languageStore.t('nightly_rate', 'Nightly Rate') }}
             </div>
             <div class="flex items-baseline gap-1">
@@ -180,11 +193,15 @@ function handleBookingSubmit(_bookingData: any) {}
         <!-- Room Information Body -->
         <div class="p-6 space-y-4 flex flex-col flex-grow">
           <div class="space-y-1.5">
-            <h3 class="font-serif text-xl font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug">
+            <h3
+              class="font-serif text-xl font-bold text-[#101827] dark:text-white group-hover:text-[#D6A94F] transition-colors leading-snug"
+            >
               {{ getRoomTypeName(room) }}
             </h3>
 
-            <div class="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium">
+            <div
+              class="flex items-center gap-4 text-xs text-slate-600 dark:text-slate-400 font-medium"
+            >
               <span class="flex items-center gap-1.5">
                 <Users class="w-3.5 h-3.5 text-[#D6A94F]" />
                 {{
@@ -202,14 +219,20 @@ function handleBookingSubmit(_bookingData: any) {}
           </div>
 
           <!-- Room Amenities Highlights -->
-          <div class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60 flex-grow text-xs text-slate-600 dark:text-slate-300 font-medium">
+          <div
+            class="space-y-1.5 pt-2 border-t border-slate-100 dark:border-[#26354D]/60 flex-grow text-xs text-slate-600 dark:text-slate-300 font-medium"
+          >
             <div class="flex items-center gap-2">
               <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
-              <span>{{ languageStore.t('comfort_and_privacy', 'Comfort and Serene Privacy') }}</span>
+              <span>{{
+                languageStore.t('comfort_and_privacy', 'Comfort and Serene Privacy')
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
               <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
-              <span>{{ languageStore.t('complimentary_breakfast', 'Complimentary Breakfast Included') }}</span>
+              <span>{{
+                languageStore.t('complimentary_breakfast', 'Complimentary Breakfast Included')
+              }}</span>
             </div>
             <div class="flex items-center gap-2">
               <Check class="w-3.5 h-3.5 text-[#D6A94F] flex-shrink-0" />
@@ -256,7 +279,9 @@ function handleBookingSubmit(_bookingData: any) {}
           <X class="w-4 h-4" />
         </button>
 
-        <h2 class="font-serif text-2xl md:text-3xl font-bold text-[#101827] dark:text-white mb-2 pr-10">
+        <h2
+          class="font-serif text-2xl md:text-3xl font-bold text-[#101827] dark:text-white mb-2 pr-10"
+        >
           {{ getRoomTypeName(selectedRoom) }}
         </h2>
 
@@ -264,18 +289,32 @@ function handleBookingSubmit(_bookingData: any) {}
           {{ getRoomDescription(selectedRoom) }}
         </p>
 
-        <div class="mb-6 space-y-3 text-sm bg-[#F7F7F5] dark:bg-[#101827] p-4 rounded-2xl border border-slate-200/80 dark:border-[#26354D]">
+        <div
+          class="mb-6 space-y-3 text-sm bg-[#F7F7F5] dark:bg-[#101827] p-4 rounded-2xl border border-slate-200/80 dark:border-[#26354D]"
+        >
           <div class="flex items-center justify-between">
-            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('capacity', 'Guest Capacity') }}</span>
-            <span class="font-bold text-[#101827] dark:text-white">{{ getRoomCapacity(selectedRoom) }} {{ languageStore.t('guests', 'guests') }}</span>
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{
+              languageStore.t('capacity', 'Guest Capacity')
+            }}</span>
+            <span class="font-bold text-[#101827] dark:text-white"
+              >{{ getRoomCapacity(selectedRoom) }} {{ languageStore.t('guests', 'guests') }}</span
+            >
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('nightly_rate', 'Nightly Rate') }}</span>
-            <span class="font-bold text-[#D6A94F]">ETB {{ getRoomPrice(selectedRoom).toLocaleString() }}</span>
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{
+              languageStore.t('nightly_rate', 'Nightly Rate')
+            }}</span>
+            <span class="font-bold text-[#D6A94F]"
+              >ETB {{ getRoomPrice(selectedRoom).toLocaleString() }}</span
+            >
           </div>
           <div class="flex items-center justify-between">
-            <span class="text-slate-500 dark:text-slate-400 font-medium">{{ languageStore.t('room_number', 'Room Number') }}</span>
-            <span class="font-bold text-[#101827] dark:text-white">#{{ selectedRoom.room_number || '101' }}</span>
+            <span class="text-slate-500 dark:text-slate-400 font-medium">{{
+              languageStore.t('room_number', 'Room Number')
+            }}</span>
+            <span class="font-bold text-[#101827] dark:text-white"
+              >#{{ selectedRoom.room_number || '101' }}</span
+            >
           </div>
         </div>
 
@@ -287,7 +326,12 @@ function handleBookingSubmit(_bookingData: any) {}
             {{ languageStore.t('close', 'Close') }}
           </button>
           <button
-            @click="() => { showDetails = false; openBookingModal(selectedRoom!) }"
+            @click="
+              () => {
+                showDetails = false
+                openBookingModal(selectedRoom!)
+              }
+            "
             class="flex-1 px-5 py-3 bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-black rounded-xl transition text-xs uppercase tracking-wider shadow-lg shadow-[#D6A94F]/25 cursor-pointer"
           >
             {{ languageStore.t('book_now', 'Book Now') }}
@@ -325,7 +369,7 @@ function handleBookingSubmit(_bookingData: any) {}
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: #D6A94F;
+  background: #d6a94f;
   box-shadow: 0 0 0 3px rgba(214, 169, 79, 0.25);
   display: block;
 }

@@ -28,21 +28,24 @@ const fallbackMenu: MenuItem[] = [
     id: 'm1',
     name: 'Prime Aged Ribeye Steak',
     image: '/images/gallery/fine-dining.jpg',
-    description: 'Tender grain-fed beef seared with aromatic rosemary butter and roasted truffle roots.',
+    description:
+      'Tender grain-fed beef seared with aromatic rosemary butter and roasted truffle roots.',
     price: 1250,
   },
   {
     id: 'm2',
     name: 'Authentic Special Tibs & Injera',
     image: '/images/gallery/chef-special.jpg',
-    description: 'Traditional sauteed beef with rosemary, onions, and jalapenos served on fresh teff injera.',
+    description:
+      'Traditional sauteed beef with rosemary, onions, and jalapenos served on fresh teff injera.',
     price: 850,
   },
   {
     id: 'm3',
     name: 'Mediterranean Sea Bass',
     image: '/images/gallery/restaurant-interior.jpg',
-    description: 'Pan-roasted wild sea bass with lemon herb veloute, asparagus, and saffron potato puree.',
+    description:
+      'Pan-roasted wild sea bass with lemon herb veloute, asparagus, and saffron potato puree.',
     price: 1100,
   },
 ]
@@ -104,9 +107,14 @@ watch(
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
       <!-- Section Header -->
       <div class="mx-auto max-w-3xl text-center space-y-3">
-        <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30">
+        <div
+          class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[11px] font-extrabold uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#8A641A] dark:text-[#D6A94F] border border-[#D6A94F]/30"
+        >
           <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
-          <span>{{ guestHotelStore.hotelName }} • {{ languageStore.t('signature_dining', 'Gastronomy & Lounge') }}</span>
+          <span
+            >{{ guestHotelStore.hotelName }} •
+            {{ languageStore.t('signature_dining', 'Gastronomy & Lounge') }}</span
+          >
         </div>
 
         <h2
@@ -115,7 +123,9 @@ watch(
           {{ languageStore.t('culinary_experience', 'An Exceptional Culinary Journey') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed">
+        <p
+          class="text-sm sm:text-base text-slate-700 dark:text-slate-300 font-normal leading-relaxed"
+        >
           {{
             languageStore.t(
               'culinary_experience_desc',
@@ -125,7 +135,9 @@ watch(
         </p>
 
         <!-- Hours & Dining Location info -->
-        <div class="flex items-center justify-center gap-6 pt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+        <div
+          class="flex items-center justify-center gap-6 pt-2 text-xs font-semibold text-slate-600 dark:text-slate-300"
+        >
           <span class="flex items-center gap-1.5">
             <Clock class="w-3.5 h-3.5 text-[#D6A94F]" />
             {{ guestHotelStore.diningHours }}
@@ -154,7 +166,9 @@ watch(
               loading="lazy"
               @error="(e: any) => (e.target.src = '/images/gallery/fine-dining.jpg')"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20" />
+            <div
+              class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-black/20"
+            />
 
             <div
               class="absolute bottom-3 right-3 px-3.5 py-1.5 bg-[#101827]/90 backdrop-blur-md text-[#D6A94F] font-bold text-xs rounded-xl border border-[#D6A94F]/40 shadow-lg"
@@ -172,13 +186,19 @@ watch(
                 {{ dish.name }}
               </h3>
 
-              <p class="text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed line-clamp-2">
+              <p
+                class="text-xs text-slate-700 dark:text-slate-300 font-normal leading-relaxed line-clamp-2"
+              >
                 {{ dish.description }}
               </p>
             </div>
 
-            <div class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex items-center justify-between">
-              <span class="text-[11px] font-bold text-[#D6A94F] uppercase tracking-wider flex items-center gap-1">
+            <div
+              class="pt-4 border-t border-slate-100 dark:border-[#26354D]/60 flex items-center justify-between"
+            >
+              <span
+                class="text-[11px] font-bold text-[#D6A94F] uppercase tracking-wider flex items-center gap-1"
+              >
                 <Utensils class="w-3 h-3" />
                 Chef Selection
               </span>

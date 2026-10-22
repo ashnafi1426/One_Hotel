@@ -357,7 +357,7 @@ export function useOrderStatus(orderId: string, initialHotelId?: string, initial
         if (orderData.value) {
           orderData.value.status = (event.status || event.newStatus) as any
           orderData.value.updated_at = event.updated_at
-          
+
           // Update other fields if available
           if (event.guest_name) orderData.value.guest_name = event.guest_name
           if (event.room_number) orderData.value.room_number = event.room_number

@@ -62,7 +62,9 @@
             </div>
             <div>
               <div class="flex items-center gap-2 flex-wrap">
-                <h1 class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight">
+                <h1
+                  class="text-xl sm:text-2xl lg:text-3xl font-black text-slate-900 dark:text-white tracking-tight"
+                >
                   {{ greetingMessage }}, {{ chefName }}!
                 </h1>
                 <span
@@ -80,7 +82,12 @@
                 </span>
               </div>
               <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                {{ languageStore.t('kitchen_subtitle', 'Prepare delicious meals and keep the kitchen running smoothly.') }}
+                {{
+                  languageStore.t(
+                    'kitchen_subtitle',
+                    'Prepare delicious meals and keep the kitchen running smoothly.',
+                  )
+                }}
               </p>
             </div>
           </div>
@@ -97,8 +104,12 @@
                 <UtensilsCrossed class="w-4 h-4" />
               </div>
               <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Orders</div>
-                <div class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Total Orders
+                </div>
+                <div
+                  class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight"
+                >
                   {{ totalOrdersCount }}
                 </div>
                 <div class="text-[10px] text-slate-400">Today</div>
@@ -115,8 +126,12 @@
                 <Clock class="w-4 h-4" />
               </div>
               <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">In Progress</div>
-                <div class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  In Progress
+                </div>
+                <div
+                  class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight"
+                >
                   {{ preparingOrders.length }}
                 </div>
                 <div class="text-[10px] text-slate-400">Being prepared</div>
@@ -133,8 +148,12 @@
                 <CheckCircle2 class="w-4 h-4" />
               </div>
               <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Ready</div>
-                <div class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Ready
+                </div>
+                <div
+                  class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight"
+                >
                   {{ readyOrders.length }}
                 </div>
                 <div class="text-[10px] text-slate-400">Waiting for pickup</div>
@@ -151,8 +170,12 @@
                 <Timer class="w-4 h-4" />
               </div>
               <div>
-                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Avg. Prep Time</div>
-                <div class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap">
+                <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Avg. Prep Time
+                </div>
+                <div
+                  class="text-base sm:text-lg font-black text-slate-900 dark:text-white leading-tight whitespace-nowrap"
+                >
                   {{ avgPrepTimeText }}
                 </div>
                 <div class="text-[10px] text-slate-400">Today</div>
@@ -162,7 +185,9 @@
         </div>
 
         <!-- Mobile & Tablet Responsive View Tab Switcher (< lg screens) -->
-        <div class="lg:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner">
+        <div
+          class="lg:hidden bg-slate-200/80 dark:bg-slate-800/80 p-1 rounded-2xl flex items-center gap-1 shadow-inner"
+        >
           <button
             type="button"
             @click="activeMobileTab = 'pending'"
@@ -177,7 +202,11 @@
             <span>To Start</span>
             <span
               class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
-              :class="activeMobileTab === 'pending' ? 'bg-orange-500 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+              :class="
+                activeMobileTab === 'pending'
+                  ? 'bg-orange-500 text-white'
+                  : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              "
             >
               {{ pendingOrders.length }}
             </span>
@@ -197,7 +226,11 @@
             <span>In Progress</span>
             <span
               class="px-1.5 py-0.2 rounded-full text-[10px] font-black"
-              :class="activeMobileTab === 'preparing' ? 'bg-blue-600 text-white' : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'"
+              :class="
+                activeMobileTab === 'preparing'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-300 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+              "
             >
               {{ preparingOrders.length }}
             </span>
@@ -215,10 +248,7 @@
           >
             <FileText class="w-3.5 h-3.5 text-emerald-500" />
             <span>Order Details</span>
-            <span
-              v-if="selectedOrder"
-              class="w-2 h-2 rounded-full bg-emerald-500"
-            ></span>
+            <span v-if="selectedOrder" class="w-2 h-2 rounded-full bg-emerald-500"></span>
           </button>
         </div>
 
@@ -228,7 +258,9 @@
           class="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3"
         >
           <div>
-            <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">Failed to load kitchen dashboard</p>
+            <p class="text-rose-700 dark:text-rose-400 font-bold text-sm">
+              Failed to load kitchen dashboard
+            </p>
             <p class="text-rose-600 dark:text-rose-300 text-xs mt-0.5">{{ error }}</p>
           </div>
           <button
@@ -376,7 +408,9 @@
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                      <span
+                        class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1"
+                      >
                         {{ item.name }}
                       </span>
                       <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
@@ -473,7 +507,9 @@
               >
                 <ChefHat class="w-6 h-6" />
               </div>
-              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Orders In Progress</h3>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                No Orders In Progress
+              </h3>
               <p class="text-[11px] text-slate-400 mt-1 max-w-[200px] mx-auto leading-relaxed">
                 Click "Start Preparing" on any pending order to begin cooking.
               </p>
@@ -545,7 +581,9 @@
                         class="w-9 h-9 rounded-lg object-cover bg-slate-100 dark:bg-slate-800 shrink-0 border border-slate-100 dark:border-slate-800"
                         loading="lazy"
                       />
-                      <span class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1">
+                      <span
+                        class="text-xs font-bold text-slate-800 dark:text-slate-200 truncate flex-1"
+                      >
                         {{ item.name }}
                       </span>
                       <span class="text-xs font-medium text-slate-400 dark:text-slate-500 shrink-0">
@@ -556,7 +594,9 @@
 
                   <!-- Preparation Progress Bar -->
                   <div class="space-y-1 pt-1">
-                    <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-1.5 overflow-hidden"
+                    >
                       <div
                         class="bg-blue-600 dark:bg-blue-500 h-1.5 rounded-full transition-all duration-500"
                         :style="{ width: `${getOrderProgress(order)}%` }"
@@ -589,21 +629,22 @@
           <!-- ======================================================== -->
           <!-- COLUMN 3: Order Details Panel (lg:col-span-4)            -->
           <!-- ======================================================== -->
-          <div
-            class="lg:col-span-4"
-            :class="{ 'hidden lg:block': activeMobileTab !== 'details' }"
-          >
+          <div class="lg:col-span-4" :class="{ 'hidden lg:block': activeMobileTab !== 'details' }">
             <div
               v-if="selectedOrder"
               class="bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xs space-y-5 lg:sticky lg:top-6"
             >
               <!-- Panel Header -->
-              <div class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
+              <div
+                class="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3"
+              >
                 <div class="flex items-center gap-2">
                   <button
                     v-if="activeMobileTab === 'details'"
                     type="button"
-                    @click="activeMobileTab = selectedOrder.status === 'pending' ? 'pending' : 'preparing'"
+                    @click="
+                      activeMobileTab = selectedOrder.status === 'pending' ? 'pending' : 'preparing'
+                    "
                     class="lg:hidden p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 mr-1"
                     title="Back to list"
                   >
@@ -643,7 +684,9 @@
                   </span>
                 </div>
 
-                <div class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400">
+                <div
+                  class="flex items-center gap-4 text-xs font-bold text-slate-500 dark:text-slate-400"
+                >
                   <div class="flex items-center gap-1.5 text-slate-700 dark:text-slate-300">
                     <Building2 class="w-3.5 h-3.5 text-slate-400" />
                     <span>{{ getDestinationLabel(selectedOrder) }}</span>
@@ -657,10 +700,14 @@
 
               <!-- Itemized List -->
               <div class="space-y-3">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div
+                  class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                >
                   {{ languageStore.t('items', 'Items') }}
                 </div>
-                <div class="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1 space-y-2">
+                <div
+                  class="divide-y divide-slate-100 dark:divide-slate-800 max-h-56 overflow-y-auto pr-1 space-y-2"
+                >
                   <div
                     v-for="(item, idx) in normalizeItems(selectedOrder)"
                     :key="idx"
@@ -711,11 +758,15 @@
 
               <!-- Preparation Progress in Details Panel -->
               <div class="space-y-1.5">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div
+                  class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                >
                   Preparation Progress
                 </div>
                 <div class="flex items-center gap-3">
-                  <div class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden">
+                  <div
+                    class="flex-1 bg-slate-100 dark:bg-slate-800 rounded-full h-2 overflow-hidden"
+                  >
                     <div
                       class="bg-emerald-500 h-2 rounded-full transition-all duration-500"
                       :style="{ width: `${getOrderProgress(selectedOrder)}%` }"
@@ -729,7 +780,9 @@
 
               <!-- Notes Box -->
               <div class="space-y-1.5">
-                <div class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                <div
+                  class="text-[11px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500"
+                >
                   Notes
                 </div>
                 <div
@@ -786,9 +839,12 @@
               >
                 <FileText class="w-6 h-6" />
               </div>
-              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">No Order Selected</h3>
+              <h3 class="text-xs font-bold text-slate-800 dark:text-slate-200">
+                No Order Selected
+              </h3>
               <p class="text-[11px] text-slate-400 leading-relaxed max-w-[200px] mx-auto">
-                Click on any order card in "To Start Preparing" or "In Progress" to view full recipe details, items, and special guest notes.
+                Click on any order card in "To Start Preparing" or "In Progress" to view full recipe
+                details, items, and special guest notes.
               </p>
             </div>
           </div>
@@ -857,7 +913,11 @@ interface Toast {
 }
 const toasts = ref<Toast[]>([])
 
-const showToast = (title: string, message: string, type: 'success' | 'info' | 'error' = 'success') => {
+const showToast = (
+  title: string,
+  message: string,
+  type: 'success' | 'info' | 'error' = 'success',
+) => {
   const id = Date.now() + Math.floor(Math.random() * 1000)
   toasts.value.push({ id, title, message, type })
   setTimeout(() => {
@@ -969,12 +1029,17 @@ const getDestinationLabel = (order: any): string => {
   if (!order) return 'Table 1'
   const rawTable = order.table?.table_number || order.table_number || order.table?.name || ''
   if (rawTable) {
-    const cleaned = String(rawTable).trim().replace(/^table\s*/i, '').replace(/^t\s*/i, '')
+    const cleaned = String(rawTable)
+      .trim()
+      .replace(/^table\s*/i, '')
+      .replace(/^t\s*/i, '')
     return `Table ${cleaned || rawTable}`
   }
   const rawRoom = order.room?.room_number || order.room_number || ''
   if (rawRoom && rawRoom !== 'Room Service') {
-    const cleanedRoom = String(rawRoom).trim().replace(/^room\s*/i, '')
+    const cleanedRoom = String(rawRoom)
+      .trim()
+      .replace(/^room\s*/i, '')
     return `Room ${cleanedRoom || rawRoom}`
   }
   if (order.destination) {
@@ -1013,8 +1078,13 @@ const normalizeItems = (order: any): any[] => {
   }
   if (Array.isArray(order.items) && order.items.length > 0) {
     return order.items.map((it: any) => {
-      const name = cleanItemName(typeof it === 'string' ? it : it.name || it.item_name || it.menu_item?.name)
-      const rawImg = typeof it === 'object' ? it.image_url || it.image || it.menu_item?.image_url || it.menu_item?.image : null
+      const name = cleanItemName(
+        typeof it === 'string' ? it : it.name || it.item_name || it.menu_item?.name,
+      )
+      const rawImg =
+        typeof it === 'object'
+          ? it.image_url || it.image || it.menu_item?.image_url || it.menu_item?.image
+          : null
       return {
         name,
         quantity: typeof it === 'object' ? it.quantity || 1 : 1,
@@ -1158,7 +1228,7 @@ const setupLiveGuestOrders = () => {
         showToast(
           'New Guest Order!',
           `Order #${orderNum.replace(/^#/, '')} has been received and is waiting to prepare.`,
-          'info'
+          'info',
         )
       }
 

@@ -18,7 +18,9 @@
           {{ languageStore.t('connect_with_us', 'Connect With Our Hotel') }}
         </h2>
 
-        <p class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed">
+        <p
+          class="text-sm sm:text-base text-slate-600 dark:text-slate-400 font-light leading-relaxed"
+        >
           {{
             languageStore.t(
               'contact_desc',

@@ -289,7 +289,10 @@ onUnmounted(() => {
   }
 })
 
-watch(() => hotelStore.hotelId, () => loadOrders())
+watch(
+  () => hotelStore.hotelId,
+  () => loadOrders(),
+)
 </script>
 
 <template>

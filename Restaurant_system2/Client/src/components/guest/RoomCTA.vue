@@ -1,17 +1,29 @@
 <template>
-  <div class="relative overflow-hidden rounded-3xl bg-[#101827] border border-[#26354D] p-8 sm:p-12 md:p-16 text-center text-white shadow-2xl">
+  <div
+    class="relative overflow-hidden rounded-3xl bg-[#101827] border border-[#26354D] p-8 sm:p-12 md:p-16 text-center text-white shadow-2xl"
+  >
     <!-- Top and bottom gold accent hairlines -->
-    <div class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80" />
-    <div class="absolute -right-20 -bottom-20 w-64 h-64 bg-[#D6A94F]/10 rounded-full blur-3xl pointer-events-none" />
-    <div class="absolute -left-20 -top-20 w-64 h-64 bg-[#D6A94F]/5 rounded-full blur-3xl pointer-events-none" />
+    <div
+      class="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#D6A94F] to-transparent opacity-80"
+    />
+    <div
+      class="absolute -right-20 -bottom-20 w-64 h-64 bg-[#D6A94F]/10 rounded-full blur-3xl pointer-events-none"
+    />
+    <div
+      class="absolute -left-20 -top-20 w-64 h-64 bg-[#D6A94F]/5 rounded-full blur-3xl pointer-events-none"
+    />
 
     <div class="relative z-10 max-w-2xl mx-auto space-y-4">
-      <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#D6A94F] border border-[#D6A94F]/30">
+      <div
+        class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] bg-[#D6A94F]/10 text-[#D6A94F] border border-[#D6A94F]/30"
+      >
         <Sparkles class="w-3.5 h-3.5 text-[#D6A94F]" />
         <span>{{ languageStore.t('experience_luxury', 'A Luxury Experience') }}</span>
       </div>
 
-      <h2 class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight">
+      <h2
+        class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-white tracking-tight leading-tight"
+      >
         {{ languageStore.t('ready_to_book', 'Reserve Your Private Sanctuary') }}
       </h2>
 

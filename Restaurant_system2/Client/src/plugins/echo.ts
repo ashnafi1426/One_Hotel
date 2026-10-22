@@ -45,8 +45,7 @@ function getPusherAuthHeaders() {
   if (!qrToken) {
     try {
       const orderPaymentData =
-        localStorage.getItem('order_payment_data') ||
-        sessionStorage.getItem('order_payment_data')
+        localStorage.getItem('order_payment_data') || sessionStorage.getItem('order_payment_data')
       if (orderPaymentData) {
         const parsed = JSON.parse(orderPaymentData)
         if (parsed.qr_token) {
@@ -93,8 +92,8 @@ const echo = new Echo({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            'Authorization': token ? `Bearer ${token}` : '',
+            Accept: 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
             'X-QR-Token': qrToken || '',
           },
           body: JSON.stringify({

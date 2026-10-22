@@ -19,7 +19,7 @@ onMounted(async () => {
     await manager.loadOrders()
   }
   await operationsStore.loadOrders()
-  
+
   // Subscribe to real-time order updates via WebSocket
   subscribeToOrderUpdates()
 })
@@ -37,13 +37,13 @@ function subscribeToOrderUpdates() {
     (data: any) => {
       console.log('[ManagerOrders] Received order update:', data)
       // Reload orders to reflect the update
-      operationsStore.loadOrders().catch(err => 
-        console.error('[ManagerOrders] Failed to reload orders:', err)
-      )
+      operationsStore
+        .loadOrders()
+        .catch((err) => console.error('[ManagerOrders] Failed to reload orders:', err))
     },
     (error: any) => {
       console.error('[ManagerOrders] WebSocket error:', error)
-    }
+    },
   )
 }
 </script>

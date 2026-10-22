@@ -7,9 +7,13 @@
         class="absolute bottom-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-amber-400/60 dark:via-amber-500/40 to-transparent"
       ></div>
 
-      <div class="px-3 sm:px-4 md:px-6 h-16 md:h-20 flex items-center justify-between gap-2 max-w-full">
+      <div
+        class="px-3 sm:px-4 md:px-6 h-16 md:h-20 flex items-center justify-between gap-2 max-w-full"
+      >
         <div class="flex items-center gap-2 sm:gap-3 shrink-0">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 flex items-center justify-center flex-shrink-0">
+          <div
+            class="w-9 h-9 sm:w-10 sm:h-10 md:w-11 md:h-11 flex items-center justify-center flex-shrink-0"
+          >
             <img
               v-if="hotelLogoUrl && !imageLoadFailed"
               :src="hotelLogoUrl || ''"
@@ -240,7 +244,10 @@
                       class="w-full h-full object-contain"
                       @error="imageLoadFailed = true"
                     />
-                    <span v-else class="text-amber-600 dark:text-amber-400 font-serif font-black text-sm">
+                    <span
+                      v-else
+                      class="text-amber-600 dark:text-amber-400 font-serif font-black text-sm"
+                    >
                       {{ (guestHotelStore.hotelName || 'H').charAt(0).toUpperCase() }}
                     </span>
                   </div>
@@ -253,7 +260,8 @@
                     <span
                       class="text-[8.5px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase"
                     >
-                      {{ languageStore.t('digital_menu', 'Digital Menu') }} • {{ languageStore.t('categories', 'Categories') }}
+                      {{ languageStore.t('digital_menu', 'Digital Menu') }} •
+                      {{ languageStore.t('categories', 'Categories') }}
                     </span>
                   </div>
                 </div>
@@ -278,7 +286,9 @@
                   v-model="mobileSearchQuery"
                   @input="handleMobileSearch"
                   type="text"
-                  :placeholder="languageStore.t('search_placeholder', 'Search delicious meals, drinks...')"
+                  :placeholder="
+                    languageStore.t('search_placeholder', 'Search delicious meals, drinks...')
+                  "
                   class="w-full pl-8 pr-3 py-1.5 bg-slate-100 dark:bg-white/5 text-slate-900 dark:text-white placeholder-slate-400 text-xs rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:border-[#c29353] font-medium"
                 />
                 <Search class="absolute left-2.5 top-2 w-3.5 h-3.5 text-[#c29353]" />
@@ -340,7 +350,9 @@
               >
                 <div class="flex items-center gap-1.5 truncate">
                   <User class="w-3.5 h-3.5 text-[#c29353]" />
-                  <span class="truncate font-semibold text-slate-700 dark:text-slate-300">{{ guestName }}</span>
+                  <span class="truncate font-semibold text-slate-700 dark:text-slate-300">{{
+                    guestName
+                  }}</span>
                 </div>
                 <span v-if="currentRoom" class="font-bold text-[#c29353] shrink-0">
                   {{ languageStore.t('room', 'Room') }} {{ currentRoom }}
@@ -477,7 +489,11 @@ const hotelLogoUrl = computed<string | null>(() => {
     ) {
       return trimmed
     }
-    if (trimmed.startsWith('/storage/') || trimmed.startsWith('storage/') || trimmed.startsWith('hotels/')) {
+    if (
+      trimmed.startsWith('/storage/') ||
+      trimmed.startsWith('storage/') ||
+      trimmed.startsWith('hotels/')
+    ) {
       return storageUrl(trimmed)
     }
     if (trimmed.startsWith('images/')) {
