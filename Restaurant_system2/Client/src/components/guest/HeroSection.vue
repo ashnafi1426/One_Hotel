@@ -1,30 +1,15 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
-import { Calendar, BedDouble, MapPin, Clock, ShieldCheck, Sparkles } from 'lucide-vue-next'
+import { Calendar, BedDouble, Sparkles } from 'lucide-vue-next'
 
 const router = useRouter()
 const languageStore = useLanguageStore()
 const guestHotelStore = useGuestHotelStore()
 
-const heroLocation = computed(() => {
-  if (guestHotelStore.currentHotel?.address) {
-    return guestHotelStore.currentHotel.address
-  }
-
-  return `${guestHotelStore.hotelCity}, ${guestHotelStore.hotelCountry}`
-})
-
 function bookNow() {
-  const bookingForm = document.getElementById('booking-search-section')
-
-  if (bookingForm) {
-    bookingForm.scrollIntoView({ behavior: 'smooth' })
-  } else {
-    router.push('/rooms')
-  }
+  router.push('/rooms')
 }
 
 function exploreRooms() {
@@ -153,59 +138,6 @@ function exploreRooms() {
             {{ languageStore.t('explore_rooms_suites', 'Explore Rooms & Suites') }}
           </span>
         </button>
-      </div>
-
-      <!-- Hotel information cards -->
-      <div
-        class="mt-9 grid w-full max-w-5xl grid-cols-1 gap-3 text-left sm:grid-cols-3 sm:gap-4 lg:mt-12"
-      >
-        <article
-          class="flex min-h-[78px] flex-col justify-center rounded-2xl border border-white/35 bg-[#192438]/90 px-4 py-3 shadow-lg backdrop-blur-md transition-colors hover:bg-[#192438]/95 sm:px-5"
-        >
-          <p
-            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.09em] text-[#E7B84F]"
-          >
-            <Clock class="h-4 w-4 shrink-0" />
-            {{ languageStore.t('check_in', 'Check-In') }}
-          </p>
-
-          <p class="mt-1.5 text-sm font-medium leading-snug text-white sm:text-base">
-            {{ guestHotelStore.currentHotel?.front_desk_hours || 'Open 24/7 / 365 Days' }}
-          </p>
-        </article>
-
-        <article
-          class="flex min-h-[78px] flex-col justify-center rounded-2xl border border-white/35 bg-[#192438]/90 px-4 py-3 shadow-lg backdrop-blur-md transition-colors hover:bg-[#192438]/95 sm:px-5"
-        >
-          <p
-            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.09em] text-[#E7B84F]"
-          >
-            <MapPin class="h-4 w-4 shrink-0" />
-            {{ languageStore.t('location', 'Location') }}
-          </p>
-
-          <p
-            class="mt-1.5 line-clamp-2 break-words text-sm font-medium leading-snug text-white sm:text-base"
-            :title="heroLocation"
-          >
-            {{ heroLocation }}
-          </p>
-        </article>
-
-        <article
-          class="flex min-h-[78px] flex-col justify-center rounded-2xl border border-white/35 bg-[#192438]/90 px-4 py-3 shadow-lg backdrop-blur-md transition-colors hover:bg-[#192438]/95 sm:px-5"
-        >
-          <p
-            class="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.09em] text-[#E7B84F]"
-          >
-            <ShieldCheck class="h-4 w-4 shrink-0" />
-            {{ languageStore.t('concierge', 'Concierge Service') }}
-          </p>
-
-          <p class="mt-1.5 text-sm font-medium leading-snug text-white sm:text-base">
-            {{ languageStore.t('concierge_service', '24/7 Dedicated Care') }}
-          </p>
-        </article>
       </div>
     </div>
   </section>
