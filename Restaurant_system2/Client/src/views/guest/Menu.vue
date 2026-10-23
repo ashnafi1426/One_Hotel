@@ -86,6 +86,15 @@ const loadingElapsedSeconds = ref(0)
 let loadingTimer: any = null
 
 const loadingStageMessage = computed(() => {
+  if (languageStore.isAmharic) {
+    if (loadingElapsedSeconds.value < 2) {
+      return 'ከማብሰያ ቤት ጋር በመገናኘት ላይ...'
+    } else if (loadingElapsedSeconds.value < 5) {
+      return 'የዛሬ ልዩ እና ወቅታዊ ምግቦችን በማምጣት ላይ...'
+    } else {
+      return 'የቀጥታ ሰርቨሩን በማዘጋጀት ላይ፣ ጥቂት ሰኮንዶች ይጠብቁ...'
+    }
+  }
   if (loadingElapsedSeconds.value < 2) {
     return 'Connecting to Executive Kitchen...'
   } else if (loadingElapsedSeconds.value < 5) {
@@ -94,6 +103,47 @@ const loadingStageMessage = computed(() => {
     return 'Waking up our live kitchen server, preparing your menu...'
   }
 })
+
+// Amharic Category translation mapping
+const CATEGORY_AMHARIC_MAP: Record<string, string> = {
+  all: 'ሁሉም',
+  starter: 'መክሰስ',
+  starters: 'መክሰሶች',
+  pizza: 'ፒዛ',
+  pizzas: 'ፒዛዎች',
+  'traditional dish': 'ባህላዊ ምግብ',
+  'traditional dishes': 'ባህላዊ ምግቦች',
+  traditional: 'ባህላዊ',
+  salad: 'ሰላጣ',
+  salads: 'ሰላጣዎች',
+  'chicken & burger': 'ዶሮ እና በርገር',
+  chicken: 'የዶሮ ምግብ',
+  burger: 'በርገር',
+  burgers: 'በርገሮች',
+  noodles: 'ኑድል',
+  pasta: 'ፓስታ',
+  soup: 'ሾርባ',
+  soups: 'ሾርባዎች',
+  breakfast: 'ቁርስ',
+  'main courses': 'ዋና ምግቦች',
+  'main course': 'ዋና ምግብ',
+  dessert: 'ጣፋጭ',
+  desserts: 'ጣፋጭ ምግቦች',
+  beverage: 'መጠጥ',
+  beverages: 'መጠጦች',
+  drinks: 'መጠጦች',
+  seafood: 'የባህር ምግቦች',
+  fish: 'ዓሳ',
+  sandwich: 'ሳንድዊች',
+  sandwiches: 'ሳንድዊቾች',
+  other: 'ሌሎች',
+}
+
+function getCategoryDisplayName(cat: string): string {
+  if (!languageStore.isAmharic) return cat
+  const key = cat.toLowerCase().trim()
+  return CATEGORY_AMHARIC_MAP[key] || cat
+}
 
 function formatCategoryName(name: string): string {
   if (!name) return 'Other'
@@ -147,7 +197,8 @@ function formatPrice(price: number | string | undefined): string {
   if (currency === '$' || currency === 'USD') {
     return `$${val % 1 === 0 ? val : val.toFixed(2)}`
   }
-  return `${val.toLocaleString()} ${currency}`
+  const currLabel = languageStore.isAmharic ? 'ብር' : currency
+  return `${val.toLocaleString()} ${currLabel}`
 }
 
 function handleImageLoad(id: string | number) {
@@ -314,7 +365,7 @@ onUnmounted(() => {
           <h1
             class="font-serif text-3xl sm:text-4xl lg:text-[40px] font-bold text-[#3E2723] dark:text-[#F3EBDD] tracking-tight leading-tight"
           >
-            Our Restaurant Menu
+            {{ languageStore.isAmharic ? 'የምግብ ቤታችን ሜኑ' : 'Our Restaurant Menu' }}
           </h1>
 
           <!-- Decorative Golden Accent Divider Line -->
@@ -324,8 +375,11 @@ onUnmounted(() => {
           <p
             class="text-[#6B7280] dark:text-slate-400 text-xs sm:text-sm md:text-[14.5px] max-w-xl mx-auto font-sans leading-relaxed px-2"
           >
-            Experience a culinary journey with our diverse menu featuring both international cuisine
-            and local Ethiopian specialties.
+            {{
+              languageStore.isAmharic
+                ? 'በተለያዩ አለም አቀፍ እና ባህላዊ የኢትዮጵያ ምግቦች የተዘጋጀውን ልዩ የምግብ ዝርዝር ይጎብኙ።'
+                : 'Experience a culinary journey with our diverse menu featuring both international cuisine and local Ethiopian specialties.'
+            }}
           </p>
 
           <!-- Subtle Background Sync Indicator -->
@@ -334,7 +388,7 @@ onUnmounted(() => {
             class="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#C08A3E] dark:text-[#E5A84B] animate-pulse"
           >
             <RefreshCw class="w-3 h-3 animate-spin" />
-            <span>Syncing latest kitchen updates...</span>
+            <span>{{ languageStore.isAmharic ? 'የቅርብ ጊዜ የምግብ ቤት መረጃዎችን በማመሳሰል ላይ...' : 'Syncing latest kitchen updates...' }}</span>
           </div>
         </header>
 
@@ -356,7 +410,7 @@ onUnmounted(() => {
                 : 'bg-white dark:bg-[#182235] text-[#4A2C2A] dark:text-slate-300 border border-slate-200/90 dark:border-slate-700/80 hover:border-[#C08A3E] hover:text-[#3E2723] dark:hover:text-[#D6A94F]',
             ]"
           >
-            {{ cat }}
+            {{ getCategoryDisplayName(cat) }}
           </button>
         </nav>
 
@@ -391,7 +445,7 @@ onUnmounted(() => {
             <h2
               class="font-serif text-xl sm:text-2xl font-bold text-[#3E2723] dark:text-[#F3EBDD] tracking-tight mb-2"
             >
-              Loading Our Restaurant Menu
+              {{ languageStore.isAmharic ? 'የምግብ ዝርዝሩን በመጫን ላይ...' : 'Loading Our Restaurant Menu' }}
             </h2>
             <p
               class="text-xs sm:text-sm text-[#6B7280] dark:text-slate-400 font-sans max-w-md mx-auto leading-relaxed mb-5"
@@ -411,7 +465,7 @@ onUnmounted(() => {
               v-if="loadingElapsedSeconds > 4"
               class="text-[11px] sm:text-xs text-amber-700/80 dark:text-amber-400/80 max-w-sm mx-auto font-medium transition-opacity duration-300"
             >
-              ⚡ Connecting with backend server. Thank you for your patience...
+              {{ languageStore.isAmharic ? '⚡ ከሰርቨር ጋር በመገናኘት ላይ። በትዕግስትዎ እናመሰግናለን...' : '⚡ Connecting with backend server. Thank you for your patience...' }}
             </p>
 
             <!-- Skeleton Outlines Behind for layout stability -->
@@ -439,7 +493,7 @@ onUnmounted(() => {
               <AlertCircle class="w-6 h-6" />
             </div>
             <h3 class="font-serif text-lg font-bold text-[#3E2723] dark:text-white">
-              Unable to Load Menu
+              {{ languageStore.isAmharic ? 'ሜኑውን መጫን አልተቻለም' : 'Unable to Load Menu' }}
             </h3>
             <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mb-5 leading-relaxed">
               {{ fetchError }}
@@ -450,7 +504,7 @@ onUnmounted(() => {
               class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4A2C2A] hover:bg-[#3E2723] text-white text-xs sm:text-sm font-semibold rounded-full shadow-sm hover:shadow transition cursor-pointer"
             >
               <RefreshCw class="w-3.5 h-3.5" />
-              <span>Retry Kitchen Connection</span>
+              <span>{{ languageStore.isAmharic ? 'እንደገና ሞክር' : 'Retry Kitchen Connection' }}</span>
             </button>
           </div>
 
@@ -509,7 +563,13 @@ onUnmounted(() => {
                 <p
                   class="text-[11px] sm:text-xs md:text-[13px] text-[#6B7280] dark:text-slate-400 font-sans leading-relaxed line-clamp-2 mt-1 sm:mt-1.5"
                 >
-                  {{ dish.ingredients || dish.description || 'Prepared fresh with premium ingredients by our seasoned chefs.' }}
+                  {{
+                    dish.ingredients ||
+                    dish.description ||
+                    (languageStore.isAmharic
+                      ? 'በልዩ ባለሙያዎቻችን ትኩስ እና ጥራት ባላቸው ግብዓቶች የተዘጋጀ።'
+                      : 'Prepared fresh with premium ingredients by our seasoned chefs.')
+                  }}
                 </p>
               </div>
             </article>
@@ -522,16 +582,20 @@ onUnmounted(() => {
           >
             <Utensils class="w-10 h-10 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
             <h3 class="font-serif text-base sm:text-lg font-bold text-[#3E2723] dark:text-slate-200">
-              No menu items found
+              {{ languageStore.isAmharic ? 'ምንም የተገኘ የምግብ አይነት የለም' : 'No menu items found' }}
             </h3>
             <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              No dishes match your filter "{{ activeCategory }}".
+              {{
+                languageStore.isAmharic
+                  ? `በ "${getCategoryDisplayName(activeCategory)}" ምድብ ምንም ምግብ አልተገኘም።`
+                  : `No dishes match your filter "${activeCategory}".`
+              }}
             </p>
             <button
               @click="activeCategory = 'All'"
               class="mt-3 px-4 py-2 bg-[#4A2C2A] text-white text-xs font-semibold rounded-full hover:bg-[#3E2723] transition cursor-pointer"
             >
-              Reset Filters
+              {{ languageStore.isAmharic ? 'ማጣሪያዎችን አጽዳ' : 'Reset Filters' }}
             </button>
           </div>
         </main>
@@ -548,13 +612,15 @@ onUnmounted(() => {
                 class="font-serif text-lg sm:text-xl md:text-2xl font-bold text-[#3E2723] dark:text-[#F3EBDD] mb-4 sm:mb-5 flex items-center gap-2"
               >
                 <Clock class="w-4 h-4 sm:w-5 sm:h-5 text-[#C08A3E]" />
-                Dining Hours
+                {{ languageStore.isAmharic ? 'የመመገቢያ ሰዓታት' : 'Dining Hours' }}
               </h2>
               <div class="space-y-2.5 sm:space-y-3.5 text-xs sm:text-sm text-slate-700 dark:text-slate-300">
                 <div
                   class="flex justify-between items-center py-1 sm:py-1.5 border-b border-slate-100 dark:border-slate-800/80"
                 >
-                  <span class="font-medium text-slate-800 dark:text-slate-200">Breakfast</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ languageStore.isAmharic ? 'ቁርስ' : 'Breakfast' }}
+                  </span>
                   <span class="text-slate-600 dark:text-slate-400 font-mono text-[11px] sm:text-xs md:text-sm"
                     >6:30 AM - 10:30 AM</span
                   >
@@ -562,7 +628,9 @@ onUnmounted(() => {
                 <div
                   class="flex justify-between items-center py-1 sm:py-1.5 border-b border-slate-100 dark:border-slate-800/80"
                 >
-                  <span class="font-medium text-slate-800 dark:text-slate-200">Lunch</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ languageStore.isAmharic ? 'ምሳ' : 'Lunch' }}
+                  </span>
                   <span class="text-slate-600 dark:text-slate-400 font-mono text-[11px] sm:text-xs md:text-sm"
                     >12:00 PM - 3:00 PM</span
                   >
@@ -570,13 +638,17 @@ onUnmounted(() => {
                 <div
                   class="flex justify-between items-center py-1 sm:py-1.5 border-b border-slate-100 dark:border-slate-800/80"
                 >
-                  <span class="font-medium text-slate-800 dark:text-slate-200">Dinner</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ languageStore.isAmharic ? 'እራት' : 'Dinner' }}
+                  </span>
                   <span class="text-slate-600 dark:text-slate-400 font-mono text-[11px] sm:text-xs md:text-sm"
                     >6:30 PM - 10:30 PM</span
                   >
                 </div>
                 <div class="flex justify-between items-center py-1 sm:py-1.5">
-                  <span class="font-medium text-slate-800 dark:text-slate-200">Bar & Lounge</span>
+                  <span class="font-medium text-slate-800 dark:text-slate-200">
+                    {{ languageStore.isAmharic ? 'ባር እና ላውንጅ' : 'Bar & Lounge' }}
+                  </span>
                   <span class="text-slate-600 dark:text-slate-400 font-mono text-[11px] sm:text-xs md:text-sm"
                     >11:00 AM - 12:00 AM</span
                   >
@@ -590,27 +662,29 @@ onUnmounted(() => {
                 class="font-serif text-lg sm:text-xl md:text-2xl font-bold text-[#3E2723] dark:text-[#F3EBDD] mb-4 sm:mb-5 flex items-center gap-2"
               >
                 <Sparkles class="w-4 h-4 sm:w-5 sm:h-5 text-[#C08A3E]" />
-                Special Dietary Requirements
+                {{ languageStore.isAmharic ? 'ልዩ የምግብ ፍላጎቶች' : 'Special Dietary Requirements' }}
               </h2>
               <p
                 class="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed mb-4 sm:mb-6 font-sans"
               >
-                We cater to various dietary needs including vegetarian, vegan, gluten-free, and
-                allergen-specific requirements. Please inform our staff about any special dietary
-                needs when making your reservation.
+                {{
+                  languageStore.isAmharic
+                    ? 'የቬጀቴሪያን፣ ቪጋን፣ ከግሉተን ነፃ እና ከአለርጂ የጸዱ ልዩ የምግብ ፍላጎቶችን እናስተናግዳለን። እባክዎ ቦታ ሲያስይዙ ለአስተናጋጆቻችን ያሳውቁ።'
+                    : 'We cater to various dietary needs including vegetarian, vegan, gluten-free, and allergen-specific requirements. Please inform our staff about any special dietary needs when making your reservation.'
+                }}
               </p>
               <div
                 class="text-xs sm:text-sm text-slate-700 dark:text-slate-300 space-y-1 bg-amber-50/50 dark:bg-amber-950/20 p-3.5 sm:p-4 rounded-xl border border-amber-200/50 dark:border-amber-900/30"
               >
                 <p class="leading-relaxed">
-                  For reservations, please call
+                  {{ languageStore.isAmharic ? 'ለቅድመ ማስያዝ እባክዎ በዚህ ይደውሉ፡' : 'For reservations, please call' }}
                   <a
                     href="tel:+251116672434"
                     class="font-bold text-[#3E2723] dark:text-[#D6A94F] hover:underline whitespace-nowrap"
                   >
                     +251 11 667 2434
                   </a>
-                  or email
+                  {{ languageStore.isAmharic ? 'ወይም በኢሜይል ያግኙን፡' : 'or email' }}
                   <a
                     href="mailto:contact@kenenisaevertt.com"
                     class="font-bold text-[#C08A3E] dark:text-[#D6A94F] hover:underline break-all"

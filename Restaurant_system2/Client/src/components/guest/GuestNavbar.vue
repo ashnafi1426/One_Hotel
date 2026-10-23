@@ -57,14 +57,14 @@ function isItemActive(itemRoute: string) {
   return route.path === itemRoute || route.path.startsWith(`${itemRoute}/`)
 }
 
-// Navigation links with clean uppercase titles matching requirements
+// Navigation links with dynamic localized titles supporting English and Amharic
 const menus = computed(() => [
-  { title: 'HOME', route: '/' },
-  { title: 'ROOMS', route: '/rooms' },
-  { title: 'MENU', route: '/menu' },
-  { title: 'GALLERY', route: '/gallery' },
-  { title: 'ABOUT', route: '/about' },
-  { title: 'CONTACT', route: '/contact' },
+  { title: languageStore.isAmharic ? 'መነሻ' : 'HOME', route: '/' },
+  { title: languageStore.isAmharic ? 'ክፍሎች' : 'ROOMS', route: '/rooms' },
+  { title: languageStore.isAmharic ? 'ሜኑ' : 'MENU', route: '/menu' },
+  { title: languageStore.isAmharic ? 'ጋለሪ' : 'GALLERY', route: '/gallery' },
+  { title: languageStore.isAmharic ? 'ስለ እኛ' : 'ABOUT', route: '/about' },
+  { title: languageStore.isAmharic ? 'ያግኙን' : 'CONTACT', route: '/contact' },
 ])
 
 function toggleMenu() {
@@ -125,7 +125,7 @@ onUnmounted(() => {
       <RouterLink
         to="/"
         class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C] rounded-lg"
-        aria-label="Executive Hotel Addis Ababa Home"
+        aria-label="Hotel Addis Ababa Home"
       >
         <!-- Logo Emblem Container: Clean & Transparent (No solid white square background) -->
         <div
@@ -133,7 +133,7 @@ onUnmounted(() => {
         >
           <img
             :src="currentHotelLogo"
-            alt="Executive Hotel Logo"
+            alt="Hotel Logo"
             class="w-full h-full object-contain select-none drop-shadow-md"
             width="48"
             height="48"
@@ -149,14 +149,16 @@ onUnmounted(() => {
         <!-- Brand Typography -->
         <div class="flex flex-col min-w-0">
           <span
-            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase whitespace-nowrap"
+            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold text-white leading-tight uppercase whitespace-nowrap"
+            :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-[0.18em]'"
           >
-            Hotel
+            {{ languageStore.isAmharic ? 'ሆቴል' : 'Hotel' }}
           </span>
           <span
-            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none whitespace-nowrap"
+            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] uppercase mt-0.5 leading-none whitespace-nowrap"
+            :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-[0.25em]'"
           >
-           system
+            {{ languageStore.isAmharic ? 'ሲስተም' : 'system' }}
           </span>
         </div>
       </RouterLink>
@@ -167,8 +169,9 @@ onUnmounted(() => {
           v-for="menu in menus"
           :key="menu.route"
           :to="menu.route"
-          class="text-sm uppercase tracking-widest font-medium transition-colors duration-200 relative py-1.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C89B3C] rounded-sm px-1"
+          class="text-sm uppercase font-medium transition-colors duration-200 relative py-1.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C89B3C] rounded-sm px-1"
           :class="[
+            languageStore.isAmharic ? 'tracking-normal' : 'tracking-widest',
             isItemActive(menu.route)
               ? 'text-[#C89B3C] font-semibold'
               : 'text-slate-300 hover:text-white',
@@ -208,7 +211,8 @@ onUnmounted(() => {
         <!-- "Book Your Stay" Button: Solid warm gold with crisp dark navy text -->
         <RouterLink
           to="/rooms"
-          class="h-9 px-6 flex items-center justify-center rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs tracking-wider uppercase shadow-md transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
+          class="h-9 px-6 flex items-center justify-center rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs uppercase shadow-md transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
+          :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-wider'"
         >
           {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
         </RouterLink>
@@ -282,7 +286,7 @@ onUnmounted(() => {
                   <div class="w-8 h-8 flex items-center justify-center shrink-0">
                     <img
                       :src="currentHotelLogo"
-                      alt="Executive Hotel Logo"
+                      alt="Hotel Logo"
                       class="w-full h-full object-contain"
                       width="32"
                       height="32"
@@ -290,11 +294,17 @@ onUnmounted(() => {
                     />
                   </div>
                   <div class="flex flex-col min-w-0">
-                    <span class="font-serif text-sm font-bold text-white tracking-wider uppercase truncate">
-                      EXECUTIVE HOTEL
+                    <span
+                      class="font-serif text-sm font-bold text-white uppercase truncate"
+                      :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-wider'"
+                    >
+                      {{ languageStore.isAmharic ? 'ሆቴል' : 'Hotel' }}
                     </span>
-                    <span class="text-[9px] font-bold text-[#C89B3C] tracking-widest uppercase">
-                      ADDIS ABABA • LUXURY HOTEL
+                    <span
+                      class="text-[9px] font-bold text-[#C89B3C] uppercase"
+                      :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-widest'"
+                    >
+                      {{ languageStore.isAmharic ? 'ሲስተም' : 'system' }}
                     </span>
                   </div>
                 </div>
@@ -316,8 +326,9 @@ onUnmounted(() => {
                   :key="menu.route"
                   :to="menu.route"
                   @click="closeMenu"
-                  class="flex items-center justify-between py-2.5 px-2 text-sm font-medium tracking-widest uppercase transition-colors group border-b border-slate-800/60 last:border-0"
+                  class="flex items-center justify-between py-2.5 px-2 text-sm font-medium uppercase transition-colors group border-b border-slate-800/60 last:border-0"
                   :class="[
+                    languageStore.isAmharic ? 'tracking-normal' : 'tracking-widest',
                     isItemActive(menu.route)
                       ? 'text-[#C89B3C] font-semibold bg-slate-900/60 rounded-lg'
                       : 'text-slate-300 hover:text-white',
@@ -358,7 +369,8 @@ onUnmounted(() => {
                 <RouterLink
                   to="/rooms"
                   @click="closeMenu"
-                  class="w-full py-3 rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs tracking-wider uppercase text-center shadow-md transition-all block active:scale-[0.99] cursor-pointer"
+                  class="w-full py-3 rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs uppercase text-center shadow-md transition-all block active:scale-[0.99] cursor-pointer"
+                  :class="languageStore.isAmharic ? 'tracking-normal' : 'tracking-wider'"
                 >
                   {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
                 </RouterLink>
