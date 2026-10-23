@@ -18,6 +18,10 @@ export default {
     return publicAxios.get('/guest/menu/items', { params, headers: getGuestHotelHeaders() })
   },
 
+  getPublicCategories(params: any = {}) {
+    return publicAxios.get('/guest/categories', { params, headers: getGuestHotelHeaders() })
+  },
+
   createMenu(data: any) {
     if (data instanceof FormData) {
       return api.post('/menu-items', data, {

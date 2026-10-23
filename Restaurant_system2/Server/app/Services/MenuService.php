@@ -11,9 +11,6 @@ use Illuminate\Support\Str;
 
 class MenuService
 {
-    /**
-     * Invalidate cached menu and category queries.
-     */
     public static function invalidateMenuCache(?string $hotelId = null): void
     {
         Cache::forget('qr_menu_items:single');

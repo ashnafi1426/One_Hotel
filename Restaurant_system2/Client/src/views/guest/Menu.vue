@@ -1,207 +1,177 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import { Search, Phone, Mail, Clock, Utensils, Sparkles } from 'lucide-vue-next'
+import { Search, Clock, Utensils, Sparkles, RefreshCw, AlertCircle } from 'lucide-vue-next'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
+import menuService from '@/services/menuService'
+import { resolveFoodImageUrl, onFoodImageError } from '@/utils/foodImages'
 
 const languageStore = useLanguageStore()
 const guestHotelStore = useGuestHotelStore()
 
-interface Dish {
-  id: string
+interface MenuItem {
+  id: string | number
   name: string
-  category: 'Starter' | 'Pizza' | 'Traditional Dish' | 'Salad' | 'Chicken & Burger' | 'Noodles'
-  price: number
-  priceDisplay: string
-  ingredients: string
-  image: string
-  imageWebp?: string
+  category?: any
+  price: number | string
+  formatted_price?: string
+  description?: string
+  ingredients?: string
+  image?: string | null
+  is_available?: boolean
 }
 
-const categories = [
-  'All',
-  'Starter',
-  'Pizza',
-  'Traditional Dish',
-  'Salad',
-  'Chicken & Burger',
-  'Noodles',
-] as const
+interface CategoryItem {
+  id: string | number
+  name: string
+  slug?: string
+  count?: number
+}
 
-type CategoryType = (typeof categories)[number]
-
-const activeCategory = ref<CategoryType>('All')
+// Dynamic state from backend
+const menuItems = ref<MenuItem[]>([])
+const backendCategories = ref<CategoryItem[]>([])
+const activeCategory = ref<string>('All')
 const searchQuery = ref('')
+const loading = ref(true)
+const error = ref<string | null>(null)
 
-const dishes: Dish[] = [
-  {
-    id: 'd1',
-    name: 'Bozena shiro',
-    category: 'Traditional Dish',
-    price: 3.0,
-    priceDisplay: '$3',
-    ingredients: 'Meat, Oil, Shiro Powder, knorr, Enjera, Oche',
-    image: '/images/food/bozena_shiro.jpg',
-    imageWebp: '/images/food/bozena_shiro.webp',
-  },
-  {
-    id: 'd2',
-    name: 'Shiro Tegabino',
-    category: 'Traditional Dish',
-    price: 2.7,
-    priceDisplay: '$2.7',
-    ingredients: 'Oil, shrio powder, Knor, enjera, Oche',
-    image: '/images/food/shiro_tegabino.jpg',
-    imageWebp: '/images/food/shiro_tegabino.webp',
-  },
-  {
-    id: 'd3',
-    name: 'Lambe Tibs',
-    category: 'Traditional Dish',
-    price: 5.21,
-    priceDisplay: '$5.21',
-    ingredients: 'Lamb, Oche, tomato, Chili, Onion',
-    image: '/images/food/lamb_tibs.jpg',
-    imageWebp: '/images/food/lamb_tibs.webp',
-  },
-  {
-    id: 'd4',
-    name: 'Chiqna Tibs',
-    category: 'Traditional Dish',
-    price: 5.0,
-    priceDisplay: '$5',
-    ingredients: 'Beef fileet, oche, tomato, chill, onion',
-    image: '/images/food/chiqna_tibs.jpg',
-    imageWebp: '/images/food/chiqna_tibs.webp',
-  },
-  {
-    id: 'd5',
-    name: 'Chicken cream soup',
-    category: 'Starter',
-    price: 2.07,
-    priceDisplay: '$2.07',
-    ingredients: 'Chicken breast, flour, Milk, Cream, Table butter, Parsly, Knorrpitta bread, salt',
-    image: '/images/food/chicken_soup.jpg',
-    imageWebp: '/images/food/chicken_soup.webp',
-  },
-  {
-    id: 'd6',
-    name: 'Veggi Soup',
-    category: 'Starter',
-    price: 1.14,
-    priceDisplay: '$1.14',
-    ingredients: 'Flour, Egg, Baking soda, Corn starch, mixed vegetables',
-    image: '/images/food/veggi_soup.jpg',
-    imageWebp: '/images/food/veggi_soup.webp',
-  },
-  {
-    id: 'd7',
-    name: 'Margerta Pizza',
-    category: 'Pizza',
-    price: 3.6,
-    priceDisplay: '$3.6',
-    ingredients: 'Cheese, Tomato sauce, Organo, Chill sauce',
-    image: '/images/food/margherita_pizza.jpg',
-  },
-  {
-    id: 'd8',
-    name: 'Meat Lover Pizza',
-    category: 'Pizza',
-    price: 4.65,
-    priceDisplay: '$4.65',
-    ingredients: 'Tomato sauce, Cheese, Organo, Minced beef, Sauge, Chill sauce',
-    image: '/images/food/meat_lover_pizza.jpg',
-  },
-  {
-    id: 'd9',
-    name: 'Chicken pizza',
-    category: 'Pizza',
-    price: 4.69,
-    priceDisplay: '$4.69',
-    ingredients: 'Bolid chicken, Tomato sauce, Cheese, Orange, Chill sauce, Flour, Yeast, Suger',
-    image: '/images/food/chicken_pizza.jpg',
-  },
-  {
-    id: 'd10',
-    name: 'Mixed Salad',
-    category: 'Salad',
-    price: 3.41,
-    priceDisplay: '$3.41',
-    ingredients: 'Lettuce, Red Cabbgae, Onion, Sweet corn, Singer, Tomato',
-    image: '/images/food/mixed_salad.jpg',
-    imageWebp: '/images/food/mixed_salad.webp',
-  },
-  {
-    id: 'd11',
-    name: 'Strir fride veggi noodles',
-    category: 'Noodles',
-    price: 3.93,
-    priceDisplay: '$3.93',
-    ingredients:
-      'carrot, zucchini, onion, cabbage, oil, baking soda, soy a sauce light, dark soy a sauce, chill flex, oyster sauce, corn starch, noodles, widge spice, broculi, mini bread',
-    image: '/images/food/veggie_noodles.jpg',
-    imageWebp: '/images/food/veggie_noodles.webp',
-  },
-  {
-    id: 'd12',
-    name: 'Strir fride beef noodles',
-    category: 'Noodles',
-    price: 4.45,
-    priceDisplay: '$4.45',
-    ingredients:
-      'beef fillet, carrot, zucchini, onion, cabbage, oil, baking soda, soy a saouce light, dark soy a sauce, chill, flex, oyster sauce, corn starch, noodles, wodge spice, broccoli',
-    image: '/images/food/beef_noodles.jpg',
-    imageWebp: '/images/food/beef_noodles.webp',
-  },
-  {
-    id: 'd13',
-    name: 'Classic Crispy Chicken Burger',
-    category: 'Chicken & Burger',
-    price: 4.2,
-    priceDisplay: '$4.20',
-    ingredients:
-      'Crispy golden chicken breast, melted cheddar cheese, fresh lettuce, pickles, house special sauce, toasted brioche bun',
-    image: '/images/food/chicken_burger.jpg',
-  },
-  {
-    id: 'd14',
-    name: 'Gourmet Double Beef Burger',
-    category: 'Chicken & Burger',
-    price: 4.8,
-    priceDisplay: '$4.80',
-    ingredients:
-      'Prime ground beef patties, caramelized onions, smoked cheddar cheese, ripe tomato, artisanal brioche bun',
-    image: '/images/food/beef_burger.jpg',
-  },
-]
+function getItemCategory(item: MenuItem): string {
+  if (!item) return 'Other'
+  if (typeof item.category === 'string' && item.category.trim()) {
+    return item.category.trim()
+  }
+  if (item.category && typeof item.category === 'object' && item.category.name) {
+    return String(item.category.name).trim()
+  }
+  return 'Other'
+}
 
+// Dynamically derived category tabs from backend data
+const categories = computed<string[]>(() => {
+  const list: string[] = ['All']
+
+  // 1. From backend categories endpoint
+  backendCategories.value.forEach((c) => {
+    const name = typeof c === 'string' ? c : c?.name
+    if (name && !list.includes(name)) {
+      list.push(name)
+    }
+  })
+
+  // 2. From actual menu items
+  menuItems.value.forEach((item) => {
+    const cat = getItemCategory(item)
+    if (cat && cat !== 'Other' && !list.includes(cat)) {
+      list.push(cat)
+    }
+  })
+
+  // If any item ended up in 'Other', add to end
+  const hasOther = menuItems.value.some((item) => getItemCategory(item) === 'Other')
+  if (hasOther && !list.includes('Other')) {
+    list.push('Other')
+  }
+
+  return list
+})
+
+function getCategoryCount(catName: string): number {
+  if (catName === 'All') return menuItems.value.length
+  return menuItems.value.filter(
+    (item) => getItemCategory(item).toLowerCase() === catName.toLowerCase(),
+  ).length
+}
+
+// Filtered dishes computed dynamically
 const filteredDishes = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
-  return dishes.filter((dish) => {
+  return menuItems.value.filter((item) => {
+    const cat = getItemCategory(item)
     const matchesCategory =
-      activeCategory.value === 'All' || dish.category === activeCategory.value
+      activeCategory.value === 'All' || cat.toLowerCase() === activeCategory.value.toLowerCase()
+
+    const description = item.description || item.ingredients || ''
     const matchesSearch =
       !query ||
-      dish.name.toLowerCase().includes(query) ||
-      dish.ingredients.toLowerCase().includes(query) ||
-      dish.category.toLowerCase().includes(query)
+      item.name.toLowerCase().includes(query) ||
+      description.toLowerCase().includes(query) ||
+      cat.toLowerCase().includes(query)
+
     return matchesCategory && matchesSearch
   })
 })
 
-function getCategoryCount(cat: CategoryType): number {
-  if (cat === 'All') return dishes.length
-  return dishes.filter((d) => d.category === cat).length
+function formatPrice(price: number | string | undefined): string {
+  const val = Number(price) || 0
+  const currency = guestHotelStore.currency || '$'
+  if (currency === '$' || currency === 'USD') {
+    return `$${val % 1 === 0 ? val : val.toFixed(2)}`
+  }
+  return `${val.toLocaleString()} ${currency}`
 }
 
-function handleImageError(event: Event) {
-  const img = event.target as HTMLImageElement
-  if (!img.dataset.fallback) {
-    img.dataset.fallback = 'true'
-    img.src = '/images/gallery/fine-dining.jpg'
+function getDishImage(item: MenuItem): string {
+  if (item.image) {
+    return resolveFoodImageUrl(item.image, item.name)
+  }
+  const n = (item.name || '').toLowerCase()
+  if (n.includes('shiro')) return '/images/food/bozena_shiro.webp'
+  if (n.includes('tibs')) return '/images/food/lamb_tibs.webp'
+  if (n.includes('soup') && n.includes('chicken')) return '/images/food/chicken_soup.webp'
+  if (n.includes('soup')) return '/images/food/veggi_soup.webp'
+  if (n.includes('pizza')) return '/images/food/margherita_pizza.jpg'
+  if (n.includes('noodle')) return '/images/food/veggie_noodles.webp'
+  if (n.includes('salad')) return '/images/food/mixed_salad.webp'
+  if (n.includes('burger')) return '/images/food/beef_burger.jpg'
+  return resolveFoodImageUrl(null, item.name)
+}
+
+function handleImageError(event: Event, item: MenuItem) {
+  onFoodImageError(event, item.name)
+}
+
+// Fetch all menu items and categories directly from backend
+async function fetchMenuData() {
+  loading.value = true
+  error.value = null
+  try {
+    const [itemsResult, catsResult] = await Promise.allSettled([
+      menuService.getPublicMenus({ flat: 1, is_available: 1 }),
+      menuService.getPublicCategories(),
+    ])
+
+    if (itemsResult.status === 'fulfilled') {
+      const res = itemsResult.value
+      const data = res.data?.data || res.data || []
+      menuItems.value = Array.isArray(data) ? data : []
+    } else {
+      console.warn('[Menu] Failed to fetch items:', itemsResult.reason)
+    }
+
+    if (catsResult.status === 'fulfilled') {
+      const res = catsResult.value
+      const data = res.data?.data || res.data || []
+      backendCategories.value = Array.isArray(data) ? data : []
+    } else {
+      console.warn('[Menu] Failed to fetch categories:', catsResult.reason)
+    }
+
+    if (menuItems.value.length === 0 && itemsResult.status === 'rejected') {
+      error.value = 'Failed to load restaurant menu from server. Please try again.'
+    }
+  } catch (err: any) {
+    console.error('[Menu] Error fetching menu data:', err)
+    error.value = err?.message || 'Failed to load menu items.'
+  } finally {
+    loading.value = false
   }
 }
+
+onMounted(() => {
+  fetchMenuData()
+})
 </script>
 
 <template>
@@ -243,15 +213,16 @@ function handleImageError(event: Event) {
             <button
               v-if="searchQuery"
               @click="searchQuery = ''"
-              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
             >
               Clear
             </button>
           </div>
         </header>
 
-        <!-- Category Pills Navigation -->
+        <!-- Category Pills Navigation (Fetched dynamically from Backend) -->
         <nav
+          v-if="categories.length > 1"
           class="flex items-center gap-2.5 overflow-x-auto pb-4 mb-8 sm:mb-10 no-scrollbar justify-start md:justify-center px-1"
           aria-label="Menu categories"
         >
@@ -279,10 +250,54 @@ function handleImageError(event: Event) {
           </button>
         </nav>
 
-        <!-- Menu Cards Grid -->
+        <!-- Main Content Area -->
         <main>
+          <!-- Loading State Skeletons -->
+          <div v-if="loading" class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 animate-pulse">
+            <div
+              v-for="i in 6"
+              :key="`skeleton-${i}`"
+              class="bg-white dark:bg-[#182235] rounded-2xl p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-4"
+            >
+              <div
+                class="w-[115px] sm:w-[135px] h-[105px] sm:h-[120px] rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0"
+              />
+              <div class="flex-1 space-y-2.5 py-1">
+                <div class="flex justify-between items-center">
+                  <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
+                  <div class="h-4 bg-amber-200/50 dark:bg-amber-900/30 rounded w-12" />
+                </div>
+                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-full" />
+                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-4/5" />
+                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/4 mt-2" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Error State -->
           <div
-            v-if="filteredDishes.length > 0"
+            v-else-if="error"
+            class="text-center py-12 bg-white dark:bg-[#182235] rounded-2xl border border-red-200 dark:border-red-900/50 p-8 max-w-lg mx-auto"
+          >
+            <AlertCircle class="w-12 h-12 text-red-500 mx-auto mb-3" />
+            <h3 class="font-serif text-lg font-bold text-red-900 dark:text-red-300">
+              Unable to load menu
+            </h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-1 mb-4">
+              {{ error }}
+            </p>
+            <button
+              @click="fetchMenuData"
+              class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4A2C2A] text-white text-xs font-semibold rounded-full hover:bg-[#3E2723] transition cursor-pointer"
+            >
+              <RefreshCw class="w-3.5 h-3.5" />
+              Try Again
+            </button>
+          </div>
+
+          <!-- Menu Cards Grid -->
+          <div
+            v-else-if="filteredDishes.length > 0"
             class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6"
           >
             <article
@@ -290,23 +305,20 @@ function handleImageError(event: Event) {
               :key="dish.id"
               class="bg-white dark:bg-[#182235] rounded-2xl p-3.5 sm:p-4 shadow-[0_2px_10px_rgba(0,0,0,0.04)] hover:shadow-md border border-slate-100/90 dark:border-slate-800/80 transition-all duration-300 flex flex-row items-center gap-4 group"
             >
-              <!-- Dish Image with WebP picture support -->
+              <!-- Dish Image -->
               <div
                 class="w-[115px] sm:w-[135px] h-[105px] sm:h-[120px] rounded-xl overflow-hidden bg-slate-100 dark:bg-slate-800 shrink-0 relative"
               >
-                <picture class="block w-full h-full">
-                  <source v-if="dish.imageWebp" :srcset="dish.imageWebp" type="image/webp" />
-                  <img
-                    :src="dish.image"
-                    :alt="dish.name"
-                    class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
-                    decoding="async"
-                    width="135"
-                    height="120"
-                    @error="handleImageError"
-                  />
-                </picture>
+                <img
+                  :src="getDishImage(dish)"
+                  :alt="dish.name"
+                  class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  loading="lazy"
+                  decoding="async"
+                  width="135"
+                  height="120"
+                  @error="handleImageError($event, dish)"
+                />
               </div>
 
               <!-- Dish Details -->
@@ -322,22 +334,22 @@ function handleImageError(event: Event) {
                   <span
                     class="text-[#C08A3E] dark:text-[#E5A84B] font-bold text-base sm:text-[17px] whitespace-nowrap shrink-0"
                   >
-                    {{ dish.priceDisplay }}
+                    {{ formatPrice(dish.price) }}
                   </span>
                 </div>
 
-                <!-- Bottom Row: Ingredients -->
+                <!-- Bottom Row: Ingredients / Description -->
                 <p
                   class="text-[12px] sm:text-[13px] text-[#6B7280] dark:text-slate-400 font-sans leading-relaxed line-clamp-3 mt-1.5"
                 >
-                  {{ dish.ingredients }}
+                  {{ dish.description || dish.ingredients || 'Prepared fresh with premium ingredients by our seasoned chefs.' }}
                 </p>
 
-                <!-- Subtle Category indicator -->
+                <!-- Category indicator -->
                 <div class="mt-2 flex items-center justify-between text-[11px] text-slate-400">
                   <span class="inline-flex items-center gap-1 font-medium text-[#C08A3E]/90">
                     <Utensils class="w-3 h-3" />
-                    {{ dish.category }}
+                    {{ getItemCategory(dish) }}
                   </span>
                 </div>
               </div>
@@ -354,8 +366,8 @@ function handleImageError(event: Event) {
               No menu items found
             </h3>
             <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              No dishes match your search "{{ searchQuery }}". Try adjusting your filter or search
-              term.
+              No dishes match your filter "{{ activeCategory }}"
+              <span v-if="searchQuery"> or search "{{ searchQuery }}"</span>.
             </p>
             <button
               @click="
@@ -364,7 +376,7 @@ function handleImageError(event: Event) {
                   searchQuery = ''
                 }
               "
-              class="mt-4 px-4 py-2 bg-[#4A2C2A] text-white text-xs font-semibold rounded-full hover:bg-[#3E2723] transition"
+              class="mt-4 px-4 py-2 bg-[#4A2C2A] text-white text-xs font-semibold rounded-full hover:bg-[#3E2723] transition cursor-pointer"
             >
               Reset Filters
             </button>
