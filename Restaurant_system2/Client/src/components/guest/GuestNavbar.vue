@@ -116,8 +116,8 @@ onUnmounted(() => {
 
 <template>
   <header
-    class="sticky top-0 z-50 w-full transition-all duration-300 select-none bg-[#0B1320] border-b border-slate-800/80"
-    :class="[scrolled ? 'shadow-lg shadow-black/40 backdrop-blur-md bg-[#0B1320]/95' : 'shadow-none']"
+    class="sticky top-0 z-50 w-full transition-all duration-300 select-none bg-[#0B1320] border-0 border-none outline-none shadow-none"
+    :class="[scrolled ? 'shadow-lg shadow-black/40 backdrop-blur-md bg-[#0B1320]/95' : '']"
   >
     <!-- Main Header Bar Container -->
     <div class="max-w-7xl mx-auto px-6 md:px-12 py-3.5 flex items-center justify-between">
@@ -382,3 +382,12 @@ onUnmounted(() => {
     </Teleport>
   </header>
 </template>
+
+<style scoped>
+header {
+  border: none !important;
+  border-bottom: none !important;
+  border-top: none !important;
+  outline: none !important;
+}
+</style>
