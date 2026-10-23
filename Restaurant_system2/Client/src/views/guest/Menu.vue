@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import GuestLayout from '@/Layouts/GuestLayout.vue'
-import { Search, Clock, Utensils, Sparkles, RefreshCw, AlertCircle } from 'lucide-vue-next'
+import { Search, Clock, Utensils, Sparkles, RefreshCw, AlertCircle, ChefHat } from 'lucide-vue-next'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 import menuService from '@/services/menuService'
@@ -20,63 +20,54 @@ interface MenuItem {
   image?: string | null
 }
 
-// Frontend local image mapping - loads in < 20ms without any 20-second network delay!
-const FRONTEND_IMAGE_MAP: Record<string, string> = {
-  'bozena shiro': '/images/food/bozena_shiro.webp',
-  'shiro tegabino': '/images/food/shiro_tegabino.webp',
-  'shiro': '/images/food/bozena_shiro.webp',
-  'lambe tibs': '/images/food/lamb_tibs.webp',
-  'lamb tibs': '/images/food/lamb_tibs.webp',
-  'chiqna tibs': '/images/food/chiqna_tibs.webp',
-  'tibs': '/images/food/lamb_tibs.webp',
-  'chicken cream soup': '/images/food/chicken_soup.webp',
-  'chicken soup': '/images/food/chicken_soup.webp',
-  'veggi soup': '/images/food/veggi_soup.webp',
-  'vegetable soup': '/images/food/veggi_soup.webp',
-  'soup': '/images/food/veggi_soup.webp',
-  'margerta pizza': '/images/food/margherita_pizza.jpg',
-  'margherita pizza': '/images/food/margherita_pizza.jpg',
-  'meat lover pizza': '/images/food/meat_lover_pizza.jpg',
-  'chicken pizza': '/images/food/chicken_pizza.jpg',
-  'pizza': '/images/food/margherita_pizza.jpg',
-  'mixed salad': '/images/food/mixed_salad.webp',
-  'salad': '/images/food/mixed_salad.webp',
-  'strir fride veggi noodles': '/images/food/veggie_noodles.webp',
-  'veggie noodles': '/images/food/veggie_noodles.webp',
-  'strir fride beef noodles': '/images/food/beef_noodles.webp',
-  'beef noodles': '/images/food/beef_noodles.webp',
-  'noodle': '/images/food/veggie_noodles.webp',
-  'noodles': '/images/food/veggie_noodles.webp',
-  'classic crispy chicken burger': '/images/food/chicken_burger.jpg',
-  'chicken burger': '/images/food/chicken_burger.jpg',
-  'gourmet double beef burger': '/images/food/beef_burger.jpg',
-  'beef burger': '/images/food/beef_burger.jpg',
-  'burger': '/images/food/burger.jpg',
-  'coffee': '/images/food/coffee.jpg',
-  'dessert': '/images/food/dessert.jpg',
-}
+// Local frontend image mapping for instant, ultra-fast loading (< 20ms)
+const FRONTEND_IMAGE_MAP: [RegExp, string][] = [
+  // Ethiopian Specialties
+  [/shiro/i, '/images/food/bozena_shiro.webp'],
+  [/tibs/i, '/images/food/lamb_tibs.webp'],
+  [/asanbussa|sambusa|samosa/i, '/images/food/sambusa.webp'],
+  // Sandwiches
+  [/sandu?a?ch|sandwich|panini/i, '/images/food/sandwich.webp'],
+  // Seafood
+  [/lobster|shrimp|salmon|seafood/i, '/images/food/lobster_tail.webp'],
+  // Soups & Starters
+  [/chicken.*soup|cream.*soup/i, '/images/food/chicken_soup.webp'],
+  [/vegg?i.*soup|vegetable.*soup/i, '/images/food/veggi_soup.webp'],
+  [/soup/i, '/images/food/veggi_soup.webp'],
+  // Pizzas
+  [/meat.*lover|pepperoni|beef.*pizza/i, '/images/food/meat_lover_pizza.jpg'],
+  [/chicken.*pizza/i, '/images/food/chicken_pizza.jpg'],
+  [/marge?r[ei]ta|pizza/i, '/images/food/margherita_pizza.jpg'],
+  // Burgers
+  [/chicken.*burger/i, '/images/food/chicken_burger.jpg'],
+  [/beef.*burger|burger/i, '/images/food/beef_burger.jpg'],
+  // Salads
+  [/salad/i, '/images/food/mixed_salad.webp'],
+  // Noodles & Pasta
+  [/beef.*noodle/i, '/images/food/beef_noodles.webp'],
+  [/noodle|pasta|spaghetti/i, '/images/food/veggie_noodles.webp'],
+  // Desserts & Beverages
+  [/cake|dessert|sweet/i, '/images/food/dessert.jpg'],
+  [/coffee|tea|juice|drink|beverage/i, '/images/food/coffee.jpg'],
+]
 
 /**
- * Resolves images directly from the local frontend assets for ultra-fast instant rendering.
+ * Resolves images with high accuracy based on item name and category.
  */
 function getFrontendDishImage(itemName: string = '', categoryName: string = ''): string {
-  const n = (itemName || '').toLowerCase().trim()
-  const c = (categoryName || '').toLowerCase().trim()
-
-  // 1. Direct name lookup or partial match
-  for (const [key, path] of Object.entries(FRONTEND_IMAGE_MAP)) {
-    if (n.includes(key)) {
+  const name = (itemName || '').trim()
+  for (const [pattern, path] of FRONTEND_IMAGE_MAP) {
+    if (pattern.test(name)) {
       return path
     }
   }
 
-  // 2. Category fallback
-  if (c.includes('traditional') || c.includes('habesha')) return '/images/food/bozena_shiro.webp'
-  if (c.includes('pizza')) return '/images/food/margherita_pizza.jpg'
-  if (c.includes('soup') || c.includes('starter')) return '/images/food/chicken_soup.webp'
-  if (c.includes('salad')) return '/images/food/mixed_salad.webp'
-  if (c.includes('noodle') || c.includes('pasta')) return '/images/food/veggie_noodles.webp'
-  if (c.includes('burger') || c.includes('chicken')) return '/images/food/chicken_burger.jpg'
+  const cat = (categoryName || '').trim()
+  for (const [pattern, path] of FRONTEND_IMAGE_MAP) {
+    if (pattern.test(cat)) {
+      return path
+    }
+  }
 
   return '/images/food/mixed_salad.webp'
 }
@@ -87,45 +78,73 @@ const backendCategories = ref<string[]>([])
 const activeCategory = ref<string>('All')
 const searchQuery = ref('')
 const loading = ref(true)
-const error = ref<string | null>(null)
+const isSyncingBackground = ref(false)
+const fetchError = ref<string | null>(null)
 const imagesLoaded = ref<Record<string, boolean>>({})
 
-// Categories are fetched dynamically from backend (NOT fixed)
-const categories = computed<string[]>(() => {
-  const set = new Set<string>(['All'])
+// Loading animation step timer
+const loadingElapsedSeconds = ref(0)
+let loadingTimer: any = null
 
-  // Add backend categories returned from API
-  backendCategories.value.forEach((cat) => {
-    if (cat && typeof cat === 'string' && cat.trim()) {
-      set.add(cat.trim())
-    }
-  })
-
-  // Also include any category names discovered in menu items
-  menuItems.value.forEach((item) => {
-    const c = (item.category || '').trim()
-    if (c && c !== 'Other') {
-      set.add(c)
-    }
-  })
-
-  return Array.from(set)
+const loadingStageMessage = computed(() => {
+  if (loadingElapsedSeconds.value < 2) {
+    return 'Connecting to Executive Kitchen...'
+  } else if (loadingElapsedSeconds.value < 5) {
+    return "Fetching today's culinary specialties & seasonal dishes..."
+  } else {
+    return 'Waking up our live kitchen server, preparing your menu...'
+  }
 })
+
+function formatCategoryName(name: string): string {
+  if (!name) return 'Other'
+  const cleaned = name.replace(/[-_]+/g, ' ').trim()
+  return cleaned
+    .split(' ')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
+}
 
 function getItemCategory(item: any): string {
   if (!item) return 'Other'
   if (typeof item.category === 'string' && item.category.trim()) {
-    return item.category.trim()
+    return formatCategoryName(item.category)
   }
   if (item.category && typeof item.category === 'object' && item.category.name) {
-    return String(item.category.name).trim()
+    return formatCategoryName(String(item.category.name))
   }
   return 'Other'
 }
 
+// Dynamic Categories: ONLY categories with available dishes (> 0 items)
+const categories = computed<string[]>(() => {
+  const set = new Set<string>()
+
+  // Collect category names from actual dishes available
+  menuItems.value.forEach((item) => {
+    const cat = getItemCategory(item)
+    if (cat && cat !== 'Other') {
+      set.add(cat)
+    }
+  })
+
+  // Also include active backend categories if they match items
+  backendCategories.value.forEach((rawCat) => {
+    const formatted = formatCategoryName(rawCat)
+    if (formatted && formatted !== 'Other') {
+      const hasDish = menuItems.value.some((item) => getItemCategory(item) === formatted)
+      if (hasDish) {
+        set.add(formatted)
+      }
+    }
+  })
+
+  return ['All', ...Array.from(set)]
+})
+
 function formatPrice(price: number | string | undefined): string {
   const val = Number(price) || 0
-  const currency = guestHotelStore.currency || '$'
+  const currency = guestHotelStore.currency || 'ETB'
   if (currency === '$' || currency === 'USD') {
     return `$${val % 1 === 0 ? val : val.toFixed(2)}`
   }
@@ -136,19 +155,19 @@ function handleImageLoad(id: string | number) {
   imagesLoaded.value[String(id)] = true
 }
 
-function handleImageError(event: Event) {
+function handleImageError(event: Event, item: MenuItem) {
   const img = event.target as HTMLImageElement
   if (!img.dataset.fallback) {
     img.dataset.fallback = 'true'
-    img.src = '/images/food/mixed_salad.webp'
+    img.src = getFrontendDishImage(item.name, item.category)
   }
 }
 
-// Filtered dishes computed
+// Filtered dishes
 const filteredDishes = computed(() => {
   const query = searchQuery.value.trim().toLowerCase()
   return menuItems.value.filter((item) => {
-    const cat = (item.category || '').trim()
+    const cat = getItemCategory(item)
     const matchesCategory =
       activeCategory.value === 'All' || cat.toLowerCase() === activeCategory.value.toLowerCase()
 
@@ -163,87 +182,134 @@ const filteredDishes = computed(() => {
   })
 })
 
-// Fetch categories and dishes from backend with local cache for instant load
-async function fetchMenuAndCategories() {
-  // Check local cache first so page opens in 0ms without waiting 20s
-  const cachedItems = localStorage.getItem('guest_menu_items_cache')
-  const cachedCats = localStorage.getItem('guest_menu_categories_cache')
+const CACHE_KEY = 'restaurant_guest_menu_cache_v2'
 
-  if (cachedItems) {
+/**
+ * Fetch menu items and categories directly from backend.
+ * Uses smart caching for 0ms return visits and displays a luxury loading spinner on first load.
+ */
+async function fetchMenuFromBackend() {
+  fetchError.value = null
+
+  // 1. Check local cache first for instant load
+  const cached = localStorage.getItem(CACHE_KEY)
+  if (cached) {
     try {
-      const parsed = JSON.parse(cachedItems)
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        menuItems.value = parsed
+      const parsed = JSON.parse(cached)
+      if (Array.isArray(parsed?.items) && parsed.items.length > 0) {
+        menuItems.value = parsed.items
+        if (Array.isArray(parsed.categories)) {
+          backendCategories.value = parsed.categories
+        }
         loading.value = false
+        isSyncingBackground.value = true
       }
     } catch (_) {}
   }
 
-  if (cachedCats) {
-    try {
-      const parsedCats = JSON.parse(cachedCats)
-      if (Array.isArray(parsedCats) && parsedCats.length > 0) {
-        backendCategories.value = parsedCats
-      }
-    } catch (_) {}
+  // If no cache, start timer for loading spinner message progression
+  if (menuItems.value.length === 0) {
+    loading.value = true
+    loadingElapsedSeconds.value = 0
+    clearInterval(loadingTimer)
+    loadingTimer = setInterval(() => {
+      loadingElapsedSeconds.value += 1
+    }, 1000)
   }
 
   try {
-    // 6-second timeout so a sleeping Render backend never freezes the page for 20s
-    const timeoutPromise = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('timeout')), 7000),
-    )
-
-    const fetchPromise = Promise.allSettled([
+    // Concurrent fetch from backend API
+    const [menuRes, catRes] = await Promise.allSettled([
       menuService.getPublicMenus({ flat: 1, is_available: 1 }),
       menuService.getPublicCategories(),
     ])
 
-    const results: any = await Promise.race([fetchPromise, timeoutPromise])
+    // Process menu items
+    if (menuRes.status === 'fulfilled') {
+      const resData = menuRes.value.data?.data || menuRes.value.data || []
+      let rawList: any[] = []
 
-    const [itemsResult, catsResult] = results
+      // Handle grouped or flat structures
+      if (Array.isArray(resData)) {
+        if (resData.length > 0 && Array.isArray((resData[0] as any)?.items)) {
+          rawList = resData.flatMap((g: any) =>
+            (g.items || []).map((item: any) => ({
+              ...item,
+              category: g.category || item.category,
+            })),
+          )
+        } else {
+          rawList = resData
+        }
+      }
 
-    // 1. Process dishes from backend
-    if (itemsResult?.status === 'fulfilled') {
-      const res = itemsResult.value
-      const rawList = res.data?.data || res.data || []
-      if (Array.isArray(rawList) && rawList.length > 0) {
-        const formattedItems: MenuItem[] = rawList.map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          category: getItemCategory(item),
-          price: item.price,
-          description: item.description || item.ingredients || '',
-          // Image comes from frontend matching for instant 0s load
-          image: getFrontendDishImage(item.name, getItemCategory(item)),
-        }))
+      if (rawList.length > 0) {
+        const parsedItems: MenuItem[] = rawList.map((item: any) => {
+          const cat = getItemCategory(item)
+          // Resolve fast image from frontend mapping
+          const image = getFrontendDishImage(item.name, cat)
 
-        menuItems.value = formattedItems
-        localStorage.setItem('guest_menu_items_cache', JSON.stringify(formattedItems))
+          return {
+            id: item.id,
+            name: item.name,
+            category: cat,
+            price: item.total_price != null ? item.total_price : item.price || 0,
+            description:
+              item.description ||
+              item.ingredients ||
+              'Prepared fresh with premium ingredients by our seasoned chefs.',
+            image,
+          }
+        })
+
+        menuItems.value = parsedItems
+
+        // Process categories
+        let parsedCats: string[] = []
+        if (catRes.status === 'fulfilled') {
+          const catData = catRes.value.data?.data || catRes.value.data || []
+          if (Array.isArray(catData)) {
+            parsedCats = catData
+              .map((c: any) => (typeof c === 'string' ? c : c?.name || c?.slug))
+              .filter(Boolean)
+            backendCategories.value = parsedCats
+          }
+        }
+
+        // Cache for instant return visits
+        localStorage.setItem(
+          CACHE_KEY,
+          JSON.stringify({
+            items: parsedItems,
+            categories: parsedCats,
+            savedAt: Date.now(),
+          }),
+        )
+      }
+    } else {
+      console.warn('[Menu] Menu fetch error:', menuRes.reason)
+      if (menuItems.value.length === 0) {
+        fetchError.value = 'Unable to connect to the kitchen server. Please try again.'
       }
     }
-
-    // 2. Process categories from backend (NOT fixed!)
-    if (catsResult?.status === 'fulfilled') {
-      const res = catsResult.value
-      const rawCats = res.data?.data || res.data || []
-      if (Array.isArray(rawCats) && rawCats.length > 0) {
-        const extracted = rawCats
-          .map((c: any) => (typeof c === 'string' ? c : c?.name))
-          .filter(Boolean)
-        backendCategories.value = extracted
-        localStorage.setItem('guest_menu_categories_cache', JSON.stringify(extracted))
-      }
+  } catch (err: any) {
+    console.error('[Menu] Fetch error:', err)
+    if (menuItems.value.length === 0) {
+      fetchError.value = 'Failed to load menu items. Please check your connection and retry.'
     }
-  } catch (err) {
-    console.warn('[Menu] Background fetch took long or failed, using fast cache:', err)
   } finally {
+    clearInterval(loadingTimer)
     loading.value = false
+    isSyncingBackground.value = false
   }
 }
 
 onMounted(() => {
-  fetchMenuAndCategories()
+  fetchMenuFromBackend()
+})
+
+onUnmounted(() => {
+  if (loadingTimer) clearInterval(loadingTimer)
 })
 </script>
 
@@ -255,6 +321,11 @@ onMounted(() => {
       <div class="max-w-6xl mx-auto">
         <!-- Header Section -->
         <header class="text-center mb-6 sm:mb-10">
+          <div class="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-amber-500/10 text-[#C08A3E] dark:text-[#E5A84B] mb-2 border border-[#C08A3E]/30">
+            <Sparkles class="w-3.5 h-3.5" />
+            <span>Executive Culinary Experience</span>
+          </div>
+
           <h1
             class="font-serif text-3xl sm:text-4xl lg:text-5xl font-bold text-[#3E2723] dark:text-[#F3EBDD] tracking-tight leading-tight"
           >
@@ -292,11 +363,20 @@ onMounted(() => {
               ✕
             </button>
           </div>
+
+          <!-- Subtle Background Sync Indicator -->
+          <div
+            v-if="isSyncingBackground && menuItems.length > 0"
+            class="mt-2 inline-flex items-center gap-1.5 text-[11px] text-[#C08A3E] dark:text-[#E5A84B] animate-pulse"
+          >
+            <RefreshCw class="w-3 h-3 animate-spin" />
+            <span>Syncing latest kitchen updates...</span>
+          </div>
         </header>
 
-        <!-- Category Pills Navigation (Fetched dynamically from Backend, Screenshot 1 design) -->
+        <!-- Category Pills Navigation (Fetched dynamically from Backend, clean >0 dishes) -->
         <nav
-          v-if="categories.length > 1"
+          v-if="categories.length > 1 && !loading"
           class="flex items-center gap-2 sm:gap-2.5 overflow-x-auto pb-3 mb-6 sm:mb-8 md:mb-10 no-scrollbar justify-start md:justify-center px-1"
           aria-label="Menu categories"
         >
@@ -318,28 +398,96 @@ onMounted(() => {
 
         <!-- Main Content Area -->
         <main>
-          <!-- Fast Loading Skeleton (Only shown if zero cache on first visit) -->
+          <!-- LUXURY LOADING SPINNER: Displayed while fetching menu from backend -->
           <div
             v-if="loading && menuItems.length === 0"
-            class="grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 md:gap-6 animate-pulse"
+            class="py-14 sm:py-20 flex flex-col items-center justify-center text-center px-4"
           >
-            <div
-              v-for="i in 6"
-              :key="`skeleton-${i}`"
-              class="bg-white dark:bg-[#182235] rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-sm border border-slate-100 dark:border-slate-800 flex items-center gap-3 sm:gap-4"
-            >
+            <!-- Animated Luxury Golden Dual-Ring Spinner -->
+            <div class="relative w-20 h-20 sm:w-24 sm:h-24 mb-6">
+              <!-- Outer glowing pulse ring -->
               <div
-                class="w-[100px] sm:w-[125px] md:w-[140px] h-[95px] sm:h-[110px] md:h-[120px] rounded-lg sm:rounded-xl bg-slate-200 dark:bg-slate-700 shrink-0"
+                class="absolute inset-0 rounded-full border-4 border-[#C08A3E]/20 animate-ping opacity-40"
               />
-              <div class="flex-1 space-y-2.5 py-1">
-                <div class="flex justify-between items-center">
-                  <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
-                  <div class="h-4 bg-amber-200/50 dark:bg-amber-900/30 rounded w-12" />
-                </div>
-                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-full" />
-                <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-4/5" />
+              <!-- Middle track -->
+              <div
+                class="absolute inset-0 rounded-full border-4 border-slate-200/60 dark:border-slate-700/60"
+              />
+              <!-- Rotating Golden Gradient Arc -->
+              <div
+                class="absolute inset-0 rounded-full border-4 border-transparent border-t-[#C08A3E] border-r-[#D97706] animate-spin"
+              />
+              <!-- Center Pulse Icon -->
+              <div class="absolute inset-0 flex items-center justify-center">
+                <ChefHat class="w-8 h-8 sm:w-9 sm:h-9 text-[#C08A3E] animate-bounce" />
               </div>
             </div>
+
+            <!-- Title & Subtitle -->
+            <h2
+              class="font-serif text-xl sm:text-2xl font-bold text-[#3E2723] dark:text-[#F3EBDD] tracking-tight mb-2"
+            >
+              Loading Our Restaurant Menu
+            </h2>
+            <p
+              class="text-xs sm:text-sm text-[#6B7280] dark:text-slate-400 font-sans max-w-md mx-auto leading-relaxed mb-5"
+            >
+              {{ loadingStageMessage }}
+            </p>
+
+            <!-- Golden Shimmer Progress Bar -->
+            <div class="w-64 sm:w-72 h-1.5 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden relative mb-3">
+              <div
+                class="h-full bg-gradient-to-r from-[#D97706] via-[#F59E0B] to-[#C08A3E] rounded-full shimmer-bar"
+              />
+            </div>
+
+            <!-- Server Warm-up Reassurance Note -->
+            <p
+              v-if="loadingElapsedSeconds > 4"
+              class="text-[11px] sm:text-xs text-amber-700/80 dark:text-amber-400/80 max-w-sm mx-auto font-medium transition-opacity duration-300"
+            >
+              ⚡ Connecting with backend server. Thank you for your patience...
+            </p>
+
+            <!-- Skeleton Outlines Behind for layout stability -->
+            <div class="w-full mt-10 grid grid-cols-1 md:grid-cols-2 gap-3.5 sm:gap-4 md:gap-6 opacity-30 pointer-events-none">
+              <div
+                v-for="i in 4"
+                :key="`bg-skel-${i}`"
+                class="bg-white dark:bg-[#182235] rounded-xl p-3 sm:p-4 border border-slate-200 dark:border-slate-800 flex items-center gap-3"
+              >
+                <div class="w-24 h-20 rounded-lg bg-slate-200 dark:bg-slate-700 shrink-0" />
+                <div class="flex-1 space-y-2">
+                  <div class="h-4 bg-slate-200 dark:bg-slate-700 rounded w-2/3" />
+                  <div class="h-3 bg-slate-100 dark:bg-slate-800 rounded w-full" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error State with Retry Button -->
+          <div
+            v-else-if="fetchError && menuItems.length === 0"
+            class="text-center py-12 sm:py-16 bg-white dark:bg-[#182235] rounded-2xl border border-rose-200/80 dark:border-rose-900/40 p-6 sm:p-8 max-w-lg mx-auto shadow-sm"
+          >
+            <div class="w-12 h-12 rounded-full bg-rose-50 dark:bg-rose-950/50 text-rose-500 mx-auto flex items-center justify-center mb-3">
+              <AlertCircle class="w-6 h-6" />
+            </div>
+            <h3 class="font-serif text-lg font-bold text-[#3E2723] dark:text-white">
+              Unable to Load Menu
+            </h3>
+            <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1 mb-5 leading-relaxed">
+              {{ fetchError }}
+            </p>
+            <button
+              @click="fetchMenuFromBackend"
+              type="button"
+              class="inline-flex items-center gap-2 px-5 py-2.5 bg-[#4A2C2A] hover:bg-[#3E2723] text-white text-xs sm:text-sm font-semibold rounded-full shadow-sm hover:shadow transition cursor-pointer"
+            >
+              <RefreshCw class="w-3.5 h-3.5" />
+              <span>Retry Kitchen Connection</span>
+            </button>
           </div>
 
           <!-- Menu Cards Grid (Responsive across mobile, tablet, and desktop) -->
@@ -372,7 +520,7 @@ onMounted(() => {
                   width="140"
                   height="120"
                   @load="handleImageLoad(dish.id)"
-                  @error="handleImageError"
+                  @error="handleImageError($event, dish)"
                 />
               </div>
 
@@ -399,11 +547,19 @@ onMounted(() => {
                 >
                   {{ dish.description || dish.ingredients || 'Prepared fresh with premium ingredients by our seasoned chefs.' }}
                 </p>
+
+                <!-- Category Badge -->
+                <div class="mt-1.5 flex items-center text-[10.5px] sm:text-[11px] text-[#C08A3E] font-medium">
+                  <span class="inline-flex items-center gap-1 opacity-90">
+                    <Utensils class="w-3 h-3" />
+                    {{ getItemCategory(dish) }}
+                  </span>
+                </div>
               </div>
             </article>
           </div>
 
-          <!-- Empty State -->
+          <!-- Empty State (No filter matches) -->
           <div
             v-else
             class="text-center py-12 sm:py-16 bg-white dark:bg-[#182235] rounded-2xl border border-slate-100 dark:border-slate-800 p-6 sm:p-8"
@@ -528,5 +684,19 @@ onMounted(() => {
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+.shimmer-bar {
+  width: 50%;
+  animation: shimmer 1.8s infinite ease-in-out;
 }
 </style>
