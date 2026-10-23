@@ -38,6 +38,12 @@ export default defineConfig({
             if (id.includes('lucide-vue-next')) {
               return 'ui-libs'
             }
+            if (id.includes('pusher-js') || id.includes('laravel-echo')) {
+              return 'vendor-echo'
+            }
+            if (id.includes('jspdf') || id.includes('html2canvas')) {
+              return 'vendor-pdf'
+            }
           }
         },
         // Ensure all chunks output as .js not .ts

@@ -45,20 +45,28 @@ function exploreRooms() {
   >
     <!-- Background image -->
     <div class="absolute inset-0 -z-10">
-      <img
-        src="/images/rooms/image.png"
-        :alt="`${guestHotelStore.hotelName} hotel exterior`"
-        class="h-full w-full object-cover object-center"
-        @error="
-          (e: Event) => {
-            const img = e.target as HTMLImageElement
-            if (!img.dataset.fallback) {
-              img.dataset.fallback = 'true'
-              img.src = '/images/gallery/executive-suite.jpg'
+      <picture class="block h-full w-full">
+        <source srcset="/images/rooms/image.webp" type="image/webp" />
+        <img
+          src="/images/rooms/image.png"
+          :alt="`${guestHotelStore.hotelName} hotel exterior`"
+          class="h-full w-full object-cover object-center"
+          loading="eager"
+          fetchpriority="high"
+          decoding="async"
+          width="1920"
+          height="822"
+          @error="
+            (e: Event) => {
+              const img = e.target as HTMLImageElement
+              if (!img.dataset.fallback) {
+                img.dataset.fallback = 'true'
+                img.src = '/images/gallery/executive-suite.jpg'
+              }
             }
-          }
-        "
-      />
+          "
+        />
+      </picture>
 
       <!-- Keep the hotel visible while protecting text contrast -->
       <div class="absolute inset-0 bg-[#101827]/35" />

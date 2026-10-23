@@ -15,10 +15,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     
-    <!-- Load luxury hotel fonts: Cormorant Garamond for elegant display/headings, Plus Jakarta Sans & Inter for UI -->
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
-    <!-- Vite injects modulepreload automatically during build -->
+    <!-- Critical Preloads for Fast Initial Render & LCP -->
+    <link rel="preload" as="image" href="/images/rooms/image.webp" type="image/webp" fetchpriority="high">
+    <link rel="preload" as="image" href="/images/Hotel logo.webp" type="image/webp">
+
+    <!-- Load luxury hotel fonts with swap to avoid render blocking -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap">
+    </noscript>
 
     
     <title>Executive Hotel – Addis Ababa | Luxury Hotel &amp; Restaurant Experience</title>
@@ -181,7 +186,10 @@
           <div class="ring-animated"></div>
         </div>
         <div class="logo-image">
-          <img src="/images/Hotel logo.png" alt="Hotel Logo" />
+          <picture>
+            <source srcset="/images/Hotel logo.webp" type="image/webp" />
+            <img src="/images/Hotel logo.png" alt="Hotel Logo" width="104" height="104" fetchpriority="high" decoding="async" />
+          </picture>
         </div>
       </div>
       <h1>EXECUTIVE HOTEL</h1>

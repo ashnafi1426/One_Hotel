@@ -4,7 +4,6 @@ import { useThemeStore } from './stores/theme'
 import { useLanguageStore } from './stores/language'
 import './assets/main.css'
 import './styles/dark-mode.css'
-import './plugins/echo'
 import App from './App.vue'
 import router from './router'
 
@@ -32,5 +31,18 @@ router.isReady().then(() => {
     setTimeout(() => {
       initialLoader.remove()
     }, 200)
+  }
+
+  // Defer WebSocket plugin so it doesn't contend with initial page render & LCP
+  if (typeof window !== 'undefined') {
+    if ('requestIdleCallback' in window) {
+      window.requestIdleCallback(() => {
+        import('./plugins/echo')
+      })
+    } else {
+      setTimeout(() => {
+        import('./plugins/echo')
+      }, 300)
+    }
   }
 })

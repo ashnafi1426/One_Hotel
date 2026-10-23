@@ -74,6 +74,10 @@ const hotelLogoUrl = computed(() => {
                 :src="hotelLogoUrl"
                 :alt="guestHotelStore.hotelName"
                 class="w-full h-full object-contain brightness-110"
+                width="44"
+                height="44"
+                loading="lazy"
+                decoding="async"
                 @error="imageLoadFailed = true"
               />
               <span v-else>{{ (guestHotelStore.hotelName || 'H').charAt(0).toUpperCase() }}</span>
