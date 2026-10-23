@@ -66,6 +66,7 @@ function isItemActive(itemRoute: string) {
 const menus = computed(() => [
   { title: languageStore.t('home', 'Home'), route: '/' },
   { title: languageStore.t('rooms', 'Rooms & Suites'), route: '/rooms' },
+  { title: languageStore.t('menu', 'Menu'), route: '/menu' },
   { title: languageStore.t('gallery', 'Gallery'), route: '/gallery' },
   { title: languageStore.t('about', 'About Us'), route: '/about' },
   { title: languageStore.t('contact', 'Contact'), route: '/contact' },

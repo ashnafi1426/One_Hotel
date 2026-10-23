@@ -147,6 +147,14 @@ const hotelLogoUrl = computed(() => {
             </li>
             <li>
               <RouterLink
+                to="/menu"
+                class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
+              >
+                <span>{{ languageStore.t('restaurant_menu', 'Restaurant Menu') }}</span>
+              </RouterLink>
+            </li>
+            <li>
+              <RouterLink
                 to="/#dining"
                 class="hover:text-[#D6A94F] transition flex items-center gap-1.5"
               >

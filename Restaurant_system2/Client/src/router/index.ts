@@ -4,6 +4,7 @@ const roomPage = () => import('../views/guest/Room.vue')
 const GuestHome = () => import('../views/guest/Home.vue')
 const contactPage = () => import('../views/guest/Contact.vue')
 const GalleryPage = () => import('../views/guest/Gallary.vue')
+const RestaurantMenuPage = () => import('../views/guest/Menu.vue')
 const LoginView = () => import('../views/LoginView.vue')
 const ActivationPage = () => import('../views/ActivationPage.vue')
 const AdminDashboard = () => import('../views/Admin/AdminDashboard.vue')
@@ -104,6 +105,12 @@ const router = createRouter({
       path: '/roomsPage',
       name: 'room',
       component: roomPage,
+      meta: { public: true },
+    },
+    {
+      path: '/menu',
+      name: 'restaurant-menu',
+      component: RestaurantMenuPage,
       meta: { public: true },
     },
     {
