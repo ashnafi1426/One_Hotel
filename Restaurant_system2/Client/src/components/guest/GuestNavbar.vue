@@ -151,12 +151,12 @@ onUnmounted(() => {
           <span
             class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase whitespace-nowrap"
           >
-            EXECUTIVE HOTEL
+            Hotel
           </span>
           <span
             class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none whitespace-nowrap"
           >
-            ADDIS ABABA • LUXURY HOTEL
+           system
           </span>
         </div>
       </RouterLink>
