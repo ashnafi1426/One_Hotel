@@ -13,7 +13,6 @@ import {
   Menu as MenuIcon,
   X as CloseIcon,
   Globe,
-  Sparkles,
   ArrowUpRight,
 } from 'lucide-vue-next'
 
@@ -45,11 +44,7 @@ const currentHotelLogo = computed(() => {
     return storageUrl(trimmed)
   }
 
-  const name = (guestHotelStore.hotelName || '').toLowerCase()
-  if (name.includes('qelem') || name.includes('meda')) {
-    return '/images/qelem meda logo.png'
-  }
-  return '/images/Hotel logo.png'
+  return '/images/Hotel logo transparent.png'
 })
 
 const mobileMenu = ref(false)
@@ -62,14 +57,14 @@ function isItemActive(itemRoute: string) {
   return route.path === itemRoute || route.path.startsWith(`${itemRoute}/`)
 }
 
-// Navigation links with Title Case labels and consistent 0.08em tracking (Facilities removed)
+// Navigation links with clean uppercase titles matching requirements
 const menus = computed(() => [
-  { title: languageStore.t('home', 'Home'), route: '/' },
-  { title: languageStore.t('rooms', 'Rooms & Suites'), route: '/rooms' },
-  { title: languageStore.t('menu', 'Menu'), route: '/menu' },
-  { title: languageStore.t('gallery', 'Gallery'), route: '/gallery' },
-  { title: languageStore.t('about', 'About Us'), route: '/about' },
-  { title: languageStore.t('contact', 'Contact'), route: '/contact' },
+  { title: 'HOME', route: '/' },
+  { title: 'ROOMS', route: '/rooms' },
+  { title: 'MENU', route: '/menu' },
+  { title: 'GALLERY', route: '/gallery' },
+  { title: 'ABOUT', route: '/about' },
+  { title: 'CONTACT', route: '/contact' },
 ])
 
 function toggleMenu() {
@@ -121,85 +116,84 @@ onUnmounted(() => {
 
 <template>
   <header
-    class="sticky top-0 z-50 w-full transition-shadow duration-300 select-none bg-white/95 dark:bg-[#101827]/95 backdrop-blur-md border-b border-slate-200/80 dark:border-white/10"
-    :class="[scrolled ? 'shadow-md shadow-slate-900/5 dark:shadow-black/40' : 'shadow-none']"
+    class="sticky top-0 z-50 w-full transition-all duration-300 select-none bg-[#0B1320] border-b border-slate-800/80"
+    :class="[scrolled ? 'shadow-lg shadow-black/40 backdrop-blur-md bg-[#0B1320]/95' : 'shadow-none']"
   >
-    <div
-      class="h-[2px] w-full bg-gradient-to-r from-transparent via-[#9A7418] dark:via-[#D6A94F] to-transparent opacity-80"
-    />
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[76px] flex items-center justify-between">
-      <!-- Logo + Brand Emblem (56px) -->
+    <!-- Main Header Bar Container -->
+    <div class="max-w-7xl mx-auto px-6 md:px-12 py-3.5 flex items-center justify-between">
+      <!-- 1. Brand Logo + Typography -->
       <RouterLink
         to="/"
-        class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] group"
+        class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C] rounded-lg"
         aria-label="Executive Hotel Addis Ababa Home"
       >
-        <!-- Responsive Emblem Container for clear visibility of crest details -->
+        <!-- Logo Emblem Container: Clean & Transparent (No solid white square background) -->
         <div
-          class="relative w-11 h-11 sm:w-14 sm:h-14 flex items-center justify-center rounded-xl bg-slate-50 dark:bg-[#182235] p-1 shadow-sm border border-slate-200/90 dark:border-[#D6A746]/30 shrink-0 transition-transform duration-300 group-hover:scale-105 overflow-hidden"
+          class="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
         >
           <img
             :src="currentHotelLogo"
-            :alt="guestHotelStore.hotelName"
-            class="w-full h-full object-contain select-none brightness-105"
-            width="56"
-            height="56"
+            alt="Executive Hotel Logo"
+            class="w-full h-full object-contain select-none drop-shadow-md"
+            width="48"
+            height="48"
             decoding="async"
             @error="
               (e: any) => {
-                e.target.src = '/images/Hotel logo.png'
+                e.target.src = '/images/Hotel logo transparent.png'
               }
             "
           />
         </div>
 
+        <!-- Brand Typography -->
         <div class="flex flex-col min-w-0">
           <span
-            class="font-serif text-[15px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.06em] sm:tracking-[0.08em] text-slate-900 dark:text-white leading-tight uppercase whitespace-nowrap"
+            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase whitespace-nowrap"
           >
-            {{ guestHotelStore.hotelName }}
+            EXECUTIVE HOTEL
           </span>
           <span
-            class="text-[8.5px] sm:text-[10px] font-bold text-[#9A7418] dark:text-[#D6A746] tracking-[0.06em] sm:tracking-[0.08em] uppercase mt-0.5 leading-none whitespace-nowrap"
+            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none whitespace-nowrap"
           >
-            {{
-              (guestHotelStore.hotelCity || 'ADDIS ABABA').toUpperCase().replace('ADDISS', 'ADDIS')
-            }}
-            • LUXURY HOTEL
+            ADDIS ABABA • LUXURY HOTEL
           </span>
         </div>
       </RouterLink>
 
-      <!-- Desktop Navigation Menu (>= 1024px) -->
+      <!-- 2. Desktop Navigation Links (>= 1024px) -->
       <nav class="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0" aria-label="Main Navigation">
         <RouterLink
           v-for="menu in menus"
           :key="menu.route"
           :to="menu.route"
-          class="text-[13px] uppercase tracking-[0.08em] transition-colors relative py-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] rounded-md px-1"
+          class="text-sm uppercase tracking-widest font-medium transition-colors duration-200 relative py-1.5 focus:outline-none focus-visible:ring-1 focus-visible:ring-[#C89B3C] rounded-sm px-1"
           :class="[
             isItemActive(menu.route)
-              ? 'text-[#9A7418] dark:text-[#D6A94F] font-bold'
-              : 'text-slate-700 hover:text-slate-950 dark:text-slate-300 dark:hover:text-white font-semibold',
+              ? 'text-[#C89B3C] font-semibold'
+              : 'text-slate-300 hover:text-white',
           ]"
         >
           {{ menu.title }}
-          <!-- 2px full-width underline for active link -->
+
+          <!-- Active Link Accent Gold Bar Underline Indicator -->
           <span
             v-if="isItemActive(menu.route)"
-            class="absolute bottom-0 inset-x-0 h-[2px] bg-[#9A7418] dark:bg-[#D6A94F] rounded-full"
+            class="absolute -bottom-1.5 inset-x-0 mx-auto w-full h-[2px] bg-[#C89B3C] rounded-full"
           />
         </RouterLink>
       </nav>
 
-      <!-- Desktop Right Actions Toolbar (>= 1024px) -->
-      <div class="hidden lg:flex items-center gap-3 shrink-0">
+      <!-- 3. Desktop Right Controls Toolbar (>= 1024px) -->
+      <div class="hidden lg:flex items-center gap-3.5 shrink-0">
+        <!-- Language Selector Pill -->
         <LanguageSelector variant="header" />
 
+        <!-- Theme Toggle Circular Button -->
         <button
           @click="handleThemeToggle"
           type="button"
-          class="w-10 h-10 flex items-center justify-center rounded-full border border-slate-200 dark:border-white/15 bg-white dark:bg-[#182235] hover:bg-slate-50 dark:hover:bg-[#182235]/80 text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white hover:border-[#9A7418]/70 dark:hover:border-[#D6A94F]/70 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
+          class="w-9 h-9 flex items-center justify-center rounded-full border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900/80 text-slate-300 hover:text-amber-400 hover:border-[#C89B3C]/60 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
           :title="
             theme.isDark
               ? languageStore.t('light_mode', 'Light Mode')
@@ -207,44 +201,50 @@ onUnmounted(() => {
           "
           :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#D6A94F]" />
-          <Moon v-else class="w-4 h-4 text-slate-700" />
+          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#C89B3C]" />
+          <Moon v-else class="w-4 h-4 text-slate-300" />
         </button>
 
+        <!-- "Book Your Stay" Button: Solid warm gold with crisp dark navy text -->
         <RouterLink
           to="/rooms"
-          class="h-10 px-5 xl:px-6 flex items-center justify-center rounded-full bg-[#D6A94F] hover:bg-[#C59B3F] text-[#101827] font-bold text-[12px] tracking-[0.08em] uppercase shadow-md shadow-[#D6A94F]/25 hover:shadow-lg hover:shadow-[#D6A94F]/35 transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
+          class="h-9 px-6 flex items-center justify-center rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs tracking-wider uppercase shadow-md transition-all duration-200 whitespace-nowrap active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
         >
           {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
         </RouterLink>
       </div>
 
-      <!-- Mobile & Tablet Hamburger Toggle (< 1024px) -->
-      <div class="flex items-center gap-2 lg:hidden">
+      <!-- 4. Mobile & Tablet Navigation Controls (< 1024px) -->
+      <div class="flex items-center gap-2.5 lg:hidden">
+        <!-- Compact Language Selector on Mobile -->
+        <LanguageSelector variant="header" :show-label="false" />
+
+        <!-- Theme Toggle on Mobile -->
         <button
           @click="handleThemeToggle"
           type="button"
-          class="w-9 h-9 flex items-center justify-center rounded-full border border-slate-200 dark:border-white/15 bg-white dark:bg-[#182235] text-slate-700 dark:text-slate-200 hover:text-slate-950 dark:hover:text-white transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]"
+          class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-700/60 bg-slate-900/40 text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
           :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         >
-          <Sun v-if="theme.isDark" class="w-4 h-4 text-[#D6A94F]" />
-          <Moon v-else class="w-4 h-4 text-slate-700" />
+          <Sun v-if="theme.isDark" class="w-3.5 h-3.5 text-[#C89B3C]" />
+          <Moon v-else class="w-3.5 h-3.5 text-slate-300" />
         </button>
 
+        <!-- Clean Hamburger Menu Toggle Button -->
         <button
           @click="toggleMenu"
           type="button"
-          class="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 dark:border-white/15 bg-white dark:bg-[#182235] text-slate-800 dark:text-white hover:border-[#9A7418] dark:hover:border-[#D6A94F] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] cursor-pointer"
+          class="w-9 h-9 flex items-center justify-center rounded-xl border border-slate-700/60 bg-slate-900/40 text-slate-200 hover:text-white hover:border-[#C89B3C]/60 transition-colors cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
           :aria-expanded="mobileMenu"
-          aria-label="Open navigation menu"
+          aria-label="Toggle navigation menu"
         >
-          <MenuIcon v-if="!mobileMenu" class="w-5 h-5 text-slate-800 dark:text-slate-100" />
-          <CloseIcon v-else class="w-5 h-5 text-[#9A7418] dark:text-[#D6A94F]" />
+          <MenuIcon v-if="!mobileMenu" class="w-5 h-5" />
+          <CloseIcon v-else class="w-5 h-5 text-[#C89B3C]" />
         </button>
       </div>
     </div>
 
-    <!-- Floating Card Modal & Backdrop (< 1024px) -->
+    <!-- 5. Floating Mobile & Tablet Navigation Drawer (< 1024px) -->
     <Teleport to="body">
       <Transition
         enter-active-class="transition-opacity duration-300 ease-out"
@@ -256,7 +256,7 @@ onUnmounted(() => {
       >
         <div
           v-if="mobileMenu"
-          class="fixed inset-0 bg-black/45 backdrop-blur-xs z-[998] lg:hidden flex justify-end items-start p-3 sm:p-5"
+          class="fixed inset-0 bg-black/60 backdrop-blur-xs z-[998] lg:hidden flex justify-end items-start p-3 sm:p-5"
           @click="closeMenu"
           aria-hidden="true"
         >
@@ -270,132 +270,82 @@ onUnmounted(() => {
             appear
           >
             <aside
-              class="w-full max-w-[340px] sm:max-w-[360px] bg-white dark:bg-[#111A28] text-slate-900 dark:text-white rounded-[26px] shadow-[0_20px_50px_-10px_rgba(0,0,0,0.3)] dark:shadow-[0_25px_60px_-10px_rgba(0,0,0,0.8)] border border-slate-200/90 dark:border-white/10 p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-28px)]"
+              class="w-full max-w-[340px] sm:max-w-[360px] bg-[#0B1320] text-white rounded-3xl shadow-2xl border border-slate-800 p-5 sm:p-6 flex flex-col gap-4 overflow-y-auto max-h-[calc(100vh-28px)]"
               @click.stop
               role="dialog"
               aria-modal="true"
               aria-label="Navigation Menu"
             >
-              <!-- Card Header: Brand Identity, Theme Pill & Close Button -->
-              <div class="flex items-center justify-between pb-1">
-                <!-- Brand Identity -->
+              <!-- Drawer Header: Brand Identity & Close Button -->
+              <div class="flex items-center justify-between pb-2 border-b border-slate-800/80">
                 <div class="flex items-center gap-2.5 min-w-0">
-                  <div
-                    class="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-50/80 dark:bg-[#182235] p-1 border border-blue-100 dark:border-[#D6A94F]/30 shrink-0 shadow-xs"
-                  >
+                  <div class="w-8 h-8 flex items-center justify-center shrink-0">
                     <img
                       :src="currentHotelLogo"
-                      :alt="guestHotelStore.hotelName"
+                      alt="Executive Hotel Logo"
                       class="w-full h-full object-contain"
-                      width="36"
-                      height="36"
-                      loading="lazy"
+                      width="32"
+                      height="32"
                       decoding="async"
-                      @error="
-                        (e: any) => {
-                          e.target.src = '/images/Hotel logo.png'
-                        }
-                      "
                     />
                   </div>
                   <div class="flex flex-col min-w-0">
-                    <span
-                      class="font-serif text-[15px] sm:text-base font-bold text-slate-900 dark:text-white tracking-tight truncate"
-                    >
-                      {{ guestHotelStore.hotelName }}
+                    <span class="font-serif text-sm font-bold text-white tracking-wider uppercase truncate">
+                      EXECUTIVE HOTEL
                     </span>
-                    <span
-                      class="text-[9px] font-bold text-[#9A7418] dark:text-[#D6A94F] tracking-[0.06em] uppercase"
-                    >
-                      {{
-                        (guestHotelStore.hotelCity || 'ADDIS ABABA')
-                          .toUpperCase()
-                          .replace('ADDISS', 'ADDIS')
-                      }}
+                    <span class="text-[9px] font-bold text-[#C89B3C] tracking-widest uppercase">
+                      ADDIS ABABA • LUXURY HOTEL
                     </span>
                   </div>
                 </div>
 
-                <!-- Right Controls: Theme Switch Pill & Circular Close Button -->
-                <div class="flex items-center gap-2 shrink-0">
-                  <!-- Theme Pill Toggle (Moon & Sun) -->
-                  <button
-                    @click="handleThemeToggle"
-                    type="button"
-                    class="flex items-center gap-0.5 p-0.5 rounded-full bg-slate-100 dark:bg-white/10 border border-slate-200/70 dark:border-white/10 transition-colors cursor-pointer"
-                    :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-                  >
-                    <span
-                      class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
-                      :class="
-                        theme.isDark ? 'bg-[#101827] text-[#D6A94F] shadow-xs' : 'text-slate-400'
-                      "
-                    >
-                      <Moon class="w-3.5 h-3.5" />
-                    </span>
-                    <span
-                      class="w-6 h-6 flex items-center justify-center rounded-full transition-all"
-                      :class="
-                        !theme.isDark ? 'bg-[#0F56B3] text-white shadow-xs' : 'text-slate-400'
-                      "
-                    >
-                      <Sun class="w-3.5 h-3.5" />
-                    </span>
-                  </button>
-
-                  <!-- Circular Close Button -->
-                  <button
-                    @click="closeMenu"
-                    type="button"
-                    class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer focus:outline-none"
-                    aria-label="Close navigation menu"
-                  >
-                    <CloseIcon class="w-4 h-4" />
-                  </button>
-                </div>
+                <button
+                  @click="closeMenu"
+                  type="button"
+                  class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-colors cursor-pointer"
+                  aria-label="Close navigation menu"
+                >
+                  <CloseIcon class="w-4 h-4" />
+                </button>
               </div>
 
-              <!-- Navigation Links with ArrowUpRight -->
+              <!-- Drawer Navigation Links -->
               <nav class="flex flex-col py-1" aria-label="Mobile Navigation Links">
                 <RouterLink
                   v-for="menu in menus"
                   :key="menu.route"
                   :to="menu.route"
                   @click="closeMenu"
-                  class="flex items-center justify-between py-2.5 sm:py-3 px-1 text-base font-serif transition-colors group border-b border-slate-100/80 dark:border-white/5 last:border-0"
+                  class="flex items-center justify-between py-2.5 px-2 text-sm font-medium tracking-widest uppercase transition-colors group border-b border-slate-800/60 last:border-0"
                   :class="[
                     isItemActive(menu.route)
-                      ? 'text-[#0F56B3] dark:text-[#D6A94F] font-bold'
-                      : 'text-slate-800 dark:text-slate-200 hover:text-[#0F56B3] dark:hover:text-[#D6A94F] font-medium',
+                      ? 'text-[#C89B3C] font-semibold bg-slate-900/60 rounded-lg'
+                      : 'text-slate-300 hover:text-white',
                   ]"
                 >
                   <span>{{ menu.title }}</span>
                   <ArrowUpRight
-                    class="w-4 h-4 text-[#0F56B3] dark:text-[#D6A94F] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
+                    class="w-4 h-4 text-[#C89B3C] transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
                   />
                 </RouterLink>
               </nav>
 
-              <!-- Language Selector Section -->
-              <div class="pt-2 border-t border-slate-100 dark:border-white/10">
-                <span
-                  class="block text-[10px] font-bold uppercase tracking-[0.12em] text-slate-400 dark:text-slate-500 mb-2"
-                >
+              <!-- Language Selection in Drawer -->
+              <div class="pt-2 border-t border-slate-800/80">
+                <span class="block text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-2">
                   {{ languageStore.t('language', 'Language') }}
                 </span>
-                <div
-                  class="inline-flex items-center gap-1 bg-slate-100 dark:bg-white/5 p-1 rounded-full border border-slate-200/60 dark:border-white/10"
-                >
+                <div class="inline-flex items-center gap-1.5 bg-slate-900/80 p-1 rounded-full border border-slate-800">
                   <button
                     v-for="opt in languageStore.options"
                     :key="opt.code"
                     @click="selectLanguage(opt.code)"
                     type="button"
-                    class="px-3.5 py-1 text-xs font-semibold rounded-full transition-all focus:outline-none cursor-pointer"
+                    class="px-3.5 py-1 text-xs font-semibold rounded-full transition-all cursor-pointer"
                     :class="[
                       languageStore.currentLanguage === opt.code
-                        ? 'bg-[#0F56B3] dark:bg-[#D6A94F] text-white dark:text-[#101827] shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white',
+                        ? 'bg-[#C89B3C] text-[#0B1320] shadow-sm'
+                        : 'text-slate-400 hover:text-white',
                     ]"
                   >
                     {{ opt.nativeName }}
@@ -403,28 +353,26 @@ onUnmounted(() => {
                 </div>
               </div>
 
-              <!-- Action Buttons -->
-              <div class="flex flex-col gap-2.5 pt-1">
-                <!-- Secondary Button: Sign In / Dashboard -->
+              <!-- Drawer Action Buttons -->
+              <div class="flex flex-col gap-2.5 pt-2">
+                <RouterLink
+                  to="/rooms"
+                  @click="closeMenu"
+                  class="w-full py-3 rounded-full bg-[#C89B3C] hover:bg-[#B3882F] text-[#0B1320] font-semibold text-xs tracking-wider uppercase text-center shadow-md transition-all block active:scale-[0.99] cursor-pointer"
+                >
+                  {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
+                </RouterLink>
+
                 <RouterLink
                   :to="authStore.isAuthenticated ? '/admin' : '/login'"
                   @click="closeMenu"
-                  class="w-full py-2.5 sm:py-3 rounded-2xl border border-slate-200/90 dark:border-white/15 bg-white dark:bg-white/5 text-slate-800 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-white/10 text-xs sm:text-sm font-semibold tracking-wide text-center transition-all shadow-xs block cursor-pointer"
+                  class="w-full py-2.5 rounded-full border border-slate-700/60 bg-slate-900/40 text-slate-300 hover:text-white text-xs font-medium tracking-wider uppercase text-center transition-all block cursor-pointer"
                 >
                   {{
                     authStore.isAuthenticated
                       ? languageStore.t('dashboard', 'Dashboard')
-                      : languageStore.t('sign_in', 'Sign in')
+                      : languageStore.t('sign_in', 'Sign In')
                   }}
-                </RouterLink>
-
-                <!-- Primary Button: Book Your Stay -->
-                <RouterLink
-                  to="/rooms"
-                  @click="closeMenu"
-                  class="w-full py-3 sm:py-3.5 rounded-2xl bg-[#0F56B3] hover:bg-[#0c448d] dark:bg-[#D6A94F] dark:hover:bg-[#C59B3F] text-white dark:text-[#101827] font-semibold text-xs sm:text-sm tracking-wide shadow-md shadow-[#0F56B3]/20 dark:shadow-black/30 text-center transition-all block active:scale-[0.99] cursor-pointer"
-                >
-                  {{ languageStore.t('book_your_stay', 'Book Your Stay') }}
                 </RouterLink>
               </div>
             </aside>
