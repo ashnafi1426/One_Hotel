@@ -196,7 +196,7 @@ onUnmounted(() => {
         <button
           @click="handleThemeToggle"
           type="button"
-          class="w-9 h-9 flex items-center justify-center rounded-full border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900/80 text-slate-300 hover:text-amber-400 hover:border-[#C89B3C]/60 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
+          class="w-9 h-9 flex items-center justify-center rounded-full border border-slate-700/60 bg-[#0B1320] hover:bg-[#111d30] text-slate-300 hover:text-amber-400 hover:border-[#C89B3C]/60 transition-colors duration-200 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C]"
           :title="
             theme.isDark
               ? languageStore.t('light_mode', 'Light Mode')
@@ -227,7 +227,7 @@ onUnmounted(() => {
         <button
           @click="handleThemeToggle"
           type="button"
-          class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-700/60 bg-slate-900/40 text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
+          class="w-8 h-8 flex items-center justify-center rounded-full border border-slate-700/60 bg-[#0B1320] text-slate-300 hover:text-amber-400 transition-colors cursor-pointer"
           :aria-label="theme.isDark ? 'Switch to light mode' : 'Switch to dark mode'"
         >
           <Sun v-if="theme.isDark" class="w-3.5 h-3.5 text-[#C89B3C]" />

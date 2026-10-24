@@ -47,9 +47,9 @@ onUnmounted(() => {
       @click.stop="toggleDropdown"
       type="button"
       :class="[
-        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] focus-visible:ring-offset-2',
+        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]',
         variant === 'header'
-          ? 'h-9 px-3 py-1.5 rounded-full border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900/70 text-slate-200 hover:text-white hover:border-[#C89B3C]/60 text-xs font-medium'
+          ? 'h-9 px-3 py-1.5 rounded-full border border-slate-700/60 bg-[#0B1320] hover:bg-[#111d30] text-slate-200 hover:text-white hover:border-[#C89B3C]/60 text-xs font-medium'
           : variant === 'pill'
             ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-transparent text-slate-800 dark:text-slate-200 hover:border-[#9A7418] dark:hover:border-[#D6A94F]'
             : variant === 'compact'
