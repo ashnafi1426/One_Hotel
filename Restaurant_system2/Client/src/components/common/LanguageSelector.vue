@@ -47,13 +47,13 @@ onUnmounted(() => {
       @click.stop="toggleDropdown"
       type="button"
       :class="[
-        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F]',
+        'flex items-center gap-1.5 sm:gap-2 transition-all duration-200 cursor-pointer select-none whitespace-nowrap focus:outline-none focus-visible:ring-2 focus-visible:ring-[#9A7418] dark:focus-visible:ring-[#D6A94F] focus-visible:ring-offset-2',
         variant === 'header'
-          ? 'h-9 px-3 py-1.5 rounded-full border border-slate-700/60 bg-[#0B1320] hover:bg-[#111d30] text-slate-200 hover:text-white hover:border-[#C89B3C]/60 text-xs font-medium'
+          ? 'h-9 px-3 py-1.5 rounded-full border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900/70 text-slate-200 hover:text-white hover:border-[#C89B3C]/60 text-xs font-medium'
           : variant === 'pill'
-            ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-transparent text-slate-800 dark:text-slate-200 hover:border-[#9A7418] dark:hover:border-[#D6A94F]'
+            ? 'h-9 sm:h-10 px-2.5 sm:px-3.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 hover:border-[#9A7418] dark:hover:border-[#D6A94F]'
             : variant === 'compact'
-              ? 'h-8 sm:h-9 px-2 sm:px-2.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-transparent dark:bg-transparent hover:border-[#9A7418] dark:hover:border-[#D6A94F] text-slate-700 dark:text-slate-200'
+              ? 'h-8 sm:h-9 px-2 sm:px-2.5 rounded-full text-xs font-medium border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-[#9A7418] dark:hover:border-[#D6A94F] text-slate-700 dark:text-slate-200'
               : 'h-9 sm:h-10 p-1.5 sm:p-2 rounded-full border border-transparent text-slate-600 dark:text-slate-300 hover:text-[#9A7418] dark:hover:text-[#D6A94F]',
       ]"
       :title="`Current language: ${languageStore.currentOption.nativeName}. Click to change.`"
@@ -107,7 +107,7 @@ onUnmounted(() => {
           >
             <div class="flex items-center gap-2.5">
               <span
-                class="w-6 h-5 rounded flex items-center justify-center text-[11px] bg-slate-800 border border-slate-700 font-bold text-slate-200"
+                class="w-6 h-5 rounded flex items-center justify-center text-[11px] bg-slate-800 border border-slate-700 font-bold text-white"
               >
                 {{ opt.code === 'am' ? 'አማ' : 'EN' }}
               </span>
