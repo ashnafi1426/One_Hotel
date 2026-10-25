@@ -120,8 +120,24 @@ export const useGuestHotelStore = defineStore('guestHotel', {
           response.data.data.length > 0
         ) {
           const hotel = response.data.data[0]
-          this.currentHotel = { ...DEFAULT_GUEST_HOTEL, ...hotel }
+          // Hotel data from API takes full priority
+          this.currentHotel = {
+            ...DEFAULT_GUEST_HOTEL,
+            ...hotel,
+            // Ensure these critical fields from API are not overridden
+            name: hotel.name || DEFAULT_GUEST_HOTEL.name,
+            email: hotel.email || DEFAULT_GUEST_HOTEL.email,
+            phone: hotel.phone || DEFAULT_GUEST_HOTEL.phone,
+          }
           this.availableHotels = [this.currentHotel]
+          
+          // Save to localStorage
+          try {
+            localStorage.setItem('guest_current_hotel', JSON.stringify(this.currentHotel))
+          } catch (e) {
+            console.warn('[guestHotelStore] Failed to save to localStorage:', e)
+          }
+          
           try {
             const themeStore = useThemeStore()
             themeStore.syncWithHotel(this.currentHotel)

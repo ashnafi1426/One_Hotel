@@ -13,11 +13,15 @@ return new class extends Migration
             $table->string('name');
             $table->string('slug')->unique();
             $table->string('email')->nullable();
+            $table->string('reservation_email')->nullable();
             $table->string('phone')->nullable();
+            $table->string('reservation_phone')->nullable();
             $table->text('address')->nullable();
             $table->string('city')->nullable();
             $table->string('country')->nullable();
             $table->string('logo')->nullable();
+            $table->string('front_desk_hours')->nullable();
+            $table->string('dining_hours')->nullable();
             $table->string('timezone')->default('Africa/Addis_Ababa');
             $table->string('currency', 10)->default('ETB');
             $table->string('status', 20)->default('active');

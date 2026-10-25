@@ -48,7 +48,7 @@ const currentHotelLogo = computed(() => {
 })
 
 const currentHotelName = computed(() => {
-  return guestHotelStore.hotelName || 'Executive Hotel'
+  return guestHotelStore.hotelName 
 })
 
 const mobileMenu = ref(false)
