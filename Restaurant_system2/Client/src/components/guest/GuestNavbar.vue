@@ -153,14 +153,15 @@ onUnmounted(() => {
         <!-- Brand Typography -->
         <div class="flex flex-col min-w-0">
           <span
-            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase whitespace-nowrap"
+            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase"
+            style="word-spacing: 0.15em;"
           >
             {{ currentHotelName }}
           </span>
           <span
-            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none whitespace-nowrap"
+            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none"
           >
-           system
+            {{ languageStore.t('luxury_hospitality', 'Luxury Hospitality') }}
           </span>
         </div>
       </RouterLink>
@@ -286,7 +287,7 @@ onUnmounted(() => {
                   <div class="w-8 h-8 flex items-center justify-center shrink-0">
                     <img
                       :src="currentHotelLogo"
-                      alt="Executive Hotel Logo"
+                      :alt="`${currentHotelName} Logo`"
                       class="w-full h-full object-contain"
                       width="32"
                       height="32"
@@ -298,7 +299,7 @@ onUnmounted(() => {
                       {{ currentHotelName }}
                     </span>
                     <span class="text-[9px] font-bold text-[#C89B3C] tracking-widest uppercase">
-                      ADDIS ABABA • LUXURY HOTEL
+                      {{ guestHotelStore.hotelCity }} • {{ languageStore.t('luxury_hotel', 'Luxury Hotel') }}
                     </span>
                   </div>
                 </div>
