@@ -287,30 +287,38 @@ class AdminProfileController extends Controller
     public function getHotelSettings(): JsonResponse
     {
         try {
-            $settings = DB::table('hotels')->first();
+            $hotel = \App\Models\Hotel::first();
             
-            if (!$settings) {
+            if (!$hotel) {
                 // Return default settings if none exist
                 return response()->json([
                     'success' => true,
                     'data' => [
-                        'name' => 'Hotel Name',
+                        'name' => 'Executive Hotel',
+                        'slug' => 'executive-hotel',
                         'address' => '',
+                        'city' => 'Addis Ababa',
+                        'country' => 'Ethiopia',
                         'phone' => '',
+                        'reservation_phone' => '',
                         'email' => '',
+                        'reservation_email' => '',
                         'website' => '',
                         'description' => '',
+                        'front_desk_hours' => 'Open 24/7 / 365 Days',
+                        'dining_hours' => '06:00 AM – 11:00 PM Daily',
                         'check_in_time' => '14:00',
                         'check_out_time' => '12:00',
                         'currency' => 'ETB',
                         'timezone' => 'Africa/Addis_Ababa',
+                        'status' => 'active',
                     ],
                 ]);
             }
 
             return response()->json([
                 'success' => true,
-                'data' => $settings,
+                'data' => $hotel,
             ]);
         } catch (\Exception $e) {
             \Log::error('Get hotel settings error: ' . $e->getMessage());
@@ -327,35 +335,46 @@ class AdminProfileController extends Controller
         try {
             $validated = $request->validate([
                 'name' => 'sometimes|string|max:255',
+                'slug' => 'sometimes|nullable|string|max:255',
                 'address' => 'sometimes|nullable|string',
+                'city' => 'sometimes|nullable|string|max:255',
+                'country' => 'sometimes|nullable|string|max:255',
                 'phone' => 'sometimes|nullable|string|max:50',
+                'reservation_phone' => 'sometimes|nullable|string|max:50',
                 'email' => 'sometimes|nullable|email|max:255',
-                'website' => 'sometimes|nullable|url|max:255',
-                'description' => 'sometimes|nullable|string',
-                'check_in_time' => 'sometimes|nullable|string',
-                'check_out_time' => 'sometimes|nullable|string',
+                'reservation_email' => 'sometimes|nullable|email|max:255',
+                'logo' => 'sometimes|nullable|string|max:500',
+                'front_desk_hours' => 'sometimes|nullable|string|max:255',
+                'dining_hours' => 'sometimes|nullable|string|max:255',
                 'currency' => 'sometimes|nullable|string|max:10',
                 'timezone' => 'sometimes|nullable|string|max:50',
+                'status' => 'sometimes|nullable|string|in:active,inactive,suspended,archived',
             ]);
 
-            // Check if settings exist
-            $exists = DB::table('hotels')->exists();
+            $hotel = \App\Models\Hotel::first();
             
-            if ($exists) {
-                DB::table('hotels')->update($validated);
+            if ($hotel) {
+                // Update existing hotel
+                $hotel->update($validated);
             } else {
-                DB::table('hotels')->insert(array_merge($validated, [
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]));
+                // Create new hotel with defaults
+                $hotel = \App\Models\Hotel::create(array_merge([
+                    'name' => 'Executive Hotel',
+                    'slug' => 'executive-hotel',
+                    'city' => 'Addis Ababa',
+                    'country' => 'Ethiopia',
+                    'currency' => 'ETB',
+                    'timezone' => 'Africa/Addis_Ababa',
+                    'status' => 'active',
+                    'front_desk_hours' => 'Open 24/7 / 365 Days',
+                    'dining_hours' => '06:00 AM – 11:00 PM Daily',
+                ], $validated));
             }
-
-            $settings = DB::table('hotels')->first();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Hotel settings updated successfully',
-                'data' => $settings,
+                'data' => $hotel->fresh(),
             ]);
         } catch (\Exception $e) {
             \Log::error('Update hotel settings error: ' . $e->getMessage());
