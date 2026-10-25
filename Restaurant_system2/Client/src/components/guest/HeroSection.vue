@@ -79,7 +79,7 @@ function exploreRooms() {
     >
       <!-- Hotel badge -->
       <div
-        class="inline-flex max-w-full items-center justify-center gap-2 rounded-full border border-white/60 bg-[#192438]/90 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow-lg backdrop-blur-md sm:px-6 sm:text-xs"
+        class="inline-flex max-w-full items-center justify-center gap-2 rounded-full bg-[#192438]/90 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.08em] text-white shadow-lg backdrop-blur-md sm:px-6 sm:text-xs"
       >
         <Sparkles class="h-4 w-4 shrink-0 text-[#D6A746]" />
 
