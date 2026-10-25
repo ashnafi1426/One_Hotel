@@ -47,6 +47,10 @@ const currentHotelLogo = computed(() => {
   return '/images/Hotel logo transparent.png'
 })
 
+const currentHotelName = computed(() => {
+  return guestHotelStore.hotelName || 'Executive Hotel'
+})
+
 const mobileMenu = ref(false)
 const scrolled = ref(false)
 
@@ -125,7 +129,7 @@ onUnmounted(() => {
       <RouterLink
         to="/"
         class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C] rounded-lg"
-        aria-label="Executive Hotel Addis Ababa Home"
+        :aria-label="`${currentHotelName} Home`"
       >
         <!-- Logo Emblem Container: Clean & Transparent (No solid white square background) -->
         <div
@@ -133,7 +137,7 @@ onUnmounted(() => {
         >
           <img
             :src="currentHotelLogo"
-            alt="Executive Hotel Logo"
+            :alt="`${currentHotelName} Logo`"
             class="w-full h-full object-contain select-none drop-shadow-md"
             width="48"
             height="48"
@@ -151,7 +155,7 @@ onUnmounted(() => {
           <span
             class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase whitespace-nowrap"
           >
-            Hotel
+            {{ currentHotelName }}
           </span>
           <span
             class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none whitespace-nowrap"
@@ -291,7 +295,7 @@ onUnmounted(() => {
                   </div>
                   <div class="flex flex-col min-w-0">
                     <span class="font-serif text-sm font-bold text-white tracking-wider uppercase truncate">
-                      EXECUTIVE HOTEL
+                      {{ currentHotelName }}
                     </span>
                     <span class="text-[9px] font-bold text-[#C89B3C] tracking-widest uppercase">
                       ADDIS ABABA • LUXURY HOTEL
