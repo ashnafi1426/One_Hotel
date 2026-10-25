@@ -151,15 +151,14 @@ onUnmounted(() => {
         </div>
 
         <!-- Brand Typography -->
-        <div class="flex flex-col min-w-0">
+        <div class="flex flex-col">
           <span
-            class="font-serif text-[17px] sm:text-[19px] lg:text-[20px] font-bold tracking-[0.18em] text-white leading-tight uppercase"
-            style="word-spacing: 0.15em;"
+            class="font-sans text-[13px] sm:text-[14px] lg:text-[15px] font-semibold tracking-[0.35em] text-white leading-none uppercase whitespace-nowrap"
           >
             {{ currentHotelName }}
           </span>
           <span
-            class="font-sans text-[10px] sm:text-[11px] font-bold text-[#C89B3C] tracking-[0.25em] uppercase mt-0.5 leading-none"
+            class="font-sans text-[9px] sm:text-[10px] font-semibold text-[#C89B3C] tracking-[0.3em] uppercase mt-1.5 leading-none whitespace-nowrap"
           >
             {{ languageStore.t('luxury_hospitality', 'Luxury Hospitality') }}
           </span>
@@ -294,11 +293,11 @@ onUnmounted(() => {
                       decoding="async"
                     />
                   </div>
-                  <div class="flex flex-col min-w-0">
-                    <span class="font-serif text-sm font-bold text-white tracking-wider uppercase truncate">
+                  <div class="flex flex-col">
+                    <span class="font-sans text-[11px] font-semibold text-white tracking-[0.3em] uppercase leading-none whitespace-nowrap">
                       {{ currentHotelName }}
                     </span>
-                    <span class="text-[9px] font-bold text-[#C89B3C] tracking-widest uppercase">
+                    <span class="text-[8px] font-semibold text-[#C89B3C] tracking-[0.25em] uppercase mt-1 leading-none whitespace-nowrap">
                       {{ guestHotelStore.hotelCity }} • {{ languageStore.t('luxury_hotel', 'Luxury Hotel') }}
                     </span>
                   </div>
