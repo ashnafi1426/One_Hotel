@@ -19,9 +19,7 @@ const values = computed<Value[]>(() => [
     title: languageStore.t('our_mission', 'Our Mission'),
     description: languageStore.t(
       'our_mission_desc',
-      'To provide exceptional hospitality at ' +
-        guestHotelStore.hotelName +
-        ' through luxurious accommodation, personalized service, and memorable experiences for every guest.',
+      'To provide exceptional hospitality through luxurious accommodation, personalized service, and authentic experiences that exceed our guests\' expectations while supporting our local community and preserving Ethiopian cultural heritage.',
     ),
   },
   {
@@ -29,9 +27,9 @@ const values = computed<Value[]>(() => [
     title: languageStore.t('our_vision', 'Our Vision'),
     description: languageStore.t(
       'our_vision_desc',
-      'To be recognized as the premier luxury hospitality destination in ' +
+      'To become the most trusted and preferred hospitality destination in ' +
         guestHotelStore.hotelCity +
-        ', known for excellence, innovation, and warm hospitality.',
+        ', recognized for excellence, innovation, sustainable practices, and warm Ethiopian hospitality.',
     ),
   },
   {
@@ -39,7 +37,7 @@ const values = computed<Value[]>(() => [
     title: languageStore.t('core_values', 'Core Values'),
     description: languageStore.t(
       'core_values_desc',
-      'Integrity, Excellence, Respect, Innovation, Teamwork, and Customer Satisfaction guide everything we do every day.',
+      'Integrity, Excellence, Respect, Innovation, Teamwork, and Customer Satisfaction form the foundation of our service culture and guide every decision we make.',
     ),
   },
 ])

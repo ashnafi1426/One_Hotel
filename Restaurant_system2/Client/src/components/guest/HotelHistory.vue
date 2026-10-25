@@ -8,39 +8,38 @@ const guestHotelStore = useGuestHotelStore()
 
 const milestones = computed(() => [
   {
-    year: '1995',
-    title: languageStore.t('Grand Foundation', 'Grand Foundation'),
+    year: languageStore.t('establishment', 'Establishment'),
+    title: languageStore.t('Foundation & Opening', 'Foundation & Opening'),
     description: languageStore.t(
-      'grand_foundation_desc',
-      'Our journey began with a vision to build ' +
-        guestHotelStore.hotelName +
-        ' into a world-class luxury hotel in ' +
+      'foundation_desc',
+      guestHotelStore.hotelName +
+        ' was established with a vision to provide world-class hospitality services to both business and leisure travelers in ' +
         guestHotelStore.hotelCity +
-        '.',
+        ', combining modern comfort with traditional Ethiopian warmth.',
     ),
   },
   {
-    year: '2005',
-    title: languageStore.t('International Expansion', 'International Expansion'),
+    year: languageStore.t('growth', 'Growth'),
+    title: languageStore.t('Expansion & Development', 'Expansion & Development'),
     description: languageStore.t(
-      'intl_expansion_desc',
-      'Added 50 executive suites and upgraded all fine dining, spa, and conference facilities.',
+      'expansion_desc',
+      'Expanded our facilities with additional guest rooms, upgraded dining experiences, and modern conference facilities to better serve our growing clientele and host international events.',
     ),
   },
   {
-    year: '2015',
-    title: languageStore.t('Continental Recognition', 'Continental Recognition'),
+    year: languageStore.t('innovation', 'Innovation'),
+    title: languageStore.t('Modernization & Technology', 'Modernization & Technology'),
     description: languageStore.t(
-      'cont_recognition_desc',
-      'Awarded Best Luxury Hotel in East Africa for exceptional guest satisfaction and service innovation.',
+      'modernization_desc',
+      'Implemented smart room technology, upgraded WiFi infrastructure, introduced mobile check-in services, and enhanced our digital guest experience while maintaining our commitment to personal service.',
     ),
   },
   {
-    year: '2023',
-    title: languageStore.t('The Modern Era', 'The Modern Era'),
+    year: languageStore.t('today', 'Today'),
+    title: languageStore.t('Continuing Excellence', 'Continuing Excellence'),
     description: languageStore.t(
-      'modern_era_desc',
-      'Completely renovated with smart room technology while preserving classic architectural elegance.',
+      'today_desc',
+      'Today, we continue to set standards for quality hospitality in the region, focusing on guest satisfaction, staff development, sustainable practices, and community engagement.',
     ),
   },
 ])

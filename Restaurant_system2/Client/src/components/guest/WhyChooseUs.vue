@@ -19,62 +19,62 @@ const reasons = computed<Reason[]>(() => [
   {
     id: 1,
     icon: Sparkles,
-    title: languageStore.t('Luxury & Comfort', 'Luxury & Comfort'),
+    title: languageStore.t('Comfort & Quality', 'Comfort & Quality'),
     description: languageStore.t(
-      'reason_luxury_desc',
-      'Experience unmatched comfort in our master suites with premium linen and city views.',
+      'reason_comfort_desc',
+      'Well-appointed rooms with comfortable beds, quality linens, modern amenities, and attention to cleanliness that ensures a restful stay.',
     ),
     color: 'text-amber-500 bg-amber-500/10 border-amber-500/20',
   },
   {
     id: 2,
     icon: UserCheck,
-    title: languageStore.t('Personalized Concierge', 'Personalized Concierge'),
+    title: languageStore.t('Professional Service', 'Professional Service'),
     description: languageStore.t(
-      'reason_concierge_desc',
-      'Our 24/7 dedicated staff ensures personalized attention for every guest request.',
+      'reason_service_desc',
+      'Our dedicated team provides attentive, friendly service 24/7 to ensure your comfort and address any needs during your stay.',
     ),
     color: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
   },
   {
     id: 3,
     icon: UtensilsCrossed,
-    title: languageStore.t('World-Class Dining', 'World-Class Dining'),
+    title: languageStore.t('Quality Dining', 'Quality Dining'),
     description: languageStore.t(
       'reason_dining_desc',
-      'Savor gourmet Ethiopian and international cuisine prepared by award-winning chefs.',
+      'Enjoy a variety of Ethiopian and international dishes prepared fresh daily by our experienced culinary team.',
     ),
     color: 'text-rose-500 bg-rose-500/10 border-rose-500/20',
   },
   {
     id: 4,
     icon: Waves,
-    title: languageStore.t('Premium Wellness Facilities', 'Premium Wellness Facilities'),
+    title: languageStore.t('Modern Facilities', 'Modern Facilities'),
     description: languageStore.t(
-      'reason_wellness_desc',
-      'Enjoy state-of-the-art facilities including luxury spa, pool, gym, and conference centers.',
+      'reason_facilities_desc',
+      'Access to conference rooms, business center, high-speed WiFi, and other amenities designed for both business and leisure travelers.',
     ),
     color: 'text-emerald-500 bg-emerald-500/10 border-emerald-500/20',
   },
   {
     id: 5,
     icon: MapPin,
-    title: languageStore.t('Prime City Location', 'Prime City Location'),
+    title: languageStore.t('Convenient Location', 'Convenient Location'),
     description: languageStore.t(
       'reason_location_desc',
-      'Strategically located in ' +
+      'Conveniently located in ' +
         guestHotelStore.hotelCity +
-        ' near business districts and cultural landmarks.',
+        ' with easy access to local businesses, markets, and transportation.',
     ),
     color: 'text-purple-500 bg-purple-500/10 border-purple-500/20',
   },
   {
     id: 6,
     icon: Tag,
-    title: languageStore.t('Best Value Guarantee', 'Best Value Guarantee'),
+    title: languageStore.t('Value for Money', 'Value for Money'),
     description: languageStore.t(
       'reason_value_desc',
-      'Competitive rates and exclusive booking perks without compromising on luxury service.',
+      'Competitive rates with complimentary breakfast, WiFi, and parking included to provide excellent value for our guests.',
     ),
     color: 'text-teal-500 bg-teal-500/10 border-teal-500/20',
   },
