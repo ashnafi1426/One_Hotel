@@ -549,6 +549,174 @@
               </div>
             </form>
           </div>
+
+          <div
+            v-if="activeTab === 'hotel-settings'"
+            class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-xs space-y-6"
+          >
+            <div>
+              <h3 class="text-lg font-black text-slate-900 dark:text-white">
+                {{languageStore.t('hotel_settings', 'Hotel Settings')}}
+              </h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                {{languageStore.t('hotel_settings_desc', 'Configure hotel information displayed to guests.')}}
+              </p>
+            </div>
+
+            <form @submit.prevent="saveHotelSettings" class="space-y-4 text-xs font-sans">
+              <!-- Hotel Name -->
+              <div>
+                <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('hotel_name', 'Hotel Name')}} *</label>
+                <input
+                  v-model="hotelSettings.name"
+                  type="text"
+                  required
+                  :placeholder="languageStore.t('hotel_name_placeholder', 'e.g. One Hotel')"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+
+              <!-- Email + Reservation Email -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('hotel_email', 'Hotel Email')}}</label>
+                  <input
+                    v-model="hotelSettings.email"
+                    type="email"
+                    :placeholder="languageStore.t('hotel_email_placeholder', 'info@hotel.com')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('reservation_email', 'Reservation Email')}}</label>
+                  <input
+                    v-model="hotelSettings.reservation_email"
+                    type="email"
+                    :placeholder="languageStore.t('reservation_email_placeholder', 'reservations@hotel.com')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+
+              <!-- Phone + Reservation Phone -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('phone_number', 'Phone Number')}}</label>
+                  <input
+                    v-model="hotelSettings.phone"
+                    type="tel"
+                    placeholder="+251 XXX XXX XXX"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('reservation_phone', 'Reservation Phone')}}</label>
+                  <input
+                    v-model="hotelSettings.reservation_phone"
+                    type="tel"
+                    placeholder="+251 XXX XXX XXX"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div>
+                <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('address', 'Address')}}</label>
+                <input
+                  v-model="hotelSettings.address"
+                  type="text"
+                  :placeholder="languageStore.t('address_placeholder', 'Street address')"
+                  class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                />
+              </div>
+
+              <!-- City + Country -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('city', 'City')}}</label>
+                  <input
+                    v-model="hotelSettings.city"
+                    type="text"
+                    :placeholder="languageStore.t('city_placeholder', 'e.g. Addis Ababa')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('country', 'Country')}}</label>
+                  <input
+                    v-model="hotelSettings.country"
+                    type="text"
+                    :placeholder="languageStore.t('country_placeholder', 'e.g. Ethiopia')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+
+              <!-- Front Desk Hours + Dining Hours -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('front_desk_hours', 'Front Desk Hours')}}</label>
+                  <input
+                    v-model="hotelSettings.front_desk_hours"
+                    type="text"
+                    :placeholder="languageStore.t('front_desk_hours_placeholder', 'e.g. 24/7')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('dining_hours', 'Dining Hours')}}</label>
+                  <input
+                    v-model="hotelSettings.dining_hours"
+                    type="text"
+                    :placeholder="languageStore.t('dining_hours_placeholder', 'e.g. 6:30 AM – 10:30 PM')"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  />
+                </div>
+              </div>
+
+              <!-- Currency + Timezone -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('currency', 'Currency')}}</label>
+                  <select
+                    v-model="hotelSettings.currency"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  >
+                    <option value="ETB">ETB – Ethiopian Birr</option>
+                    <option value="USD">USD – US Dollar</option>
+                    <option value="EUR">EUR – Euro</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[10px] font-extrabold uppercase text-slate-500 dark:text-slate-400 mb-1">{{languageStore.t('timezone', 'Timezone')}}</label>
+                  <select
+                    v-model="hotelSettings.timezone"
+                    class="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-slate-900 dark:text-white font-bold focus:outline-none focus:border-amber-500 transition"
+                  >
+                    <option value="Africa/Addis_Ababa">Africa/Addis_Ababa (EAT, UTC+3)</option>
+                    <option value="UTC">UTC</option>
+                    <option value="America/New_York">America/New_York (ET)</option>
+                    <option value="Europe/London">Europe/London (GMT/BST)</option>
+                    <option value="Europe/Paris">Europe/Paris (CET)</option>
+                    <option value="Asia/Dubai">Asia/Dubai (GST, UTC+4)</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Save button -->
+              <div class="flex items-center justify-end gap-2.5 pt-4 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="submit"
+                  :disabled="hotelSettingsLoading"
+                  class="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-black text-xs shadow-md shadow-blue-600/20 transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  <Save class="w-3.5 h-3.5" />
+                  <span>{{hotelSettingsLoading ? languageStore.t('saving', 'Saving...') : languageStore.t('save_settings', 'Save Settings')}}</span>
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
@@ -566,6 +734,7 @@ import {
   type AdminProfile,
   type AdminStats,
 } from '@/services/profile/adminProfileService'
+import { hotelSettingsService, type HotelSettings } from '@/services/hotelSettingsService'
 import {
   Camera,
   User,
@@ -575,6 +744,7 @@ import {
   ShoppingBag,
   DollarSign,
   Building,
+  Building2,
   Home,
   Briefcase,
   Mail,
@@ -615,11 +785,28 @@ const passwordData = ref({
   new_password_confirmation: '',
 })
 
+const hotelSettingsLoading = ref(false)
+const hotelSettings = ref<HotelSettings>({
+  name: '',
+  email: '',
+  reservation_email: '',
+  phone: '',
+  reservation_phone: '',
+  address: '',
+  city: '',
+  country: '',
+  front_desk_hours: '',
+  dining_hours: '',
+  currency: 'ETB',
+  timezone: 'Africa/Addis_Ababa',
+})
+
 const localizedTabs = computed(() => [
   { id: 'personal', label: languageStore.t('personal_info', 'Personal Info'), icon: User },
   { id: 'professional', label: languageStore.t('professional', 'Professional'), icon: Briefcase },
   { id: 'statistics', label: languageStore.t('statistics', 'Statistics'), icon: BarChart3 },
   { id: 'security', label: languageStore.t('security', 'Security'), icon: Lock },
+  { id: 'hotel-settings', label: languageStore.t('hotel_settings', 'Hotel Settings'), icon: Building2 },
 ])
 
 const profilePhotoUrl = computed(() => {
@@ -743,6 +930,44 @@ async function changePassword() {
   }
 }
 
+async function loadHotelSettings() {
+  try {
+    hotelSettingsLoading.value = true
+    const data = await hotelSettingsService.getHotelSettings()
+    hotelSettings.value = {
+      name: data.name || '',
+      email: data.email || '',
+      reservation_email: data.reservation_email || '',
+      phone: data.phone || '',
+      reservation_phone: data.reservation_phone || '',
+      address: data.address || '',
+      city: data.city || '',
+      country: data.country || '',
+      front_desk_hours: data.front_desk_hours || '',
+      dining_hours: data.dining_hours || '',
+      currency: data.currency || 'ETB',
+      timezone: data.timezone || 'Africa/Addis_Ababa',
+    }
+  } catch (error: any) {
+    console.error('[AdminProfile] Failed to load hotel settings:', error)
+  } finally {
+    hotelSettingsLoading.value = false
+  }
+}
+
+async function saveHotelSettings() {
+  try {
+    hotelSettingsLoading.value = true
+    await hotelSettingsService.updateHotelSettings(hotelSettings.value)
+    alert(languageStore.t('hotel_settings_saved', 'Hotel settings saved successfully'))
+  } catch (error: any) {
+    console.error('[AdminProfile] Failed to save hotel settings:', error)
+    alert(`Error: ${error.response?.data?.message || 'Failed to save hotel settings'}`)
+  } finally {
+    hotelSettingsLoading.value = false
+  }
+}
+
 function resetForm() {
   if (profile.value) {
     formData.value = {
@@ -779,5 +1004,6 @@ onMounted(() => {
   }
   loadProfile()
   loadStats()
+  loadHotelSettings()
 })
 </script>
