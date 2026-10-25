@@ -24,8 +24,8 @@ export interface PublicHotel {
 
 const DEFAULT_GUEST_HOTEL: PublicHotel = {
   id: '41b094f8-7ed2-4af0-bd16-6f0533e34544',
-  name: HOTEL_CONFIG.name,
-  slug: 'executive-hotel',
+  name: 'Sunny Side Hotel',
+  slug: 'sunny-side-hotel',
   logo: null,
   description: HOTEL_CONFIG.tagline,
   address: HOTEL_CONFIG.address,
