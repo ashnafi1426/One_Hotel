@@ -128,19 +128,19 @@ onUnmounted(() => {
       <!-- 1. Brand Logo + Typography -->
       <RouterLink
         to="/"
-        class="flex items-center gap-3 sm:gap-3.5 min-w-0 select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C] rounded-lg"
+        class="flex items-center gap-2 sm:gap-2.5 min-w-0 select-none group focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C89B3C] rounded-lg"
         :aria-label="`${currentHotelName} Home`"
       >
         <!-- Logo Emblem Container: Clean & Transparent (No solid white square background) -->
         <div
-          class="relative w-10 h-10 sm:w-12 sm:h-12 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
+          class="relative w-8 h-8 sm:w-9 sm:h-9 lg:w-10 lg:h-10 flex items-center justify-center shrink-0 transition-transform duration-300 group-hover:scale-105"
         >
           <img
             :src="currentHotelLogo"
             :alt="`${currentHotelName} Logo`"
             class="w-full h-full object-contain select-none drop-shadow-md"
-            width="48"
-            height="48"
+            width="40"
+            height="40"
             decoding="async"
             @error="
               (e: any) => {
@@ -153,7 +153,7 @@ onUnmounted(() => {
         <!-- Brand Typography - Single Hotel Name Line -->
         <div class="flex items-center">
           <span
-            class="font-sans text-[11px] sm:text-[12px] lg:text-[13px] font-medium tracking-[0.2em] text-white leading-none uppercase whitespace-nowrap"
+            class="font-sans text-[9px] sm:text-[10px] lg:text-[11px] font-normal tracking-[0.15em] text-white leading-none uppercase whitespace-nowrap"
           >
             {{ currentHotelName }}
           </span>
@@ -289,7 +289,7 @@ onUnmounted(() => {
                     />
                   </div>
                   <div class="flex items-center">
-                    <span class="font-sans text-[10px] font-medium text-white tracking-[0.2em] uppercase leading-none whitespace-nowrap">
+                    <span class="font-sans text-[8px] font-normal text-white tracking-[0.15em] uppercase leading-none whitespace-nowrap">
                       {{ currentHotelName }}
                     </span>
                   </div>
