@@ -950,6 +950,9 @@ async function loadHotelSettings() {
     }
   } catch (error: any) {
     console.error('[AdminProfile] Failed to load hotel settings:', error)
+    // Show user-friendly error message
+    const errorMsg = error.response?.data?.message || languageStore.t('hotel_settings_load_error', 'Failed to load hotel settings. Please try again.')
+    alert(errorMsg)
   } finally {
     hotelSettingsLoading.value = false
   }
@@ -959,10 +962,13 @@ async function saveHotelSettings() {
   try {
     hotelSettingsLoading.value = true
     await hotelSettingsService.updateHotelSettings(hotelSettings.value)
-    alert(languageStore.t('hotel_settings_saved', 'Hotel settings saved successfully'))
+    alert(languageStore.t('hotel_settings_saved', 'Hotel settings saved successfully!'))
+    // Reload hotel store to update sidebar/navigation
+    await hotelStore.fetchMyHotels()
   } catch (error: any) {
     console.error('[AdminProfile] Failed to save hotel settings:', error)
-    alert(`Error: ${error.response?.data?.message || 'Failed to save hotel settings'}`)
+    const errorMsg = error.response?.data?.message || languageStore.t('hotel_settings_save_error', 'Failed to save hotel settings. Please try again.')
+    alert(`${languageStore.t('error', 'Error')}: ${errorMsg}`)
   } finally {
     hotelSettingsLoading.value = false
   }
