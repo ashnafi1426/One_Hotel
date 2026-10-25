@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import { BedDouble, Droplet, Tv, Wifi, Sparkles, ChevronDown } from 'lucide-vue-next'
+import { Sparkles } from 'lucide-vue-next'
 import { useLanguageStore } from '@/stores/language'
 import { useGuestHotelStore } from '@/stores/guestHotelStore'
 
 const languageStore = useLanguageStore()
 const guestHotelStore = useGuestHotelStore()
-
-// Preserve existing scroll functionality
-const exploreRooms = () => {
-  const roomsSection = document.getElementById('rooms-section')
-
-  if (roomsSection) {
-    const offset = 80
-    const bodyRect = document.body.getBoundingClientRect().top
-    const elementRect = roomsSection.getBoundingClientRect().top
-    const elementPosition = elementRect - bodyRect
-    const offsetPosition = elementPosition - offset
-
-    window.scrollTo({
-      top: offsetPosition,
-      behavior: 'smooth',
-    })
-  }
-}
 </script>
 
 <template>
@@ -119,71 +101,6 @@ const exploreRooms = () => {
           )
         }}
       </p>
-
-      <!-- Four balanced amenity cards -->
-      <div
-        class="mb-7 grid w-full max-w-[1040px] grid-cols-2 gap-3 sm:mb-9 sm:gap-4 lg:grid-cols-4 lg:gap-5"
-      >
-        <!-- Luxury Beds -->
-        <div
-          class="flex min-h-[58px] min-w-0 items-center justify-center gap-2.5 rounded-2xl border border-white/50 bg-[#192438]/95 px-2.5 py-3 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D6A746] hover:bg-[#202D43] sm:min-h-[64px] sm:gap-3 sm:px-4"
-        >
-          <BedDouble class="h-4 w-4 shrink-0 text-[#E2B34F] sm:h-5 sm:w-5" />
-          <span class="text-xs font-medium text-white sm:text-sm lg:text-base">
-            {{ languageStore.t('luxury_beds', 'Luxury Beds') }}
-          </span>
-        </div>
-
-        <!-- Modern Bath -->
-        <div
-          class="flex min-h-[58px] min-w-0 items-center justify-center gap-2.5 rounded-2xl border border-white/50 bg-[#192438]/95 px-2.5 py-3 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D6A746] hover:bg-[#202D43] sm:min-h-[64px] sm:gap-3 sm:px-4"
-        >
-          <Droplet class="h-4 w-4 shrink-0 text-[#E2B34F] sm:h-5 sm:w-5" />
-          <span class="text-xs font-medium text-white sm:text-sm lg:text-base">
-            {{ languageStore.t('modern_bath', 'Modern Bath') }}
-          </span>
-        </div>
-
-        <!-- Smart HD TV -->
-        <div
-          class="flex min-h-[58px] min-w-0 items-center justify-center gap-2.5 rounded-2xl border border-white/50 bg-[#192438]/95 px-2.5 py-3 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D6A746] hover:bg-[#202D43] sm:min-h-[64px] sm:gap-3 sm:px-4"
-        >
-          <Tv class="h-4 w-4 shrink-0 text-[#E2B34F] sm:h-5 sm:w-5" />
-          <span class="text-xs font-medium text-white sm:text-sm lg:text-base">
-            {{ languageStore.t('smart_hd_tv', 'Smart HD TV') }}
-          </span>
-        </div>
-
-        <!-- Free Wi-Fi -->
-        <div
-          class="flex min-h-[58px] min-w-0 items-center justify-center gap-2 rounded-2xl border border-white/50 bg-[#192438]/95 px-2 py-3 shadow-lg backdrop-blur-md transition-all duration-300 hover:-translate-y-1 hover:border-[#D6A746] hover:bg-[#202D43] sm:min-h-[64px] sm:gap-3 sm:px-4"
-        >
-          <Wifi class="h-4 w-4 shrink-0 text-[#E2B34F] sm:h-5 sm:w-5" />
-
-          <span class="text-xs font-medium text-white sm:text-sm lg:text-base">
-            <span class="sm:hidden">Free Wi-Fi</span>
-            <span class="hidden sm:inline">
-              {{ languageStore.t('free_wifi', 'Free High-Speed Wi-Fi') }}
-            </span>
-          </span>
-        </div>
-      </div>
-
-      <!-- Explore suites: existing scroll action preserved -->
-      <button
-        @click="exploreRooms"
-        type="button"
-        class="group inline-flex min-h-[48px] max-w-full items-center justify-center gap-3 rounded-full border border-[#D6A746]/80 bg-[#192438]/90 px-5 py-3 text-xs font-semibold uppercase tracking-[0.08em] text-[#E2B34F] shadow-lg backdrop-blur-md transition-all duration-300 hover:border-[#E2B34F] hover:bg-[#D6A746] hover:text-[#101827] active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-[#E2B34F] focus-visible:ring-offset-2 focus-visible:ring-offset-[#101827] sm:px-7 sm:text-sm"
-        aria-label="Scroll down to explore available suites"
-      >
-        <span>
-          {{ languageStore.t('explore_available_suites', 'Explore Available Suites') }}
-        </span>
-
-        <ChevronDown
-          class="h-4 w-4 shrink-0 transition-transform duration-300 group-hover:translate-y-1"
-        />
-      </button>
     </div>
   </section>
 </template>
