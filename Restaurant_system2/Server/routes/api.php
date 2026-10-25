@@ -336,6 +336,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/photo', [AdminProfileController::class, 'uploadPhoto']);
             Route::post('/change-password', [AdminProfileController::class, 'changePassword']);
             Route::get('/stats', [AdminProfileController::class, 'getStats']);
+            
+            // Hotel Settings Management
+            Route::get('/hotel-settings', [AdminProfileController::class, 'getHotelSettings']);
+            Route::put('/hotel-settings', [AdminProfileController::class, 'updateHotelSettings']);
         });
         
         Route::get('/admin/dashboard', [DashboardController::class, 'index']);

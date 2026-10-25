@@ -283,5 +283,87 @@ class AdminProfileController extends Controller
             ], 500);
         }
     }
-}
 
+    public function getHotelSettings(): JsonResponse
+    {
+        try {
+            $settings = DB::table('hotels')->first();
+            
+            if (!$settings) {
+                // Return default settings if none exist
+                return response()->json([
+                    'success' => true,
+                    'data' => [
+                        'name' => 'Hotel Name',
+                        'address' => '',
+                        'phone' => '',
+                        'email' => '',
+                        'website' => '',
+                        'description' => '',
+                        'check_in_time' => '14:00',
+                        'check_out_time' => '12:00',
+                        'currency' => 'ETB',
+                        'timezone' => 'Africa/Addis_Ababa',
+                    ],
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $settings,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Get hotel settings error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch hotel settings',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function updateHotelSettings(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'sometimes|string|max:255',
+                'address' => 'sometimes|nullable|string',
+                'phone' => 'sometimes|nullable|string|max:50',
+                'email' => 'sometimes|nullable|email|max:255',
+                'website' => 'sometimes|nullable|url|max:255',
+                'description' => 'sometimes|nullable|string',
+                'check_in_time' => 'sometimes|nullable|string',
+                'check_out_time' => 'sometimes|nullable|string',
+                'currency' => 'sometimes|nullable|string|max:10',
+                'timezone' => 'sometimes|nullable|string|max:50',
+            ]);
+
+            // Check if settings exist
+            $exists = DB::table('hotels')->exists();
+            
+            if ($exists) {
+                DB::table('hotels')->update($validated);
+            } else {
+                DB::table('hotels')->insert(array_merge($validated, [
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]));
+            }
+
+            $settings = DB::table('hotels')->first();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Hotel settings updated successfully',
+                'data' => $settings,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Update hotel settings error: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update hotel settings',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+}
