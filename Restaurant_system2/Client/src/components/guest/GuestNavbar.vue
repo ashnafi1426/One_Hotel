@@ -150,17 +150,12 @@ onUnmounted(() => {
           />
         </div>
 
-        <!-- Brand Typography -->
-        <div class="flex flex-col">
+        <!-- Brand Typography - Single Hotel Name Line -->
+        <div class="flex items-center">
           <span
-            class="font-sans text-[13px] sm:text-[14px] lg:text-[15px] font-semibold tracking-[0.35em] text-white leading-none uppercase whitespace-nowrap"
+            class="font-sans text-[14px] sm:text-[15px] lg:text-[16px] font-medium tracking-[0.35em] text-white leading-none uppercase whitespace-nowrap"
           >
             {{ currentHotelName }}
-          </span>
-          <span
-            class="font-sans text-[9px] sm:text-[10px] font-semibold text-[#C89B3C] tracking-[0.3em] uppercase mt-1.5 leading-none whitespace-nowrap"
-          >
-            {{ languageStore.t('luxury_hospitality', 'Luxury Hospitality') }}
           </span>
         </div>
       </RouterLink>
@@ -293,12 +288,9 @@ onUnmounted(() => {
                       decoding="async"
                     />
                   </div>
-                  <div class="flex flex-col">
-                    <span class="font-sans text-[11px] font-semibold text-white tracking-[0.3em] uppercase leading-none whitespace-nowrap">
+                  <div class="flex items-center">
+                    <span class="font-sans text-[12px] font-medium text-white tracking-[0.3em] uppercase leading-none whitespace-nowrap">
                       {{ currentHotelName }}
-                    </span>
-                    <span class="text-[8px] font-semibold text-[#C89B3C] tracking-[0.25em] uppercase mt-1 leading-none whitespace-nowrap">
-                      {{ guestHotelStore.hotelCity }} • {{ languageStore.t('luxury_hotel', 'Luxury Hotel') }}
                     </span>
                   </div>
                 </div>
