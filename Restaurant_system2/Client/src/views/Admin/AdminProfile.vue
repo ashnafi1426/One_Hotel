@@ -966,7 +966,7 @@ async function saveHotelSettings() {
     await hotelSettingsService.updateHotelSettings(hotelSettings.value)
     alert(languageStore.t('hotel_settings_saved', 'Hotel settings saved successfully!'))
     // Reload hotel store to update sidebar/navigation
-    await guestHotelStore.fetchHotels()
+    await guestHotelStore.fetchAvailableHotels()
   } catch (error: any) {
     console.error('[AdminProfile] Failed to save hotel settings:', error)
     const errorMsg = error.response?.data?.message || languageStore.t('hotel_settings_save_error', 'Failed to save hotel settings. Please try again.')
