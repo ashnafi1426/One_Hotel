@@ -153,7 +153,7 @@ onUnmounted(() => {
         <!-- Brand Typography - Single Hotel Name Line -->
         <div class="flex items-center">
           <span
-            class="font-sans text-[14px] sm:text-[15px] lg:text-[16px] font-medium tracking-[0.35em] text-white leading-none uppercase whitespace-nowrap"
+            class="font-sans text-[11px] sm:text-[12px] lg:text-[13px] font-medium tracking-[0.2em] text-white leading-none uppercase whitespace-nowrap"
           >
             {{ currentHotelName }}
           </span>
@@ -289,7 +289,7 @@ onUnmounted(() => {
                     />
                   </div>
                   <div class="flex items-center">
-                    <span class="font-sans text-[12px] font-medium text-white tracking-[0.3em] uppercase leading-none whitespace-nowrap">
+                    <span class="font-sans text-[10px] font-medium text-white tracking-[0.2em] uppercase leading-none whitespace-nowrap">
                       {{ currentHotelName }}
                     </span>
                   </div>
